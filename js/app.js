@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputWish = document.getElementById('input-wish');
   const inputPhoto = document.getElementById('input-photo');
   const photoFilename = document.getElementById('photo-filename');
+  const inputPhotoUrl = document.getElementById('input-photo-url');
+  const photoUploadStatus = document.getElementById('photo-upload-status');
 
   const shareBtn = document.getElementById('share-btn');
   const shareModal = document.getElementById('share-modal');
@@ -598,6 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files[0];
     if (file) {
       photoFilename.textContent = file.name;
+      if (photoUploadStatus) {
+        photoUploadStatus.textContent = '⏳ Preparing photo for cloud sharing...';
+        photoUploadStatus.className = 'photo-upload-status show';
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
@@ -608,12 +615,69 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('birthday_custom_photo', compressed);
           } catch(err) {}
           scene.updateUserPhoto(img);
+
+          // Upload to free image CDN for permanent, short, cross-device shareable URL
+          const formData = new FormData();
+          formData.append('image', file);
+          fetch('https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a5', {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.image && data.image.url) {
+              currentPhotoDataUrl = data.image.url;
+              if (inputPhotoUrl) inputPhotoUrl.value = data.image.url;
+              if (photoUploadStatus) {
+                photoUploadStatus.textContent = '✅ Photo cloud-hosted! Link is ready to share anywhere.';
+                photoUploadStatus.className = 'photo-upload-status show success';
+              }
+              try { localStorage.setItem('birthday_custom_photo', data.image.url); } catch(e) {}
+            } else {
+              if (photoUploadStatus) {
+                photoUploadStatus.textContent = '✅ Photo ready for sharing.';
+                photoUploadStatus.className = 'photo-upload-status show success';
+              }
+            }
+          })
+          .catch(() => {
+            if (photoUploadStatus) {
+              photoUploadStatus.textContent = '✅ Photo ready for sharing.';
+              photoUploadStatus.className = 'photo-upload-status show success';
+            }
+          });
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
   });
+
+  if (inputPhotoUrl) {
+    inputPhotoUrl.addEventListener('input', () => {
+      const url = inputPhotoUrl.value.trim();
+      if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image'))) {
+        currentPhotoDataUrl = url;
+        try { localStorage.setItem('birthday_custom_photo', url); } catch(e) {}
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          if (scene) scene.updateUserPhoto(img);
+          if (photoUploadStatus) {
+            photoUploadStatus.textContent = '✅ Photo loaded successfully from URL!';
+            photoUploadStatus.className = 'photo-upload-status show success';
+          }
+        };
+        img.onerror = () => {
+          if (photoUploadStatus) {
+            photoUploadStatus.textContent = '⚠️ Check image URL (must be direct image link)';
+            photoUploadStatus.className = 'photo-upload-status show error';
+          }
+        };
+        img.src = url;
+      }
+    });
+  }
 
   closeGiftModal.addEventListener('click', () => giftModal.classList.remove('show'));
   btnGiftReplay.addEventListener('click', () => {

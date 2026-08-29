@@ -1963,6 +1963,18 @@ body.disco-active .disco-overlay {
   transition: opacity 0.3s ease;
 }
 
-.firecrackers-canvas-overlay.active {
-  opacity: 1;
+.photo-upload-status {
+  font-size: 0.78rem;
+  margin-top: 6px;
+  color: #ffd700;
+  display: none;
+}
+.photo-upload-status.show {
+  display: block;
+}
+.photo-upload-status.success {
+  color: #00e676;
+}
+.photo-upload-status.error {
+  color: #ff5252;
 }
