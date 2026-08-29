@@ -157,6 +157,9 @@ class BirthdayScene {
     this.createConfettiStorm();
 
     window.addEventListener('resize', this.onWindowResize.bind(this));
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.onWindowResize(), 150);
+    });
     this.renderer.domElement.addEventListener('pointerdown', this.onPointerDown.bind(this));
     window.addEventListener('pointermove', this.onPointerMove.bind(this));
 
@@ -172,7 +175,84 @@ class BirthdayScene {
       }
     });
 
+    // Auto-detect device type (Mobile, Tablet, Desktop) and apply perfect framing
+    this.applyAdaptiveLayout();
+
     this.animate();
+  }
+
+  /* =========================================================
+     AUTO DEVICE DETECTION & ADAPTIVE RESPONSIVE LAYOUT ENGINE
+     ========================================================= */
+  getDeviceProfile() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const aspect = w / h;
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+    let type = 'desktop';
+    if (w < 700 || (w < 900 && aspect < 1.0)) {
+      type = 'mobile';
+    } else if (w <= 1080 || (isTouch && w <= 1200)) {
+      type = 'tablet';
+    }
+
+    return {
+      type,
+      width: w,
+      height: h,
+      aspect,
+      isPortrait: aspect < 1.0,
+      isTouch
+    };
+  }
+
+  applyAdaptiveLayout() {
+    const dev = this.getDeviceProfile();
+
+    // 1. Update document body classes for CSS responsive styling
+    document.body.classList.remove('device-mobile', 'device-tablet', 'device-desktop', 'orientation-portrait', 'orientation-landscape');
+    document.body.classList.add(`device-${dev.type}`);
+    document.body.classList.add(dev.isPortrait ? 'orientation-portrait' : 'orientation-landscape');
+
+    // 2. Adaptive FOV & Camera Framing for Mobile / Tablet / Desktop
+    if (dev.type === 'mobile') {
+      // Mobile portrait view: broaden FOV so Left Stand Board, Center Cake, and Right Photo Frame fit in vertical view
+      if (dev.isPortrait) {
+        this.camera.fov = Math.min(66, Math.max(52, 45 / dev.aspect * 0.72));
+      } else {
+        this.camera.fov = 48;
+      }
+      if (this.controls) {
+        this.controls.minDistance = 6;
+        this.controls.maxDistance = 55;
+      }
+    } else if (dev.type === 'tablet') {
+      this.camera.fov = dev.isPortrait ? 54 : 48;
+      if (this.controls) {
+        this.controls.minDistance = 5;
+        this.controls.maxDistance = 50;
+      }
+    } else {
+      // Desktop Cinematic
+      this.camera.fov = 45;
+      if (this.controls) {
+        this.controls.minDistance = 5;
+        this.controls.maxDistance = 50;
+      }
+    }
+
+    this.camera.aspect = dev.aspect;
+    this.camera.updateProjectionMatrix();
+
+    if (this.renderer) {
+      this.renderer.setSize(dev.width, dev.height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dev.type === 'mobile' ? 1.75 : 2));
+    }
+  }
+
+  onWindowResize() {
+    this.applyAdaptiveLayout();
   }
 
   setupLighting() {

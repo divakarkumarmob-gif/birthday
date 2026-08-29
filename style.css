@@ -1063,6 +1063,72 @@ body {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* =========================================================
+   RESPONSIVE AUTO-ADAPTIVE DEVICE STYLING (MOBILE, TABLET, DESKTOP)
+   ========================================================= */
+body.device-mobile .hero-celebrant-overlay {
+  top: 60px;
+}
+body.device-mobile .celebrant-name-display {
+  font-size: 1.45rem;
+  gap: 8px;
+}
+body.device-mobile .wish-subtitle {
+  font-size: 0.78rem;
+}
+body.device-mobile .main-screen-quest-card {
+  bottom: 16px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  gap: 12px;
+  max-width: 95vw;
+}
+body.device-mobile .quest-icon-wrap {
+  font-size: 1.8rem;
+}
+body.device-mobile .quest-title {
+  font-size: 1.02rem;
+  letter-spacing: 0.8px;
+}
+body.device-mobile .quest-badge-counter {
+  font-size: 0.7rem;
+  padding: 1px 8px;
+}
+body.device-mobile .quest-subtitle {
+  font-size: 0.74rem;
+}
+body.device-mobile .quest-progress-dots {
+  font-size: 0.95rem;
+  gap: 6px;
+}
+body.device-mobile .guided-story-bar {
+  bottom: 16px;
+}
+body.device-mobile .guided-action-btn {
+  padding: 12px 22px;
+  border-radius: 20px;
+  gap: 12px;
+}
+body.device-mobile .guided-action-btn strong {
+  font-size: 0.98rem;
+}
+body.device-mobile .guided-action-btn small {
+  font-size: 0.74rem;
+}
+body.device-mobile .tap-gift-card {
+  bottom: 18px;
+  padding: 10px 18px;
+  border-radius: 20px;
+}
+
+body.device-tablet .main-screen-quest-card {
+  bottom: 22px;
+  padding: 12px 24px;
+}
+body.device-tablet .guided-story-bar {
+  bottom: 22px;
+}
+
 .guided-action-btn i {
   font-size: 1.6rem;
 }
