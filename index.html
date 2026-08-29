@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>✨ 3D Birthday Celebration Experience 🎉</title>
+  <meta name="description" content="An interactive 3D birthday celebration with realistic cake, blowable candles, popping balloons, surprise gifts, games, sparklers, and fireworks!">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&family=Sacramento&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="theme-midnight-gold">
+
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Ambient Light Sparks Background -->
+  <div class="stars-bg"></div>
+
+  <!-- Disco Light Overlay Effects -->
+  <div class="disco-overlay" id="disco-overlay"></div>
+
+  <!-- Sparkler Cursor Canvas -->
+  <canvas id="sparkler-canvas"></canvas>
+
+  <!-- Main Top Bar -->
+  <header class="top-nav">
+    <div class="logo-badge">
+      <span class="sparkle-icon">🎂</span>
+      <span class="logo-title" id="celebrant-title">Happy Birthday!</span>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Camera views -->
+      <div class="camera-pill-group">
+        <button class="pill-btn active" id="cam-orbit" title="Free Orbit View"><i class="fa-solid fa-arrows-spin"></i> <span>Orbit</span></button>
+        <button class="pill-btn" id="cam-cake" title="Focus on Cake"><i class="fa-solid fa-cake-candles"></i> <span>Cake</span></button>
+        <button class="pill-btn" id="cam-gift" title="Focus on Gift"><i class="fa-solid fa-gift"></i> <span>Gift</span></button>
+        <button class="pill-btn" id="cam-fireworks" title="Sky Fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Sky</span></button>
+      </div>
+
+      <!-- Feature Toggles Group -->
+      <div class="feature-toggles">
+        <button class="icon-btn" id="btn-disco-mode" title="Toggle Disco Party Mode"><i class="fa-solid fa-compact-disc"></i></button>
+        <button class="icon-btn" id="btn-sparkler-wand" title="Toggle 3D Sparkler Wand"><i class="fa-solid fa-wand-sparkles"></i></button>
+        <button class="icon-btn" id="btn-arcade-game" title="Play Balloon Pop Arcade Game"><i class="fa-solid fa-gamepad"></i></button>
+        <button class="icon-btn" id="btn-slice-cake" title="Slice the Cake"><i class="fa-solid fa-utensils"></i></button>
+        <button class="icon-btn" id="btn-sky-lanterns" title="Release Sky Wish Lanterns"><i class="fa-solid fa-fire"></i></button>
+        <button class="icon-btn" id="btn-photo-booth" title="3D Photo Booth & Postcard"><i class="fa-solid fa-camera-retro"></i></button>
+      </div>
+
+      <!-- Theme Switcher -->
+      <div class="theme-dropdown-container">
+        <button class="icon-btn" id="theme-btn" title="Change Theme Palette">
+          <i class="fa-solid fa-palette"></i>
+        </button>
+        <div class="theme-menu" id="theme-menu">
+          <div class="theme-option active" data-theme="midnight-gold">
+            <span class="color-dot" style="background: linear-gradient(135deg, #ffd700, #ff8c00);"></span> Midnight Gold
+          </div>
+          <div class="theme-option" data-theme="rose-glamour">
+            <span class="color-dot" style="background: linear-gradient(135deg, #ff758c, #ff7eb3);"></span> Rose Glamour
+          </div>
+          <div class="theme-option" data-theme="cyber-neon">
+            <span class="color-dot" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></span> Cyber Neon
+          </div>
+          <div class="theme-option" data-theme="cosmic-purple">
+            <span class="color-dot" style="background: linear-gradient(135deg, #b721ff, #21d4fd);"></span> Cosmic Dream
+          </div>
+          <div class="theme-option" data-theme="pastel-rainbow">
+            <span class="color-dot" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);"></span> Pastel Fantasy
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Controls -->
+      <button class="icon-btn" id="music-toggle-btn" title="Play/Pause Birthday Song">
+        <i class="fa-solid fa-music"></i>
+        <div class="sound-wave" id="sound-wave">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+
+      <!-- Customize Button -->
+      <button class="icon-btn highlight" id="customize-btn" title="Personalize Name, Age & Wishes">
+        <i class="fa-solid fa-pen-nib"></i>
+      </button>
+
+      <!-- Share Button -->
+      <button class="icon-btn" id="share-btn" title="Share Celebration Link & QR Code">
+        <i class="fa-solid fa-share-nodes"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Hint / Tooltip Bubble -->
+  <div class="interaction-hint" id="interaction-hint">
+    <i class="fa-solid fa-hand-pointer"></i> <span>Drag to rotate • Tap balloons or stars to explore • Click top icons for games & disco!</span>
+  </div>
+
+  <!-- Center Celebrant Floating Banner -->
+  <div class="hero-celebrant-overlay" id="hero-overlay">
+    <div class="wish-subtitle" id="wish-subtitle">Wishing You a Wonderful Year Ahead!</div>
+    <h1 class="celebrant-name-display" id="name-display">
+      <span class="gradient-text" id="display-name-text">Alex</span>
+      <span class="age-badge" id="display-age-badge">24</span>
+    </h1>
+  </div>
+
+  <!-- Bottom Action Control Bar -->
+  <div class="bottom-action-bar">
+    <button class="action-card-btn action-blow" id="btn-blow-candles">
+      <div class="btn-glow"></div>
+      <div class="action-icon"><i class="fa-solid fa-wind"></i></div>
+      <div class="action-text">
+        <strong>Blow Candles</strong>
+        <small id="mic-status-label">Click or puff mic</small>
+      </div>
+    </button>
+
+    <button class="action-card-btn action-fireworks" id="btn-launch-fireworks">
+      <div class="btn-glow"></div>
+      <div class="action-icon"><i class="fa-solid fa-sparkles"></i></div>
+      <div class="action-text">
+        <strong>Launch Fireworks</strong>
+        <small>Light up sky</small>
+      </div>
+    </button>
+
+    <button class="action-card-btn action-gift" id="btn-open-gift">
+      <div class="btn-glow"></div>
+      <div class="action-icon"><i class="fa-solid fa-gift"></i></div>
+      <div class="action-text">
+        <strong>Open Gift Box</strong>
+        <small>Mystery wish</small>
+      </div>
+    </button>
+
+    <button class="action-card-btn action-balloon" id="btn-spawn-balloons">
+      <div class="btn-glow"></div>
+      <div class="action-icon"><i class="fa-solid fa-soap"></i></div>
+      <div class="action-text">
+        <strong>More Balloons</strong>
+        <small>Float & pop</small>
+      </div>
+    </button>
+  </div>
+
+  <!-- Balloon Pop Arcade Mini-Game HUD Overlay -->
+  <div class="arcade-hud" id="arcade-hud">
+    <div class="arcade-card">
+      <div class="arcade-stat">
+        <span class="stat-label">TIME</span>
+        <span class="stat-val" id="arcade-timer">30s</span>
+      </div>
+      <div class="arcade-stat score-stat">
+        <span class="stat-label">SCORE</span>
+        <span class="stat-val" id="arcade-score">0000</span>
+      </div>
+      <div class="arcade-stat combo-stat">
+        <span class="stat-label">COMBO</span>
+        <span class="stat-val" id="arcade-combo">x1</span>
+      </div>
+      <button class="arcade-quit-btn" id="btn-quit-arcade" title="Quit Arcade">&times;</button>
+    </div>
+    <div class="arcade-timer-bar">
+      <div class="arcade-timer-fill" id="arcade-timer-fill"></div>
+    </div>
+  </div>
+
+  <!-- Arcade Game Over Modal -->
+  <div class="modal-overlay" id="arcade-over-modal">
+    <div class="modal-card arcade-result-card">
+      <div class="arcade-trophy">🏆</div>
+      <h2 class="arcade-title">GAME OVER!</h2>
+      <div class="final-score-box">
+        <span>FINAL SCORE</span>
+        <strong id="final-score-val">1450</strong>
+      </div>
+      <div class="rank-badge" id="final-rank-badge">🎉 PARTY MASTER 🎉</div>
+      <div class="arcade-actions">
+        <button class="btn-primary" id="btn-replay-arcade"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
+        <button class="btn-secondary" id="btn-close-arcade-modal">Back to Celebration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blow Microphone Detection Bar -->
+  <div class="mic-meter-container" id="mic-meter-container">
+    <div class="mic-meter-header">
+      <i class="fa-solid fa-microphone-lines"></i>
+      <span>Blow into microphone!</span>
+      <button class="text-close-btn" id="close-mic-btn">&times;</button>
+    </div>
+    <div class="mic-meter-track">
+      <div class="mic-meter-fill" id="mic-meter-fill"></div>
+    </div>
+  </div>
+
+  <!-- Surprise Gift Modal / Card Popup -->
+  <div class="modal-overlay" id="gift-modal">
+    <div class="modal-card surprise-card">
+      <button class="modal-close" id="close-gift-modal">&times;</button>
+      <div class="card-ribbon-decor">🎀</div>
+      <div class="card-header-icon">🎉</div>
+      <h2 class="card-title">A Special Birthday Wish For You!</h2>
+      <div class="card-divider"></div>
+      <p class="custom-wish-text" id="gift-custom-wish">
+        "May your day be filled with infinite joy, laughter, wonderful surprises, and all your biggest dreams coming true! Happy Birthday!"
+      </p>
+      <div class="card-signature">
+        <span>With all our love & best wishes ❤️</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-primary" id="btn-gift-replay-fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate More</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wish Star Note Modal (Guestbook) -->
+  <div class="modal-overlay" id="star-note-modal">
+    <div class="modal-card star-card">
+      <button class="modal-close" id="close-star-modal">&times;</button>
+      <div class="star-decor-icon">⭐</div>
+      <h2 class="card-title" id="star-author">Wish From a Friend</h2>
+      <div class="card-divider"></div>
+      <p class="custom-wish-text" id="star-message">
+        "Wishing you a year ahead filled with happiness, adventures, and endless milestones! Keep shining bright!"
+      </p>
+      <div class="card-actions">
+        <button class="btn-primary" id="btn-close-star-note"><i class="fa-solid fa-heart"></i> Thank You!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customization Modal -->
+  <div class="modal-overlay" id="customize-modal">
+    <div class="modal-card form-card">
+      <button class="modal-close" id="close-customize-modal">&times;</button>
+      <h2>✨ Personalize Celebration</h2>
+      <p class="modal-sub">Create a tailored 3D greeting for your special someone.</p>
+
+      <form id="customize-form">
+        <div class="form-group">
+          <label for="input-name"><i class="fa-solid fa-user"></i> Celebrant Name</label>
+          <input type="text" id="input-name" placeholder="e.g. Sophia, David, Mom" value="Alex" maxlength="20" required>
+        </div>
+
+        <div class="form-group">
+          <label for="input-age"><i class="fa-solid fa-cake-candles"></i> Age (Shows 3D numeric candles!)</label>
+          <input type="number" id="input-age" placeholder="e.g. 24" value="24" min="1" max="120">
+        </div>
+
+        <div class="form-group">
+          <label for="input-wish"><i class="fa-solid fa-heart"></i> Heartfelt Birthday Message</label>
+          <textarea id="input-wish" rows="3" placeholder="Write your personalized wish here...">May your day be filled with infinite joy, laughter, wonderful surprises, and all your biggest dreams coming true! Happy Birthday!</textarea>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fa-solid fa-image"></i> Floating Photo Card (Optional)</label>
+          <div class="photo-upload-row">
+            <input type="file" id="input-photo" accept="image/*" class="file-input-hidden">
+            <label for="input-photo" class="upload-btn-label">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo
+            </label>
+            <span class="upload-filename" id="photo-filename">Using celebratory default</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> Apply & Celebrate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Share & QR Modal -->
+  <div class="modal-overlay" id="share-modal">
+    <div class="modal-card share-card">
+      <button class="modal-close" id="close-share-modal">&times;</button>
+      <div class="share-icon"><i class="fa-solid fa-qrcode"></i></div>
+      <h2>Share & Scan Celebration</h2>
+      <p>Scan the QR code with any mobile camera or copy the link below!</p>
+      
+      <!-- QR Code Output -->
+      <div class="qrcode-wrapper">
+        <div id="qrcode-container"></div>
+      </div>
+
+      <div class="share-input-group">
+        <input type="text" id="share-link-input" readonly value="">
+        <button class="btn-primary" id="btn-copy-link"><i class="fa-regular fa-copy"></i> Copy</button>
+      </div>
+      <div class="copy-feedback" id="copy-feedback"><i class="fa-solid fa-circle-check"></i> Copied to clipboard!</div>
+    </div>
+  </div>
+
+  <!-- 3D Photo Booth Snapshot Modal -->
+  <div class="modal-overlay" id="photo-booth-modal">
+    <div class="modal-card photo-booth-card">
+      <button class="modal-close" id="close-photo-modal">&times;</button>
+      <div class="photo-booth-header">
+        <i class="fa-solid fa-camera-retro"></i>
+        <h2>Birthday Postcard Snapshot</h2>
+      </div>
+      <div class="postcard-preview-container">
+        <img id="postcard-preview-img" alt="Birthday Postcard Preview" src="">
+      </div>
+      <div class="postcard-actions">
+        <a id="btn-download-postcard" class="btn-primary" download="birthday_celebration.png">
+          <i class="fa-solid fa-download"></i> Download Postcard Image
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grand Celebration Notification Banner -->
+  <div class="celebration-banner" id="celebration-banner">
+    <div class="banner-content">
+      <div class="banner-badge">✨ MAKE A WISH! ✨</div>
+      <h2 id="banner-title">HAPPY BIRTHDAY!</h2>
+      <p id="banner-desc">May all your wishes come true!</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/scene3d.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
