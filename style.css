@@ -1943,3 +1943,25 @@ body.disco-active .disco-overlay {
     top: 24%;
   }
 }
+
+/* =========================================================
+   REAL FIRECRACKERS VIDEO CHROMA-KEY OVERLAY (COMPACT CENTERED)
+   ========================================================= */
+.firecrackers-canvas-overlay {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(80vw, 880px);
+  height: min(65vh, 580px);
+  pointer-events: none;
+  z-index: 150;
+  opacity: 0;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.45)) contrast(1.15) saturate(1.4);
+  transition: opacity 0.3s ease;
+}
+
+.firecrackers-canvas-overlay.active {
+  opacity: 1;
+}

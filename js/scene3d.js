@@ -177,10 +177,156 @@ class BirthdayScene {
       }
     });
 
+    // Real-Time Firecrackers Video & Chroma-Key Player
+    this.initFirecrackersVideoPlayer();
+
     // Auto-detect device type (Mobile, Tablet, Desktop) and apply perfect framing
     this.applyAdaptiveLayout();
 
     this.animate();
+  }
+
+  /* =========================================================
+     REAL-TIME FIRECRACKERS VIDEO & CHROMA-KEY (GREEN REMOVAL)
+     ========================================================= */
+  initFirecrackersVideoPlayer() {
+    this.fcVideo = document.getElementById('firecrackers-video');
+    this.fcCanvas = document.getElementById('firecrackers-canvas');
+    if (!this.fcVideo || !this.fcCanvas) return;
+
+    this.fcCtx = this.fcCanvas.getContext('2d', { willReadFrequently: true });
+    this.isFcPlaying = false;
+
+    // Buffer canvas for GPU chroma-key processing
+    this.fcBufferCanvas = document.createElement('canvas');
+    this.fcBufferCanvas.width = 640;
+    this.fcBufferCanvas.height = 360;
+    this.fcBufferCtx = this.fcBufferCanvas.getContext('2d', { willReadFrequently: true });
+  }
+
+  playGreenScreenFirecrackers(duration = null, onVideoComplete = null) {
+    if (!this.fcVideo || !this.fcCanvas) {
+      if (onVideoComplete) onVideoComplete();
+      return;
+    }
+
+    const w = this.fcCanvas.clientWidth || Math.min(window.innerWidth * 0.8, 880);
+    const h = this.fcCanvas.clientHeight || Math.min(window.innerHeight * 0.65, 580);
+    this.fcCanvas.width = w;
+    this.fcCanvas.height = h;
+    this.fcCanvas.classList.add('active');
+
+    // Video starts at exactly 7.5s to the end
+    this.fcVideo.currentTime = 7.5;
+    this.fcVideo.volume = 1.0;
+    this.fcVideo.muted = false;
+
+    this.onFcComplete = onVideoComplete;
+
+    const playPromise = this.fcVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Fallback for mobile autoplay policy if user hasn't interacted
+        this.fcVideo.muted = true;
+        this.fcVideo.play();
+      });
+    }
+
+    this.isFcPlaying = true;
+    const startTime = Date.now();
+
+    const processChromaFrame = () => {
+      if (!this.isFcPlaying) return;
+
+      const isEnded = this.fcVideo.ended || (this.fcVideo.duration > 0 && this.fcVideo.currentTime >= this.fcVideo.duration - 0.25 && (Date.now() - startTime > 2000));
+      const isTimeUp = duration && (Date.now() - startTime > duration * 1000);
+
+      if (isEnded || isTimeUp) {
+        this.stopGreenScreenFirecrackers();
+        return;
+      }
+
+      if (this.fcVideo.readyState >= 2) {
+        const bw = this.fcBufferCanvas.width;
+        const bh = this.fcBufferCanvas.height;
+
+        this.fcBufferCtx.drawImage(this.fcVideo, 0, 0, bw, bh);
+        const frame = this.fcBufferCtx.getImageData(0, 0, bw, bh);
+        const l = frame.data.length;
+        const timeNow = (Date.now() - startTime) * 0.003;
+
+        // Ultra-clean Chroma-Key Green Removal & Multi-Color Vibrant Spark Grading
+        for (let i = 0; i < l; i += 4) {
+          const r = frame.data[i];
+          const g = frame.data[i + 1];
+          const b = frame.data[i + 2];
+
+          // Green Screen Detection: Green dominates both Red and Blue
+          if (g > 55 && g > r * 1.15 && g > b * 1.15) {
+            const maxRB = Math.max(r, b);
+            const diff = g - maxRB;
+            if (diff > 25) {
+              frame.data[i + 3] = 0; // 100% Transparent
+              continue;
+            } else {
+              frame.data[i + 3] = Math.max(0, 255 - (diff / 25) * 255);
+              frame.data[i + 1] = maxRB; // Remove green fringing on sparks
+            }
+          }
+
+          // Dynamic Multi-Color Festival Grading for Firecracker Sparks & Bursts
+          if (frame.data[i + 3] > 15) {
+            const pixelIdx = i >> 2;
+            const px = pixelIdx % bw;
+            const py = (pixelIdx / bw) | 0;
+            const lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+
+            // Chromatic waves for Gold, Crimson Red, Royal Blue, Emerald, Violet, Cyan
+            const phase = (px / bw) * 4.0 + (py / bh) * 3.0 + timeNow;
+            const cr = 0.5 + 0.5 * Math.sin(phase);
+            const cg = 0.5 + 0.5 * Math.sin(phase + 2.094);
+            const cb = 0.5 + 0.5 * Math.sin(phase + 4.188);
+
+            if (lum > 0.88) {
+              // Super bright hot explosion core: incandescent sparkling gold/white
+              frame.data[i] = Math.min(255, r * 1.05 + cr * 40);
+              frame.data[i + 1] = Math.min(255, g * 1.02 + cg * 35);
+              frame.data[i + 2] = Math.min(255, b * 1.05 + cb * 40);
+            } else {
+              // Firecracker sparks, tails and trails get rich brilliant rainbow colors!
+              frame.data[i] = Math.min(255, Math.floor(lum * cr * 340 + 35));
+              frame.data[i + 1] = Math.min(255, Math.floor(lum * cg * 320 + 25));
+              frame.data[i + 2] = Math.min(255, Math.floor(lum * cb * 360 + 45));
+            }
+          }
+        }
+
+        this.fcBufferCtx.putImageData(frame, 0, 0);
+
+        // Render transparent sparks directly over the 3D scene
+        this.fcCtx.clearRect(0, 0, this.fcCanvas.width, this.fcCanvas.height);
+        this.fcCtx.drawImage(this.fcBufferCanvas, 0, 0, this.fcCanvas.width, this.fcCanvas.height);
+      }
+
+      this.fcAnimFrame = requestAnimationFrame(processChromaFrame);
+    };
+
+    processChromaFrame();
+  }
+
+  stopGreenScreenFirecrackers() {
+    this.isFcPlaying = false;
+    if (this.fcAnimFrame) cancelAnimationFrame(this.fcAnimFrame);
+    if (this.fcVideo) this.fcVideo.pause();
+    if (this.fcCanvas) {
+      this.fcCanvas.classList.remove('active');
+      if (this.fcCtx) this.fcCtx.clearRect(0, 0, this.fcCanvas.width, this.fcCanvas.height);
+    }
+    if (this.onFcComplete) {
+      const cb = this.onFcComplete;
+      this.onFcComplete = null;
+      cb();
+    }
   }
 
   /* =========================================================
@@ -1863,18 +2009,9 @@ class BirthdayScene {
           this.partyFriends.forEach(f => { f.userData.isClapping = true; });
         }
 
-        // 4. Start 3-Second Multi-Color Firecracker Barrage (Red, Blue, Gold, Emerald, Magenta)
-        this.start3SecondFirecrackers();
-
-        // 5. Celebration Banner
-        const banner = document.getElementById('celebration-banner');
-        if (banner) {
-          banner.classList.add('active');
-          setTimeout(() => banner.classList.remove('active'), 4000);
-        }
-
-        // After 3 seconds firecrackers finish -> smoothly return camera to celebration angle (mobile vs desktop)
-        setTimeout(() => {
+        // 4. Start Firecrackers Video and stay on fireworks view until it finishes completely!
+        this.playGreenScreenFirecrackers(null, () => {
+          // Firecrackers have completely finished -> NOW smoothly return camera to celebration angle (mobile vs desktop)
           const grandCam = this.getCelebrationCameraCoords();
           gsap.to(this.camera.position, {
             x: grandCam.pos.x,
@@ -1896,103 +2033,42 @@ class BirthdayScene {
               }, 2000);
             }
           });
-        }, 3200);
+        });
+
+        // 5. Celebration Banner
+        const banner = document.getElementById('celebration-banner');
+        if (banner) {
+          banner.classList.add('active');
+          setTimeout(() => banner.classList.remove('active'), 5000);
+        }
+
+        // 6. Confetti Rain
+        if (window.confetti) {
+          window.confetti({ particleCount: 60, spread: 100, origin: { x: 0.5, y: 0.5 } });
+        }
       });
   }
 
   /* =========================================================
-     3-SECOND MULTI-COLORED FIRECRACKER BARRAGE
+     REAL FIRECRACKERS VIDEO & AUDIO CELEBRATION (EXCLUSIVELY VIDEO)
      ========================================================= */
   start3SecondFirecrackers() {
-    const durationMs = 3000;
-    const intervalMs = 160;
-    const endTime = Date.now() + durationMs;
+    // 1. Play Real Firecrackers Video (1.5s to End) with Authentic Sound
+    this.playGreenScreenFirecrackers(8.0);
 
-    // Explicitly Red, Blue, Gold, Green, Magenta
-    const fireworkColors = [0xff0044, 0x0088ff, 0xffd700, 0x00e676, 0xb721ff, 0xff8c00, 0x00f2fe];
-
-    const barrageInterval = setInterval(() => {
-      if (Date.now() > endTime) {
-        clearInterval(barrageInterval);
-        return;
-      }
-
-      const posX = (Math.random() - 0.5) * 24;
-      const posZ = (Math.random() - 0.5) * 24;
-      const color = fireworkColors[Math.floor(Math.random() * fireworkColors.length)];
-      this.launchFirework(posX, posZ, color);
-
-      if (window.confetti && Math.random() < 0.4) {
-        window.confetti({
-          particleCount: 35,
-          spread: 80,
-          origin: { x: Math.random() * 0.8 + 0.1, y: 0.5 }
-        });
-      }
-    }, intervalMs);
-
-    this.launchFirework(-6, -4, 0xff0044); // Red
-    this.launchFirework(6, -4, 0x0088ff);  // Blue
-    this.launchFirework(0, 5, 0xffd700);   // Gold
-  }
-
-  launchFirework(x, z, color) {
-    if (window.birthdayAudio) window.birthdayAudio.playFirework();
-
-    const startX = x !== undefined ? x : (Math.random() - 0.5) * 20;
-    const startZ = z !== undefined ? z : (Math.random() - 0.5) * 20;
-    const targetY = 12 + Math.random() * 8;
-    const chosenColor = color || 0xffd700;
-
-    const rocket = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    rocket.position.set(startX, 0, startZ);
-    this.scene.add(rocket);
-
-    gsap.to(rocket.position, {
-      y: targetY, duration: 0.75, ease: 'power2.out',
-      onComplete: () => {
-        this.scene.remove(rocket);
-        this.explodeFirework(startX, targetY, startZ, chosenColor);
-      }
-    });
-  }
-
-  explodeFirework(x, y, z, color) {
-    const particles = [];
-    const geo = new THREE.SphereGeometry(0.08, 6, 6);
-
-    for (let i = 0; i < 70; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1 });
-      const p = new THREE.Mesh(geo, mat);
-      p.position.set(x, y, z);
-
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-      const speed = 2.0 + Math.random() * 3.5;
-
-      p.userData = {
-        vel: new THREE.Vector3(speed * Math.sin(phi) * Math.cos(theta), speed * Math.sin(phi) * Math.sin(theta), speed * Math.cos(phi)),
-        gravity: -0.04
-      };
-      this.scene.add(p);
-      particles.push(p);
-    }
-
-    const startTime = performance.now();
-    const updateFirework = () => {
-      const elapsed = (performance.now() - startTime) / 1000;
-      if (elapsed > 1.4) {
-        particles.forEach(p => this.scene.remove(p));
-        return;
-      }
-      particles.forEach(p => {
-        p.position.addScaledVector(p.userData.vel, 0.025);
-        p.userData.vel.y += p.userData.gravity;
-        p.material.opacity = Math.max(0, 1 - elapsed / 1.4);
+    // 2. Celebratory Confetti Rain
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 60,
+        spread: 100,
+        origin: { x: 0.5, y: 0.5 }
       });
-      requestAnimationFrame(updateFirework);
-    };
-    updateFirework();
+    }
+  }
+
+  launchFirework() {
+    // Directly triggers the real firecrackers video
+    this.playGreenScreenFirecrackers(6.0);
   }
 
   /* =========================================================
