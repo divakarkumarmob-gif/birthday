@@ -68,7 +68,9 @@
   <!-- Sparkler Cursor Canvas -->
   <canvas id="sparkler-canvas"></canvas>
 
-  <!-- Main Top Bar (Visible after curtain opens) -->
+  <!-- =========================================================
+       CLEAN TOP BAR (WITH 3-LINE MENU BUTTON)
+       ========================================================= -->
   <header class="top-nav" id="main-top-nav">
     <div class="logo-badge">
       <span class="sparkle-icon">🎂</span>
@@ -76,48 +78,7 @@
     </div>
 
     <div class="nav-actions">
-      <!-- Camera views -->
-      <div class="camera-pill-group">
-        <button class="pill-btn active" id="cam-orbit" title="Free Orbit View"><i class="fa-solid fa-arrows-spin"></i> <span>Orbit</span></button>
-        <button class="pill-btn" id="cam-cake" title="Focus on Cake"><i class="fa-solid fa-cake-candles"></i> <span>Cake</span></button>
-        <button class="pill-btn" id="cam-gift" title="Focus on Gift"><i class="fa-solid fa-gift"></i> <span>Gift</span></button>
-        <button class="pill-btn" id="cam-fireworks" title="Sky Fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Sky</span></button>
-      </div>
-
-      <!-- Feature Toggles Group -->
-      <div class="feature-toggles">
-        <button class="icon-btn" id="btn-disco-mode" title="Toggle Disco Party Mode"><i class="fa-solid fa-compact-disc"></i></button>
-        <button class="icon-btn" id="btn-sparkler-wand" title="Toggle 3D Sparkler Wand"><i class="fa-solid fa-wand-sparkles"></i></button>
-        <button class="icon-btn" id="btn-arcade-game" title="Play Balloon Pop Arcade Game"><i class="fa-solid fa-gamepad"></i></button>
-        <button class="icon-btn" id="btn-sky-lanterns" title="Release Sky Wish Lanterns"><i class="fa-solid fa-fire"></i></button>
-        <button class="icon-btn" id="btn-photo-booth" title="3D Photo Booth & Postcard"><i class="fa-solid fa-camera-retro"></i></button>
-      </div>
-
-      <!-- Theme Switcher -->
-      <div class="theme-dropdown-container">
-        <button class="icon-btn" id="theme-btn" title="Change Theme Palette">
-          <i class="fa-solid fa-palette"></i>
-        </button>
-        <div class="theme-menu" id="theme-menu">
-          <div class="theme-option active" data-theme="midnight-gold">
-            <span class="color-dot" style="background: linear-gradient(135deg, #ffd700, #ff8c00);"></span> Midnight Gold
-          </div>
-          <div class="theme-option" data-theme="rose-glamour">
-            <span class="color-dot" style="background: linear-gradient(135deg, #ff758c, #ff7eb3);"></span> Rose Glamour
-          </div>
-          <div class="theme-option" data-theme="cyber-neon">
-            <span class="color-dot" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></span> Cyber Neon
-          </div>
-          <div class="theme-option" data-theme="cosmic-purple">
-            <span class="color-dot" style="background: linear-gradient(135deg, #b721ff, #21d4fd);"></span> Cosmic Dream
-          </div>
-          <div class="theme-option" data-theme="pastel-rainbow">
-            <span class="color-dot" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);"></span> Pastel Fantasy
-          </div>
-        </div>
-      </div>
-
-      <!-- Audio Controls -->
+      <!-- Quick Music Button -->
       <button class="icon-btn" id="music-toggle-btn" title="Play/Pause Birthday Song">
         <i class="fa-solid fa-music"></i>
         <div class="sound-wave" id="sound-wave">
@@ -125,17 +86,183 @@
         </div>
       </button>
 
-      <!-- Customize Button -->
-      <button class="icon-btn highlight" id="customize-btn" title="Personalize Name, Age & Wishes">
-        <i class="fa-solid fa-pen-nib"></i>
-      </button>
-
-      <!-- Share Button -->
-      <button class="icon-btn" id="share-btn" title="Share Celebration Link & QR Code">
-        <i class="fa-solid fa-share-nodes"></i>
+      <!-- 3-Line Hamburger Menu Button -->
+      <button class="icon-btn menu-toggle-btn highlight" id="main-menu-btn" title="Open Party Menu">
+        <i class="fa-solid fa-bars"></i>
       </button>
     </div>
   </header>
+
+  <!-- =========================================================
+       SLIDING GLASS PARTY MENU DRAWER (ALL OPTIONS INSIDE)
+       ========================================================= -->
+  <div class="menu-drawer-backdrop" id="menu-drawer-backdrop"></div>
+  <aside class="menu-drawer" id="menu-drawer">
+    <div class="menu-drawer-header">
+      <div class="drawer-title">
+        <i class="fa-solid fa-champagne-glasses"></i>
+        <span>Party Menu</span>
+      </div>
+      <button class="drawer-close-btn" id="close-menu-btn">&times;</button>
+    </div>
+
+    <div class="menu-drawer-content">
+      <!-- Section 1: Camera Views -->
+      <div class="drawer-section">
+        <div class="section-tag-row">
+          <span class="section-tag"><i class="fa-solid fa-video"></i> Camera Angles</span>
+          <button class="badge-toggle-btn" id="btn-toggle-cam-inspector"><i class="fa-solid fa-compass"></i> Live Angle Inspector</button>
+        </div>
+        <div class="drawer-pill-grid">
+          <button class="drawer-action-pill active" id="cam-orbit"><i class="fa-solid fa-arrows-spin"></i> <span>Orbit</span></button>
+          <button class="drawer-action-pill" id="cam-cake"><i class="fa-solid fa-cake-candles"></i> <span>Cake Focus</span></button>
+          <button class="drawer-action-pill" id="cam-gift"><i class="fa-solid fa-gift"></i> <span>Gift Focus</span></button>
+          <button class="drawer-action-pill" id="cam-fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Sky View</span></button>
+        </div>
+      </div>
+
+      <!-- Section 2: Party Features & Activities -->
+      <div class="drawer-section">
+        <span class="section-tag"><i class="fa-solid fa-wand-sparkles"></i> Party Activities</span>
+        <div class="drawer-grid">
+          <button class="drawer-feature-btn" id="btn-disco-mode">
+            <div class="feat-icon"><i class="fa-solid fa-compact-disc"></i></div>
+            <div class="feat-info">
+              <strong>Disco Party Mode</strong>
+              <small>Lights & Dance Groove</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-sparkler-wand">
+            <div class="feat-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="feat-info">
+              <strong>3D Sparkler Wand</strong>
+              <small>Draw Glowing Trails</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-arcade-game">
+            <div class="feat-icon"><i class="fa-solid fa-gamepad"></i></div>
+            <div class="feat-info">
+              <strong>Balloon Pop Arcade</strong>
+              <small>30-Sec Mini Game</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-sky-lanterns">
+            <div class="feat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="feat-info">
+              <strong>Sky Wish Lanterns</strong>
+              <small>Release into Night Sky</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-photo-booth">
+            <div class="feat-icon"><i class="fa-solid fa-camera-retro"></i></div>
+            <div class="feat-info">
+              <strong>3D Photo Postcard</strong>
+              <small>Download Snapshot</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 3: Themes -->
+      <div class="drawer-section">
+        <span class="section-tag"><i class="fa-solid fa-palette"></i> Color Themes</span>
+        <div class="drawer-theme-grid">
+          <div class="drawer-theme-pill active" data-theme="midnight-gold">
+            <span class="color-dot" style="background: linear-gradient(135deg, #ffd700, #ff8c00);"></span>
+            <span>Midnight Gold</span>
+          </div>
+          <div class="drawer-theme-pill" data-theme="rose-glamour">
+            <span class="color-dot" style="background: linear-gradient(135deg, #ff758c, #ff7eb3);"></span>
+            <span>Rose Glamour</span>
+          </div>
+          <div class="drawer-theme-pill" data-theme="cyber-neon">
+            <span class="color-dot" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></span>
+            <span>Cyber Neon</span>
+          </div>
+          <div class="drawer-theme-pill" data-theme="cosmic-purple">
+            <span class="color-dot" style="background: linear-gradient(135deg, #b721ff, #21d4fd);"></span>
+            <span>Cosmic Dream</span>
+          </div>
+          <div class="drawer-theme-pill" data-theme="pastel-rainbow">
+            <span class="color-dot" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);"></span>
+            <span>Pastel Fantasy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Actions & Customization -->
+      <div class="drawer-section">
+        <span class="section-tag"><i class="fa-solid fa-gear"></i> Celebration Tools</span>
+        <div class="drawer-actions-row">
+          <button class="drawer-big-btn" id="customize-btn">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span>Personalize</span>
+          </button>
+          <button class="drawer-big-btn" id="share-btn">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>Share & QR</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  <!-- =========================================================
+       LIVE CAMERA DISTANCE & ANGLE TELEMETRY INSPECTOR HUD
+       ========================================================= -->
+  <div class="camera-telemetry-hud show" id="camera-telemetry-hud">
+    <div class="hud-header">
+      <div class="hud-title">
+        <i class="fa-solid fa-compass-drafting"></i>
+        <span>Live Camera Telemetry</span>
+      </div>
+      <button class="hud-close-btn" id="close-hud-btn" title="Hide Inspector">&times;</button>
+    </div>
+
+    <div class="hud-metrics-grid">
+      <div class="metric-box highlight">
+        <span class="metric-label">DISTANCE</span>
+        <strong class="metric-val" id="metric-cam-dist">21.58 u</strong>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">PITCH (POLAR)</span>
+        <strong class="metric-val" id="metric-cam-pitch">67.2°</strong>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">YAW (AZIMUTH)</span>
+        <strong class="metric-val" id="metric-cam-yaw">0.0°</strong>
+      </div>
+    </div>
+
+    <div class="hud-coords-row">
+      <div class="coord-item">
+        <span class="coord-label">Cam Pos:</span>
+        <span class="coord-val" id="metric-cam-pos">X: 0.0, Y: 7.5, Z: 21.0</span>
+      </div>
+      <div class="coord-item">
+        <span class="coord-label">Look At:</span>
+        <span class="coord-val" id="metric-cam-target">X: 0.0, Y: 2.5, Z: 0.0</span>
+      </div>
+    </div>
+
+    <!-- Distance Zoom Slider -->
+    <div class="hud-slider-group">
+      <div class="slider-label-row">
+        <span><i class="fa-solid fa-arrows-left-right-to-line"></i> Distance Slider:</span>
+        <span id="slider-dist-val">21.5 u</span>
+      </div>
+      <input type="range" id="cam-distance-slider" min="4" max="40" step="0.5" value="21.5">
+    </div>
+
+    <div class="hud-actions-row">
+      <button class="btn-hud-copy" id="btn-copy-cam-coords">
+        <i class="fa-solid fa-copy"></i>
+        <span id="copy-cam-text">Copy Angle & Distance</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Center Celebrant Floating Banner -->
   <div class="hero-celebrant-overlay" id="hero-overlay">
@@ -265,18 +392,6 @@
         <button class="btn-primary" id="btn-replay-arcade"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
         <button class="btn-secondary" id="btn-close-arcade-modal">Back to Celebration</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Blow Microphone Detection Bar -->
-  <div class="mic-meter-container" id="mic-meter-container">
-    <div class="mic-meter-header">
-      <i class="fa-solid fa-microphone-lines"></i>
-      <span>Blow into microphone!</span>
-      <button class="text-close-btn" id="close-mic-btn">&times;</button>
-    </div>
-    <div class="mic-meter-track">
-      <div class="mic-meter-fill" id="mic-meter-fill"></div>
     </div>
   </div>
 

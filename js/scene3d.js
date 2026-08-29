@@ -1562,7 +1562,28 @@ class BirthdayScene {
     }
 
     if (this.controls) this.controls.update();
+
+    // Broadcast live camera telemetry for angle & distance inspector HUD
+    if (window.onCameraTelemetryUpdate && this.camera && this.controls) {
+      const dist = this.camera.position.distanceTo(this.controls.target);
+      const polar = this.controls.getPolarAngle() * (180 / Math.PI);
+      const azimuth = this.controls.getAzimuthalAngle() * (180 / Math.PI);
+      window.onCameraTelemetryUpdate({
+        distance: dist,
+        pitch: polar,
+        yaw: azimuth,
+        pos: this.camera.position,
+        target: this.controls.target
+      });
+    }
+
     this.renderer.render(this.scene, this.camera);
+  }
+
+  setCameraDistance(newDist) {
+    if (!this.camera || !this.controls) return;
+    const dir = new THREE.Vector3().subVectors(this.camera.position, this.controls.target).normalize();
+    this.camera.position.copy(this.controls.target).addScaledVector(dir, newDist);
   }
 
   onWindowResize() {

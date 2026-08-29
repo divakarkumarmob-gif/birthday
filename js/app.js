@@ -1,5 +1,5 @@
 /**
- * 3D Birthday Celebration - Main App Controller (Sequential Story Flow)
+ * 3D Birthday Celebration - Main App Controller (Sequential Story Flow + Clean Top Bar)
  * Celebrant: Shubham Sharnam (Age 22)
  */
 
@@ -26,6 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const stepOpenGift = document.getElementById('step-open-gift');
   const freePlayBottomBar = document.getElementById('free-play-bottom-bar');
 
+  // Top Nav & Menu Drawer
+  const mainMenuBtn = document.getElementById('main-menu-btn');
+  const closeMenuBtn = document.getElementById('close-menu-btn');
+  const menuDrawer = document.getElementById('menu-drawer');
+  const menuDrawerBackdrop = document.getElementById('menu-drawer-backdrop');
+
   const displayNameText = document.getElementById('display-name-text');
   const displayAgeBadge = document.getElementById('display-age-badge');
   const celebrantTitle = document.getElementById('celebrant-title');
@@ -33,8 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bannerTitle = document.getElementById('banner-title');
   const musicToggleBtn = document.getElementById('music-toggle-btn');
   const soundWave = document.getElementById('sound-wave');
-  const themeBtn = document.getElementById('theme-btn');
-  const themeMenu = document.getElementById('theme-menu');
+
   const customizeBtn = document.getElementById('customize-btn');
   const customizeModal = document.getElementById('customize-modal');
   const closeCustomizeModal = document.getElementById('close-customize-modal');
@@ -44,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputWish = document.getElementById('input-wish');
   const inputPhoto = document.getElementById('input-photo');
   const photoFilename = document.getElementById('photo-filename');
+
   const shareBtn = document.getElementById('share-btn');
   const shareModal = document.getElementById('share-modal');
   const closeShareModal = document.getElementById('close-share-modal');
@@ -60,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeStarModal = document.getElementById('close-star-modal');
   const btnCloseStarNote = document.getElementById('btn-close-star-note');
 
-  // Feature buttons
+  // Feature buttons (inside drawer)
   const btnDiscoMode = document.getElementById('btn-disco-mode');
   const btnSparklerWand = document.getElementById('btn-sparkler-wand');
   const btnArcadeGame = document.getElementById('btn-arcade-game');
@@ -92,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const postcardPreviewImg = document.getElementById('postcard-preview-img');
   const btnDownloadPostcard = document.getElementById('btn-download-postcard');
 
-  // Camera buttons
+  // Camera buttons (inside drawer)
   const camPills = {
     orbit: document.getElementById('cam-orbit'),
     cake: document.getElementById('cam-cake'),
@@ -106,6 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
     sparklerCanvas.width = window.innerWidth;
     sparklerCanvas.height = window.innerHeight;
   }
+
+  /* =========================================================
+     MENU DRAWER CONTROLS (3-LINE HAMBURGER)
+     ========================================================= */
+  function openMenuDrawer() {
+    menuDrawer.classList.add('open');
+    menuDrawerBackdrop.classList.add('show');
+  }
+
+  function closeMenuDrawer() {
+    menuDrawer.classList.remove('open');
+    menuDrawerBackdrop.classList.remove('show');
+  }
+
+  mainMenuBtn.addEventListener('click', openMenuDrawer);
+  closeMenuBtn.addEventListener('click', closeMenuDrawer);
+  menuDrawerBackdrop.addEventListener('click', closeMenuDrawer);
 
   /* =========================================================
      STEP 1: INTRO CURTAIN OPEN ACTION
@@ -242,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.className = `theme-${themeName}`;
     scene.setTheme(themeName);
 
-    document.querySelectorAll('.theme-option').forEach(opt => {
+    document.querySelectorAll('.drawer-theme-pill').forEach(opt => {
       if (opt.getAttribute('data-theme') === themeName) {
         opt.classList.add('active');
       } else {
@@ -251,21 +274,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  themeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    themeMenu.classList.toggle('show');
-  });
-
-  document.querySelectorAll('.theme-option').forEach(opt => {
+  document.querySelectorAll('.drawer-theme-pill').forEach(opt => {
     opt.addEventListener('click', () => {
       const theme = opt.getAttribute('data-theme');
       applyTheme(theme);
-      themeMenu.classList.remove('show');
     });
-  });
-
-  document.addEventListener('click', () => {
-    themeMenu.classList.remove('show');
   });
 
   /* =========================================================
@@ -281,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =========================================================
-     CAMERA VIEWS
+     CAMERA VIEWS (DRAWER)
      ========================================================= */
   Object.keys(camPills).forEach(key => {
     const btn = camPills[key];
@@ -290,12 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(camPills).forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         scene.setCameraView(key);
+        closeMenuDrawer();
       });
     }
   });
 
   /* =========================================================
-     FEATURE TOGGLES
+     FEATURE TOGGLES (DRAWER)
      ========================================================= */
   btnDiscoMode.addEventListener('click', () => {
     const isActive = scene.toggleDiscoMode();
@@ -309,13 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnSkyLanterns.addEventListener('click', () => {
+    closeMenuDrawer();
     scene.setCameraView('fireworks');
     Object.values(camPills).forEach(b => b.classList.remove('active'));
-    camPills.fireworks.classList.add('active');
+    if (camPills.fireworks) camPills.fireworks.classList.add('active');
     scene.start3SecondFirecrackers();
   });
 
   btnPhotoBooth.addEventListener('click', () => {
+    closeMenuDrawer();
     generatePostcard();
   });
 
@@ -365,11 +381,14 @@ document.addEventListener('DOMContentLoaded', () => {
   closePhotoModal.addEventListener('click', () => photoBoothModal.classList.remove('show'));
 
   // Arcade Game
-  btnArcadeGame.addEventListener('click', () => startArcadeGame());
+  btnArcadeGame.addEventListener('click', () => {
+    closeMenuDrawer();
+    startArcadeGame();
+  });
 
   function startArcadeGame() {
-    arcadeScore = 0;
-    arcadeCombo = 1;
+    let arcadeScore = 0;
+    let arcadeCombo = 1;
     let arcadeTimeLeft = 30;
 
     arcadeScoreVal.textContent = '0000';
@@ -413,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnLaunchFireworks.addEventListener('click', () => {
     scene.setCameraView('fireworks');
     Object.values(camPills).forEach(b => b.classList.remove('active'));
-    camPills.fireworks.classList.add('active');
+    if (camPills.fireworks) camPills.fireworks.classList.add('active');
     scene.start3SecondFirecrackers();
   });
 
@@ -426,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnOpenGift.addEventListener('click', () => {
     scene.setCameraView('gift');
     Object.values(camPills).forEach(b => b.classList.remove('active'));
-    camPills.gift.classList.add('active');
+    if (camPills.gift) camPills.gift.classList.add('active');
     scene.openGift();
   });
 
@@ -438,14 +457,17 @@ document.addEventListener('DOMContentLoaded', () => {
   btnBlowCandles.addEventListener('click', () => {
     scene.setCameraView('cake');
     Object.values(camPills).forEach(b => b.classList.remove('active'));
-    camPills.cake.classList.add('active');
+    if (camPills.cake) camPills.cake.classList.add('active');
     scene.start3SecondFirecrackers();
   });
 
   /* =========================================================
      MODAL CONTROLS & FORMS
      ========================================================= */
-  customizeBtn.addEventListener('click', () => customizeModal.classList.add('show'));
+  customizeBtn.addEventListener('click', () => {
+    closeMenuDrawer();
+    customizeModal.classList.add('show');
+  });
   closeCustomizeModal.addEventListener('click', () => customizeModal.classList.remove('show'));
 
   customizeForm.addEventListener('submit', (e) => {
@@ -483,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseStarNote.addEventListener('click', () => starNoteModal.classList.remove('show'));
 
   shareBtn.addEventListener('click', () => {
+    closeMenuDrawer();
     const shareUrl = generateShareUrl();
     shareLinkInput.value = shareUrl;
     copyFeedback.classList.remove('show');
@@ -510,6 +533,77 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => copyFeedback.classList.remove('show'), 3000);
     });
   });
+
+  /* =========================================================
+     LIVE CAMERA TELEMETRY INSPECTOR HUD LOGIC
+     ========================================================= */
+  const btnToggleCamInspector = document.getElementById('btn-toggle-cam-inspector');
+  const cameraTelemetryHud = document.getElementById('camera-telemetry-hud');
+  const closeHudBtn = document.getElementById('close-hud-btn');
+  const metricCamDist = document.getElementById('metric-cam-dist');
+  const metricCamPitch = document.getElementById('metric-cam-pitch');
+  const metricCamYaw = document.getElementById('metric-cam-yaw');
+  const metricCamPos = document.getElementById('metric-cam-pos');
+  const metricCamTarget = document.getElementById('metric-cam-target');
+  const camDistanceSlider = document.getElementById('cam-distance-slider');
+  const sliderDistVal = document.getElementById('slider-dist-val');
+  const btnCopyCamCoords = document.getElementById('btn-copy-cam-coords');
+  const copyCamText = document.getElementById('copy-cam-text');
+
+  let currentTelemetry = null;
+
+  if (btnToggleCamInspector) {
+    btnToggleCamInspector.addEventListener('click', () => {
+      cameraTelemetryHud.classList.toggle('show');
+      closeMenuDrawer();
+    });
+  }
+
+  if (closeHudBtn) {
+    closeHudBtn.addEventListener('click', () => {
+      cameraTelemetryHud.classList.remove('show');
+    });
+  }
+
+  window.onCameraTelemetryUpdate = (data) => {
+    currentTelemetry = data;
+    if (!cameraTelemetryHud.classList.contains('show')) return;
+
+    metricCamDist.textContent = `${data.distance.toFixed(1)} u`;
+    metricCamPitch.textContent = `${data.pitch.toFixed(1)}°`;
+    metricCamYaw.textContent = `${data.yaw.toFixed(1)}°`;
+
+    metricCamPos.textContent = `X: ${data.pos.x.toFixed(1)}, Y: ${data.pos.y.toFixed(1)}, Z: ${data.pos.z.toFixed(1)}`;
+    metricCamTarget.textContent = `X: ${data.target.x.toFixed(1)}, Y: ${data.target.y.toFixed(1)}, Z: ${data.target.z.toFixed(1)}`;
+
+    if (document.activeElement !== camDistanceSlider) {
+      camDistanceSlider.value = data.distance;
+      sliderDistVal.textContent = `${data.distance.toFixed(1)} u`;
+    }
+  };
+
+  if (camDistanceSlider) {
+    camDistanceSlider.addEventListener('input', (e) => {
+      const dist = parseFloat(e.target.value);
+      sliderDistVal.textContent = `${dist.toFixed(1)} u`;
+      scene.setCameraDistance(dist);
+    });
+  }
+
+  if (btnCopyCamCoords) {
+    btnCopyCamCoords.addEventListener('click', () => {
+      if (!currentTelemetry) return;
+      const t = currentTelemetry;
+      const textToCopy = `camera: { x: ${t.pos.x.toFixed(2)}, y: ${t.pos.y.toFixed(2)}, z: ${t.pos.z.toFixed(2)} }, target: { x: ${t.target.x.toFixed(2)}, y: ${t.target.y.toFixed(2)}, z: ${t.target.z.toFixed(2)} }, distance: ${t.distance.toFixed(1)}, pitch: ${t.pitch.toFixed(1)}°, yaw: ${t.yaw.toFixed(1)}°`;
+      
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        copyCamText.textContent = "✅ Copied to Clipboard!";
+        setTimeout(() => {
+          copyCamText.textContent = "Copy Angle & Distance";
+        }, 2500);
+      });
+    });
+  }
 
   [customizeModal, shareModal, giftModal, arcadeOverModal, photoBoothModal, starNoteModal].forEach(modal => {
     if (modal) {
