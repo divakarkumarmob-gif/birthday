@@ -742,18 +742,46 @@ class BirthdayScene {
     this.candlesLit = true;
     if (window.birthdayAudio) window.birthdayAudio.playSparklerCrackle();
 
-    this.flames.forEach(item => {
+    this.flames.forEach((item, idx) => {
       item.flame.visible = true;
       item.core.visible = true;
-      gsap.fromTo(item.flame.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, duration: 0.5, ease: 'back.out(2)' });
+      if (item.halo) item.halo.visible = true;
+
+      item.flame.scale.set(1, 1, 1);
+      item.core.scale.set(1, 1, 1);
+      if (item.halo) item.halo.scale.set(1, 1, 1);
+
+      // Spawn 15 golden ignition sparks around each candle flame
+      const sparkGeo = new THREE.SphereGeometry(0.04, 6, 6);
+      const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+      for (let s = 0; s < 12; s++) {
+        const spark = new THREE.Mesh(sparkGeo, sparkMat);
+        const candleWorldPos = new THREE.Vector3();
+        this.candles[idx].getWorldPosition(candleWorldPos);
+        spark.position.set(
+          candleWorldPos.x + (Math.random() - 0.5) * 0.2,
+          candleWorldPos.y + 1.4 + Math.random() * 0.2,
+          candleWorldPos.z + (Math.random() - 0.5) * 0.2
+        );
+        this.scene.add(spark);
+
+        gsap.to(spark.position, {
+          x: spark.position.x + (Math.random() - 0.5) * 0.8,
+          y: spark.position.y + 0.6 + Math.random() * 0.5,
+          z: spark.position.z + (Math.random() - 0.5) * 0.8,
+          duration: 0.6 + Math.random() * 0.4,
+          ease: 'power1.out',
+          onComplete: () => this.scene.remove(spark)
+        });
+      }
     });
 
     this.candleLights.forEach(light => {
-      gsap.to(light, { intensity: 1.2, duration: 0.5 });
+      gsap.to(light, { intensity: 2.5, duration: 0.4 });
     });
 
     if (window.confetti) {
-      window.confetti({ particleCount: 40, spread: 70, origin: { y: 0.5 } });
+      window.confetti({ particleCount: 50, spread: 75, origin: { y: 0.55 } });
     }
   }
 
@@ -1268,13 +1296,13 @@ class BirthdayScene {
     // 2. Candle Flames Flicker (When Lit)
     if (this.candlesLit) {
       this.flames.forEach((item, idx) => {
-        const flicker = Math.sin(time * 15 + idx * 2.5) * 0.08 + Math.cos(time * 22 + idx) * 0.04;
-        item.flame.scale.y = 1.0 + flicker;
-        item.flame.scale.x = 1.0 - flicker * 0.5;
-        item.flame.scale.z = 1.0 - flicker * 0.5;
+        const flicker = Math.sin(time * 16 + idx * 3.0) * 0.12 + Math.cos(time * 24 + idx) * 0.06;
+        item.flame.scale.set(1.0 - flicker * 0.4, 1.0 + flicker, 1.0 - flicker * 0.4);
+        item.core.scale.set(1.0 - flicker * 0.3, 1.0 + flicker * 0.8, 1.0 - flicker * 0.3);
+        if (item.halo) item.halo.scale.set(1.0 + flicker * 0.35, 1.0 + flicker * 0.35, 1.0 + flicker * 0.35);
       });
       this.candleLights.forEach((light, idx) => {
-        light.intensity = 1.0 + Math.sin(time * 20 + idx) * 0.2;
+        light.intensity = 2.4 + Math.sin(time * 18 + idx) * 0.6;
       });
     }
 
