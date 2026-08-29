@@ -1,5 +1,5 @@
 /* =========================================================
-   3D BIRTHDAY CELEBRATION - STYLESHEET (FULL SUITE)
+   3D BIRTHDAY CELEBRATION - STYLESHEET (STORY WORKFLOW)
    ========================================================= */
 
 :root {
@@ -82,6 +82,288 @@ body {
   background: var(--bg-gradient);
   color: var(--text-main);
   position: relative;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =========================================================
+   STEP 1: ROYAL INTRO CURTAINS
+   ========================================================= */
+.curtain-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: visibility 1.8s;
+}
+
+.curtain-container.opened {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.curtain {
+  width: 50vw;
+  height: 100vh;
+  position: relative;
+  background: linear-gradient(135deg, #780206 0%, #460002 60%, #200001 100%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.85);
+  transition: transform 1.6s cubic-bezier(0.77, 0, 0.175, 1);
+  display: flex;
+}
+
+.curtain-left {
+  border-right: 4px solid #ffd700;
+  transform: translateX(0);
+}
+
+.curtain-right {
+  border-left: 4px solid #ffd700;
+  transform: translateX(0);
+}
+
+.curtain-container.opened .curtain-left {
+  transform: translateX(-105%);
+}
+
+.curtain-container.opened .curtain-right {
+  transform: translateX(105%);
+}
+
+/* Rich Velvet Folds */
+.curtain-fold {
+  flex: 1;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.5) 50%, rgba(255,255,255,0.08) 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.curtain-fringe {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, #ffd700, #ff8c00 10px, #b8860b 20px);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+}
+
+/* Curtain Intro Content Card */
+.curtain-intro-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1010;
+  text-align: center;
+  background: rgba(15, 8, 28, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 2px solid var(--primary-accent);
+  padding: 44px 50px;
+  border-radius: 32px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 40px var(--accent-glow);
+  max-width: 580px;
+  width: 90%;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.curtain-container.opened .curtain-intro-content {
+  opacity: 0;
+  transform: translate(-50%, -60%) scale(0.9);
+  pointer-events: none;
+}
+
+.intro-sparkle-badge {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--primary-accent);
+  margin-bottom: 12px;
+}
+
+.intro-headline {
+  font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #ffffff 10%, var(--primary-accent) 70%, var(--secondary-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+.intro-subtext {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+.btn-celebrate-intro {
+  background: var(--btn-gradient);
+  color: var(--btn-text);
+  border: none;
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 1.2rem;
+  padding: 16px 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 10px 35px var(--accent-glow);
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-celebrate-intro:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 15px 45px var(--accent-glow);
+}
+
+.btn-celebrate-intro:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  animation: shine 2.8s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  40%, 100% { left: 180%; }
+}
+
+/* =========================================================
+   GUIDED STEP STORY DOCK
+   ========================================================= */
+.guided-story-bar {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  max-width: 92vw;
+  pointer-events: auto;
+}
+
+.story-step-card {
+  background: rgba(15, 10, 30, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--primary-accent);
+  border-radius: 20px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 10px 40px var(--accent-glow);
+  animation: popIn 0.4s ease-out;
+}
+
+.step-icon-anim {
+  font-size: 2rem;
+  animation: bounce 1.2s infinite;
+}
+
+.step-details {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.step-details strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+}
+
+.step-details span {
+  font-size: 0.86rem;
+  color: #ffffff;
+}
+
+/* Guided Action Button (Burn Candle, Cut Cake, Open Gift) */
+.guided-action-btn {
+  background: var(--btn-gradient);
+  color: var(--btn-text);
+  border: none;
+  padding: 14px 32px;
+  border-radius: 22px;
+  font-family: var(--font-main);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 40px var(--accent-glow);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: popIn 0.4s ease-out;
+}
+
+.guided-action-btn i {
+  font-size: 1.6rem;
+}
+
+.guided-action-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 16px 50px var(--accent-glow);
+}
+
+.guided-action-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-glow-pulse {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { opacity: 0.1; }
+  100% { opacity: 0.5; }
+}
+
+.btn-content-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  z-index: 1;
+}
+
+.btn-content-text strong {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.btn-content-text small {
+  font-size: 0.76rem;
+  opacity: 0.85;
 }
 
 /* 3D Canvas */
@@ -378,32 +660,10 @@ body.disco-active .disco-overlay {
   box-shadow: 0 0 8px rgba(0,0,0,0.5);
 }
 
-/* Interaction Hint */
-.interaction-hint {
-  position: absolute;
-  top: 72px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10, 8, 20, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 18px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-}
-
 /* Hero Celebrant Overlay */
 .hero-celebrant-overlay {
   position: absolute;
-  top: 18%;
+  top: 17%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
@@ -423,7 +683,7 @@ body.disco-active .disco-overlay {
 }
 
 .celebrant-name-display {
-  font-size: clamp(2.4rem, 6vw, 4.5rem);
+  font-size: clamp(2.2rem, 5.5vw, 4.2rem);
   font-weight: 900;
   letter-spacing: 1.5px;
   display: inline-flex;
@@ -453,7 +713,7 @@ body.disco-active .disco-overlay {
   display: inline-block;
 }
 
-/* Bottom Action Bar */
+/* Bottom Action Bar (Free play) */
 .bottom-action-bar {
   position: absolute;
   bottom: 24px;
@@ -542,9 +802,7 @@ body.disco-active .disco-overlay {
   color: var(--text-muted);
 }
 
-/* =========================================================
-   ARCADE MINI-GAME HUD
-   ========================================================= */
+/* Arcade Mini-Game HUD */
 .arcade-hud {
   position: absolute;
   top: 80px;
@@ -701,9 +959,7 @@ body.disco-active .disco-overlay {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* =========================================================
-   QR CODE & SHARE MODAL
-   ========================================================= */
+/* QR Code & Share Modal */
 .qrcode-wrapper {
   background: #ffffff;
   padding: 16px;
@@ -717,9 +973,7 @@ body.disco-active .disco-overlay {
   margin: 0 auto;
 }
 
-/* =========================================================
-   PHOTO BOOTH POSTCARD MODAL
-   ========================================================= */
+/* Photo Booth Postcard Modal */
 .photo-booth-card {
   max-width: 540px;
   text-align: center;
@@ -750,9 +1004,7 @@ body.disco-active .disco-overlay {
   display: block;
 }
 
-/* =========================================================
-   WISH STAR CARD
-   ========================================================= */
+/* Wish Star Card */
 .star-card {
   text-align: center;
 }
@@ -1089,7 +1341,7 @@ body.disco-active .disco-overlay {
 /* Grand Celebration Banner */
 .celebration-banner {
   position: fixed;
-  top: 30%;
+  top: 28%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.5);
   background: rgba(15, 10, 30, 0.92);
@@ -1162,8 +1414,8 @@ body.disco-active .disco-overlay {
   .camera-pill-group .pill-btn {
     padding: 6px 10px;
   }
-  .bottom-action-bar {
-    bottom: 12px;
+  .guided-story-bar, .bottom-action-bar {
+    bottom: 14px;
     gap: 8px;
     flex-wrap: wrap;
     justify-content: center;
@@ -1183,9 +1435,6 @@ body.disco-active .disco-overlay {
   }
   .action-text strong {
     font-size: 0.82rem;
-  }
-  .interaction-hint {
-    display: none;
   }
   .hero-celebrant-overlay {
     top: 24%;

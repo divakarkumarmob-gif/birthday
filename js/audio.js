@@ -166,33 +166,44 @@ class BirthdayAudio {
     this.isDiscoPlaying = true;
     let step = 0;
     const bassline = ['C3', 'C3', 'Eb3', 'F3', 'G3', 'G3', 'Bb3', 'G3'];
+    const chordChimes = [
+      ['C4', 'E4', 'G4'],
+      ['C4', 'E4', 'G4'],
+      ['Eb4', 'G4', 'Bb4'],
+      ['F4', 'A4', 'C5'],
+      ['G4', 'B4', 'D5'],
+      ['G4', 'B4', 'D5'],
+      ['Bb4', 'D5', 'F5'],
+      ['G4', 'B4', 'D5']
+    ];
 
     const playBeat = () => {
       if (!this.isDiscoPlaying || !this.ctx) return;
+      if (this.ctx.state === 'suspended') this.ctx.resume();
       const now = this.ctx.currentTime;
 
-      // 4-on-the-floor Kick
+      // 4-on-the-floor Punchy Kick
       const kickOsc = this.ctx.createOscillator();
       const kickGain = this.ctx.createGain();
-      kickOsc.frequency.setValueAtTime(150, now);
-      kickOsc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
-      kickGain.gain.setValueAtTime(0.7, now);
-      kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+      kickOsc.frequency.setValueAtTime(160, now);
+      kickOsc.frequency.exponentialRampToValueAtTime(35, now + 0.14);
+      kickGain.gain.setValueAtTime(0.8, now);
+      kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
       kickOsc.connect(kickGain);
       kickGain.connect(this.masterGain);
       kickOsc.start(now);
-      kickOsc.stop(now + 0.12);
+      kickOsc.stop(now + 0.14);
 
       // Hi-hat on off-beats
       if (step % 2 === 1) {
-        const hatBuf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.04, this.ctx.sampleRate);
+        const hatBuf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
         const data = hatBuf.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.35;
         const hat = this.ctx.createBufferSource();
         hat.buffer = hatBuf;
         const hatFilter = this.ctx.createBiquadFilter();
         hatFilter.type = 'highpass';
-        hatFilter.frequency.value = 7000;
+        hatFilter.frequency.value = 6500;
         hat.connect(hatFilter);
         hatFilter.connect(this.masterGain);
         hat.start(now);
@@ -205,18 +216,27 @@ class BirthdayAudio {
       const bassGain = this.ctx.createGain();
       bassOsc.type = 'sawtooth';
       bassOsc.frequency.setValueAtTime(bassFreq, now);
-      bassGain.gain.setValueAtTime(0.25, now);
+      bassGain.gain.setValueAtTime(0.35, now);
       bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
       bassOsc.connect(bassGain);
       bassGain.connect(this.masterGain);
       bassOsc.start(now);
       bassOsc.stop(now + 0.22);
 
+      // Disco synth chord stabs on off-beats (step 2 & 6)
+      if (step % 4 === 2) {
+        const chord = chordChimes[step % chordChimes.length];
+        chord.forEach(n => {
+          this.playChimeTone(this.getFreq(n), now, 0.2, 0.2);
+        });
+      }
+
       step++;
     };
 
     if (this.discoInterval) clearInterval(this.discoInterval);
-    this.discoInterval = setInterval(playBeat, 250); // 120 BPM 8th notes
+    playBeat();
+    this.discoInterval = setInterval(playBeat, 240);
   }
 
   // FX: Balloon Pop Sound

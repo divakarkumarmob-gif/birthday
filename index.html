@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>✨ 3D Birthday Celebration Experience 🎉</title>
-  <meta name="description" content="An interactive 3D birthday celebration with realistic cake, blowable candles, popping balloons, surprise gifts, games, sparklers, and fireworks!">
+  <title>✨ Happy Birthday Shubham Sharnam! 🎉</title>
+  <meta name="description" content="An interactive 3D birthday celebration story for Shubham Sharnam (Age 22) with royal curtain reveal, balloon bursting, cake cutting, fireworks, and gifts!">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,36 @@
 </head>
 <body class="theme-midnight-gold">
 
+  <!-- =========================================================
+       STEP 1: ROYAL CURTAIN WELCOME INTRO SCREEN
+       ========================================================= -->
+  <div class="curtain-container" id="curtain-container">
+    <div class="curtain curtain-left" id="curtain-left">
+      <div class="curtain-fold"></div>
+      <div class="curtain-fold"></div>
+      <div class="curtain-fold"></div>
+      <div class="curtain-fringe"></div>
+    </div>
+    <div class="curtain curtain-right" id="curtain-right">
+      <div class="curtain-fold"></div>
+      <div class="curtain-fold"></div>
+      <div class="curtain-fold"></div>
+      <div class="curtain-fringe"></div>
+    </div>
+
+    <!-- Intro Card on Curtains -->
+    <div class="curtain-intro-content" id="curtain-intro-content">
+      <div class="intro-sparkle-badge">✨ SPECIAL CELEBRATION ✨</div>
+      <h1 class="intro-headline">It seems today is your birthday!</h1>
+      <p class="intro-subtext">A magical 3D surprise has been crafted specially for you...</p>
+      
+      <button class="btn-celebrate-intro" id="btn-start-celebration">
+        <span class="btn-shine"></span>
+        <i class="fa-solid fa-sparkles"></i> Let's Celebrate 🎉
+      </button>
+    </div>
+  </div>
+
   <!-- 3D WebGL Canvas Container -->
   <div id="canvas-container"></div>
 
@@ -38,11 +68,11 @@
   <!-- Sparkler Cursor Canvas -->
   <canvas id="sparkler-canvas"></canvas>
 
-  <!-- Main Top Bar -->
-  <header class="top-nav">
+  <!-- Main Top Bar (Visible after curtain opens) -->
+  <header class="top-nav" id="main-top-nav">
     <div class="logo-badge">
       <span class="sparkle-icon">🎂</span>
-      <span class="logo-title" id="celebrant-title">Happy Birthday!</span>
+      <span class="logo-title" id="celebrant-title">Happy Birthday Shubham!</span>
     </div>
 
     <div class="nav-actions">
@@ -59,7 +89,6 @@
         <button class="icon-btn" id="btn-disco-mode" title="Toggle Disco Party Mode"><i class="fa-solid fa-compact-disc"></i></button>
         <button class="icon-btn" id="btn-sparkler-wand" title="Toggle 3D Sparkler Wand"><i class="fa-solid fa-wand-sparkles"></i></button>
         <button class="icon-btn" id="btn-arcade-game" title="Play Balloon Pop Arcade Game"><i class="fa-solid fa-gamepad"></i></button>
-        <button class="icon-btn" id="btn-slice-cake" title="Slice the Cake"><i class="fa-solid fa-utensils"></i></button>
         <button class="icon-btn" id="btn-sky-lanterns" title="Release Sky Wish Lanterns"><i class="fa-solid fa-fire"></i></button>
         <button class="icon-btn" id="btn-photo-booth" title="3D Photo Booth & Postcard"><i class="fa-solid fa-camera-retro"></i></button>
       </div>
@@ -108,22 +137,61 @@
     </div>
   </header>
 
-  <!-- Interactive Hint / Tooltip Bubble -->
-  <div class="interaction-hint" id="interaction-hint">
-    <i class="fa-solid fa-hand-pointer"></i> <span>Drag to rotate • Tap balloons or stars to explore • Click top icons for games & disco!</span>
-  </div>
-
   <!-- Center Celebrant Floating Banner -->
   <div class="hero-celebrant-overlay" id="hero-overlay">
     <div class="wish-subtitle" id="wish-subtitle">Wishing You a Wonderful Year Ahead!</div>
     <h1 class="celebrant-name-display" id="name-display">
-      <span class="gradient-text" id="display-name-text">Alex</span>
-      <span class="age-badge" id="display-age-badge">24</span>
+      <span class="gradient-text" id="display-name-text">Shubham Sharnam</span>
+      <span class="age-badge" id="display-age-badge">22</span>
     </h1>
   </div>
 
-  <!-- Bottom Action Control Bar -->
-  <div class="bottom-action-bar">
+  <!-- =========================================================
+       GUIDED STEP STORY DOCK (DYNAMIC WORKFLOW)
+       ========================================================= -->
+  <div class="guided-story-bar" id="guided-story-bar">
+    <!-- Step 2: Burst Balloons Notice -->
+    <div class="story-step-card" id="step-burst-balloons">
+      <div class="step-icon-anim">🎈</div>
+      <div class="step-details">
+        <strong>Cake is hidden under the cloth!</strong>
+        <span id="balloon-count-text">To remove cloth, burst all balloons on the table! 🎈 (5 remaining)</span>
+      </div>
+    </div>
+
+    <!-- Step 3: Burn Candle Button -->
+    <button class="guided-action-btn hidden" id="step-burn-candles">
+      <div class="btn-glow-pulse"></div>
+      <i class="fa-solid fa-fire-flame-curved"></i>
+      <div class="btn-content-text">
+        <strong>Burn Candles</strong>
+        <small>Light up the 22 candles</small>
+      </div>
+    </button>
+
+    <!-- Step 4: Cut the Cake Button -->
+    <button class="guided-action-btn hidden" id="step-cut-cake">
+      <div class="btn-glow-pulse"></div>
+      <i class="fa-solid fa-cake-candles"></i>
+      <div class="btn-content-text">
+        <strong>Cut the Cake 🍰</strong>
+        <small>Start music & 3s fireworks</small>
+      </div>
+    </button>
+
+    <!-- Step 5: Open Mystery Gift Button -->
+    <button class="guided-action-btn hidden" id="step-open-gift">
+      <div class="btn-glow-pulse"></div>
+      <i class="fa-solid fa-gift"></i>
+      <div class="btn-content-text">
+        <strong>Open Gift Box 🎁</strong>
+        <small>Reveal special greeting</small>
+      </div>
+    </button>
+  </div>
+
+  <!-- Free Play Bottom Control Bar (Unlocked after story flow) -->
+  <div class="bottom-action-bar hidden" id="free-play-bottom-bar">
     <button class="action-card-btn action-blow" id="btn-blow-candles">
       <div class="btn-glow"></div>
       <div class="action-icon"><i class="fa-solid fa-wind"></i></div>
@@ -138,7 +206,7 @@
       <div class="action-icon"><i class="fa-solid fa-sparkles"></i></div>
       <div class="action-text">
         <strong>Launch Fireworks</strong>
-        <small>Light up sky</small>
+        <small>3s Multi-color sky blast</small>
       </div>
     </button>
 
@@ -218,10 +286,10 @@
       <button class="modal-close" id="close-gift-modal">&times;</button>
       <div class="card-ribbon-decor">🎀</div>
       <div class="card-header-icon">🎉</div>
-      <h2 class="card-title">A Special Birthday Wish For You!</h2>
+      <h2 class="card-title">Happy 22nd Birthday Shubham!</h2>
       <div class="card-divider"></div>
       <p class="custom-wish-text" id="gift-custom-wish">
-        "May your day be filled with infinite joy, laughter, wonderful surprises, and all your biggest dreams coming true! Happy Birthday!"
+        "May your 22nd year be filled with infinite success, joy, unforgettable moments, and all your dreams coming true! Happy Birthday Shubham Sharnam!"
       </p>
       <div class="card-signature">
         <span>With all our love & best wishes ❤️</span>
@@ -237,10 +305,10 @@
     <div class="modal-card star-card">
       <button class="modal-close" id="close-star-modal">&times;</button>
       <div class="star-decor-icon">⭐</div>
-      <h2 class="card-title" id="star-author">Wish From a Friend</h2>
+      <h2 class="card-title" id="star-author">Wish For Shubham</h2>
       <div class="card-divider"></div>
       <p class="custom-wish-text" id="star-message">
-        "Wishing you a year ahead filled with happiness, adventures, and endless milestones! Keep shining bright!"
+        "Wishing you a year ahead filled with happiness, adventures, and endless milestones! Keep shining bright Shubham!"
       </p>
       <div class="card-actions">
         <button class="btn-primary" id="btn-close-star-note"><i class="fa-solid fa-heart"></i> Thank You!</button>
@@ -258,17 +326,17 @@
       <form id="customize-form">
         <div class="form-group">
           <label for="input-name"><i class="fa-solid fa-user"></i> Celebrant Name</label>
-          <input type="text" id="input-name" placeholder="e.g. Sophia, David, Mom" value="Alex" maxlength="20" required>
+          <input type="text" id="input-name" placeholder="e.g. Shubham Sharnam" value="Shubham Sharnam" maxlength="24" required>
         </div>
 
         <div class="form-group">
           <label for="input-age"><i class="fa-solid fa-cake-candles"></i> Age (Shows 3D numeric candles!)</label>
-          <input type="number" id="input-age" placeholder="e.g. 24" value="24" min="1" max="120">
+          <input type="number" id="input-age" placeholder="e.g. 22" value="22" min="1" max="120">
         </div>
 
         <div class="form-group">
           <label for="input-wish"><i class="fa-solid fa-heart"></i> Heartfelt Birthday Message</label>
-          <textarea id="input-wish" rows="3" placeholder="Write your personalized wish here...">May your day be filled with infinite joy, laughter, wonderful surprises, and all your biggest dreams coming true! Happy Birthday!</textarea>
+          <textarea id="input-wish" rows="3" placeholder="Write your personalized wish here...">May your 22nd year be filled with infinite success, joy, unforgettable moments, and all your dreams coming true! Happy Birthday Shubham Sharnam!</textarea>
         </div>
 
         <div class="form-group">
@@ -297,7 +365,6 @@
       <h2>Share & Scan Celebration</h2>
       <p>Scan the QR code with any mobile camera or copy the link below!</p>
       
-      <!-- QR Code Output -->
       <div class="qrcode-wrapper">
         <div id="qrcode-container"></div>
       </div>
@@ -332,9 +399,9 @@
   <!-- Grand Celebration Notification Banner -->
   <div class="celebration-banner" id="celebration-banner">
     <div class="banner-content">
-      <div class="banner-badge">✨ MAKE A WISH! ✨</div>
-      <h2 id="banner-title">HAPPY BIRTHDAY!</h2>
-      <p id="banner-desc">May all your wishes come true!</p>
+      <div class="banner-badge">✨ HAPPY 22ND BIRTHDAY! ✨</div>
+      <h2 id="banner-title">SHUBHAM SHARNAM</h2>
+      <p id="banner-desc">May all your wishes and dreams come true!</p>
     </div>
   </div>
 
