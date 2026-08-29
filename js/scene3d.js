@@ -2083,11 +2083,47 @@ class BirthdayScene {
   /* =========================================================
      REAL FIRECRACKERS VIDEO & AUDIO CELEBRATION (EXCLUSIVELY VIDEO)
      ========================================================= */
-  start3SecondFirecrackers() {
-    // 1. Play Real Firecrackers Video (1.5s to End) with Authentic Sound
-    this.playGreenScreenFirecrackers(8.0);
+  start3SecondFirecrackers(onComplete = null) {
+    // 1. Tilt Camera upwards towards the Sky for Fireworks view
+    gsap.to(this.camera.position, {
+      x: 0.00,
+      y: 15.5,
+      z: 34.0,
+      duration: 1.5,
+      ease: 'power2.inOut'
+    });
+    gsap.to(this.controls.target, {
+      x: 0.00,
+      y: 13.5,
+      z: 0.00,
+      duration: 1.5,
+      ease: 'power2.inOut'
+    });
 
-    // 2. Celebratory Confetti Rain
+    // 2. Play Real Firecrackers Video (7.5s to End) with Authentic Sound
+    this.playGreenScreenFirecrackers(null, () => {
+      // 3. Firecrackers finished -> Smoothly return camera to celebration angle
+      const grandCam = this.getCelebrationCameraCoords();
+      gsap.to(this.camera.position, {
+        x: grandCam.pos.x,
+        y: grandCam.pos.y,
+        z: grandCam.pos.z,
+        duration: 1.6,
+        ease: 'power2.inOut'
+      });
+      gsap.to(this.controls.target, {
+        x: grandCam.target.x,
+        y: grandCam.target.y,
+        z: grandCam.target.z,
+        duration: 1.6,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          if (onComplete) onComplete();
+        }
+      });
+    });
+
+    // 4. Celebratory Confetti Rain
     if (window.confetti) {
       window.confetti({
         particleCount: 60,
@@ -2097,9 +2133,8 @@ class BirthdayScene {
     }
   }
 
-  launchFirework() {
-    // Directly triggers the real firecrackers video
-    this.playGreenScreenFirecrackers(6.0);
+  launchFirework(onComplete = null) {
+    this.start3SecondFirecrackers(onComplete);
   }
 
   /* =========================================================

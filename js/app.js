@@ -354,13 +354,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = new URL(window.location.href);
     url.search = '';
     const params = new URLSearchParams();
-    params.set('name', celebrantName);
-    params.set('age', celebrantAge);
-    params.set('wish', customWish);
-    params.set('theme', activeTheme);
-    if (currentPhotoDataUrl) {
-      params.set('photo', currentPhotoDataUrl);
-    }
+    params.set('name', celebrantName || 'Shubham Sharnam');
+    params.set('age', celebrantAge || '22');
+    params.set('wish', customWish || 'Happy Birthday!');
+    params.set('theme', activeTheme || 'royal-gold');
     url.hash = params.toString();
     return url.toString();
   }
@@ -625,16 +622,20 @@ document.addEventListener('DOMContentLoaded', () => {
     shareLinkInput.value = shareUrl;
     copyFeedback.classList.remove('show');
 
-    if (window.QRCode) {
-      qrcodeContainer.innerHTML = '';
-      qrcodeInstance = new QRCode(qrcodeContainer, {
-        text: shareUrl,
-        width: 170,
-        height: 170,
-        colorDark: "#1a103c",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
+    if (window.QRCode && qrcodeContainer) {
+      try {
+        qrcodeContainer.innerHTML = '';
+        qrcodeInstance = new QRCode(qrcodeContainer, {
+          text: shareUrl,
+          width: 170,
+          height: 170,
+          colorDark: "#1a103c",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch(qrErr) {
+        console.warn('QR Code generation notice:', qrErr);
+      }
     }
     shareModal.classList.add('show');
   });
@@ -643,10 +644,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCopyLink.addEventListener('click', () => {
     shareLinkInput.select();
-    navigator.clipboard.writeText(shareLinkInput.value).then(() => {
+    shareLinkInput.setSelectionRange(0, 99999);
+    try {
+      navigator.clipboard.writeText(shareLinkInput.value).then(() => {
+        copyFeedback.classList.add('show');
+        setTimeout(() => copyFeedback.classList.remove('show'), 3000);
+      }).catch(() => {
+        document.execCommand('copy');
+        copyFeedback.classList.add('show');
+        setTimeout(() => copyFeedback.classList.remove('show'), 3000);
+      });
+    } catch(err) {
+      document.execCommand('copy');
       copyFeedback.classList.add('show');
       setTimeout(() => copyFeedback.classList.remove('show'), 3000);
-    });
+    }
   });
 
   /* =========================================================
