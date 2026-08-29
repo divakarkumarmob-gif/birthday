@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPhotoDataUrl = localStorage.getItem('birthday_custom_photo') || null;
   } catch(e) {}
 
-  function compressImage(img, maxWidth = 320, maxHeight = 420, quality = 0.72) {
+  function compressImage(img, maxWidth = 200, maxHeight = 260, quality = 0.52) {
     const canvas = document.createElement('canvas');
     let width = img.width;
     let height = img.height;
@@ -310,7 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check shared photo in URL hash or localStorage
     let sharedPhoto = params.get('photo');
-    if (!sharedPhoto) {
+    if (sharedPhoto) {
+      currentPhotoDataUrl = sharedPhoto;
+      try {
+        localStorage.setItem('birthday_custom_photo', sharedPhoto);
+      } catch(e) {}
+    } else {
       try {
         sharedPhoto = localStorage.getItem('birthday_custom_photo');
       } catch(e) {}
@@ -350,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function generateShareUrl() {
+  function generateShareUrl(includePhoto = true) {
     const url = new URL(window.location.href);
     url.search = '';
     const params = new URLSearchParams();
@@ -358,6 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
     params.set('age', celebrantAge || '22');
     params.set('wish', customWish || 'Happy Birthday!');
     params.set('theme', activeTheme || 'royal-gold');
+    if (includePhoto && currentPhotoDataUrl) {
+      params.set('photo', currentPhotoDataUrl);
+    }
     url.hash = params.toString();
     return url.toString();
   }
@@ -618,7 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   shareBtn.addEventListener('click', () => {
     closeMenuDrawer();
-    const shareUrl = generateShareUrl();
+    const shareUrl = generateShareUrl(true); // Includes Photo in Link!
+    const qrUrl = generateShareUrl(false); // Clean URL for QR Code
     shareLinkInput.value = shareUrl;
     copyFeedback.classList.remove('show');
 
@@ -626,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         qrcodeContainer.innerHTML = '';
         qrcodeInstance = new QRCode(qrcodeContainer, {
-          text: shareUrl,
+          text: qrUrl,
           width: 170,
           height: 170,
           colorDark: "#1a103c",
