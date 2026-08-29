@@ -239,17 +239,17 @@ class BirthdayAudio {
     this.discoInterval = setInterval(playBeat, 240);
   }
 
-  // FX: Balloon Pop Sound
+  // FX: Balloon Pop Sound (2x Volume & Punchy Snap)
   playBalloonPop() {
     this.init();
     if (this.isMuted) return;
 
     const now = this.ctx.currentTime;
-    const bufferSize = this.ctx.sampleRate * 0.06;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.08);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const output = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.18));
     }
 
     const whiteNoise = this.ctx.createBufferSource();
@@ -257,32 +257,33 @@ class BirthdayAudio {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1200, now);
-    filter.Q.setValueAtTime(3.0, now);
+    filter.frequency.setValueAtTime(1600, now);
+    filter.Q.setValueAtTime(2.2, now);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.7, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+    gain.gain.setValueAtTime(1.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
     whiteNoise.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterGain);
 
+    // Punchy air pressure wave
     const osc = this.ctx.createOscillator();
     const oscGain = this.ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(160, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.09);
 
-    oscGain.gain.setValueAtTime(0.5, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    oscGain.gain.setValueAtTime(1.2, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
 
     osc.connect(oscGain);
     oscGain.connect(this.masterGain);
 
     whiteNoise.start(now);
     osc.start(now);
-    osc.stop(now + 0.08);
+    osc.stop(now + 0.09);
   }
 
   // FX: Real Firecrackers Audio - Exclusively driven by authentic firecrackers video audio track
