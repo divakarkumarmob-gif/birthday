@@ -285,56 +285,189 @@ class BirthdayAudio {
     osc.stop(now + 0.08);
   }
 
-  // FX: Firework Launch & Burst
+  // FX: Realistic Gunpowder Cracker Snap / Patakha Pop
+  playRealCrackerSnap(delay = 0, intensity = 0.7) {
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime + delay;
+
+    // 1. Sharp Gunpowder Transient Noise Burst
+    const bufSize = Math.floor(this.ctx.sampleRate * (0.04 + Math.random() * 0.05));
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.22));
+    }
+    const noiseSource = this.ctx.createBufferSource();
+    noiseSource.buffer = buf;
+
+    const snapFilter = this.ctx.createBiquadFilter();
+    snapFilter.type = 'bandpass';
+    snapFilter.frequency.setValueAtTime(1400 + Math.random() * 1200, now);
+    snapFilter.Q.setValueAtTime(2.5, now);
+
+    const snapGain = this.ctx.createGain();
+    snapGain.gain.setValueAtTime(intensity * 0.8, now);
+    snapGain.gain.exponentialRampToValueAtTime(0.001, now + bufSize / this.ctx.sampleRate);
+
+    noiseSource.connect(snapFilter);
+    snapFilter.connect(snapGain);
+    snapGain.connect(this.masterGain);
+    noiseSource.start(now);
+
+    // 2. Concussive Punch
+    const punch = this.ctx.createOscillator();
+    const punchGain = this.ctx.createGain();
+    punch.type = 'triangle';
+    punch.frequency.setValueAtTime(180 + Math.random() * 60, now);
+    punch.frequency.exponentialRampToValueAtTime(32, now + 0.06);
+
+    punchGain.gain.setValueAtTime(intensity * 0.6, now);
+    punchGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+    punch.connect(punchGain);
+    punchGain.connect(this.masterGain);
+    punch.start(now);
+    punch.stop(now + 0.06);
+  }
+
+  // FX: Authentic Rocket Launch Whistle & Sizzle
+  playRocketWhistle(delay = 0) {
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime + delay;
+
+    // Screaming Whistle resonance
+    const whistleOsc = this.ctx.createOscillator();
+    const whistleFilter = this.ctx.createBiquadFilter();
+    const whistleGain = this.ctx.createGain();
+
+    whistleOsc.type = 'sawtooth';
+    whistleOsc.frequency.setValueAtTime(480, now);
+    whistleOsc.frequency.exponentialRampToValueAtTime(3200 + Math.random() * 600, now + 0.38);
+
+    whistleFilter.type = 'bandpass';
+    whistleFilter.frequency.setValueAtTime(500, now);
+    whistleFilter.frequency.exponentialRampToValueAtTime(3400, now + 0.38);
+    whistleFilter.Q.setValueAtTime(6.0, now);
+
+    whistleGain.gain.setValueAtTime(0.001, now);
+    whistleGain.gain.linearRampToValueAtTime(0.35, now + 0.12);
+    whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    whistleOsc.connect(whistleFilter);
+    whistleFilter.connect(whistleGain);
+    whistleGain.connect(this.masterGain);
+    whistleOsc.start(now);
+    whistleOsc.stop(now + 0.38);
+
+    // Sizzling launch tail
+    const sizzleSize = Math.floor(this.ctx.sampleRate * 0.35);
+    const sizzleBuf = this.ctx.createBuffer(1, sizzleSize, this.ctx.sampleRate);
+    const sizzleData = sizzleBuf.getChannelData(0);
+    for (let i = 0; i < sizzleSize; i++) {
+      sizzleData[i] = (Math.random() * 2 - 1) * 0.25;
+    }
+    const sizzleSrc = this.ctx.createBufferSource();
+    sizzleSrc.buffer = sizzleBuf;
+    const sizzleFilter = this.ctx.createBiquadFilter();
+    sizzleFilter.type = 'highpass';
+    sizzleFilter.frequency.value = 3500;
+    const sizzleGain = this.ctx.createGain();
+    sizzleGain.gain.setValueAtTime(0.2, now);
+    sizzleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    sizzleSrc.connect(sizzleFilter);
+    sizzleFilter.connect(sizzleGain);
+    sizzleGain.connect(this.masterGain);
+    sizzleSrc.start(now);
+  }
+
+  // FX: Authentic Real Firework Aerial Burst & Thunder Boom
   playFirework() {
     this.init();
     if (this.isMuted) return;
 
-    const now = this.ctx.currentTime;
+    // 1. Whistling Launch Sound
+    this.playRocketWhistle(0);
 
-    const whoosh = this.ctx.createOscillator();
-    const whooshGain = this.ctx.createGain();
-    whoosh.type = 'sine';
-    whoosh.frequency.setValueAtTime(300, now);
-    whoosh.frequency.exponentialRampToValueAtTime(1400, now + 0.25);
+    const boomDelay = 0.36;
+    const now = this.ctx.currentTime + boomDelay;
 
-    whooshGain.gain.setValueAtTime(0.15, now);
-    whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-
-    whoosh.connect(whooshGain);
-    whooshGain.connect(this.masterGain);
-    whoosh.start(now);
-    whoosh.stop(now + 0.25);
-
-    const boomTime = now + 0.26;
+    // 2. Heavy Sub-Bass Concussive Shockwave (Deep Chest Thump)
     const boomOsc = this.ctx.createOscillator();
     const boomGain = this.ctx.createGain();
-    boomOsc.type = 'triangle';
-    boomOsc.frequency.setValueAtTime(120, boomTime);
-    boomOsc.frequency.exponentialRampToValueAtTime(25, boomTime + 0.6);
+    boomOsc.type = 'sine';
+    boomOsc.frequency.setValueAtTime(140, now);
+    boomOsc.frequency.exponentialRampToValueAtTime(24, now + 0.85);
 
-    boomGain.gain.setValueAtTime(0.8, boomTime);
-    boomGain.gain.exponentialRampToValueAtTime(0.001, boomTime + 0.7);
+    boomGain.gain.setValueAtTime(0.95, now);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
     boomOsc.connect(boomGain);
     boomGain.connect(this.masterGain);
-    boomOsc.start(boomTime);
-    boomOsc.stop(boomTime + 0.7);
+    boomOsc.start(now);
+    boomOsc.stop(now + 0.85);
 
-    for (let i = 0; i < 6; i++) {
-      const crackleTime = boomTime + 0.1 + Math.random() * 0.4;
-      const crackleFreq = 1800 + Math.random() * 1600;
-      this.playChimeTone(crackleFreq, crackleTime, 0.08, 0.15);
+    // 3. Explosion Blast Shrapnel & Noise Shock
+    const blastSize = Math.floor(this.ctx.sampleRate * 0.25);
+    const blastBuf = this.ctx.createBuffer(1, blastSize, this.ctx.sampleRate);
+    const blastData = blastBuf.getChannelData(0);
+    for (let i = 0; i < blastSize; i++) {
+      blastData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (blastSize * 0.15));
+    }
+    const blastSrc = this.ctx.createBufferSource();
+    blastSrc.buffer = blastBuf;
+    const blastFilter = this.ctx.createBiquadFilter();
+    blastFilter.type = 'lowpass';
+    blastFilter.frequency.setValueAtTime(2200, now);
+    blastFilter.frequency.exponentialRampToValueAtTime(300, now + 0.25);
+
+    const blastGain = this.ctx.createGain();
+    blastGain.gain.setValueAtTime(0.85, now);
+    blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+    blastSrc.connect(blastFilter);
+    blastFilter.connect(blastGain);
+    blastGain.connect(this.masterGain);
+    blastSrc.start(now);
+
+    // 4. Sparkling Willow & Patakha Crackle Echoes (Real Sizzling Tail)
+    const numCrackles = 10 + Math.floor(Math.random() * 8);
+    for (let c = 0; c < numCrackles; c++) {
+      const crackDelay = boomDelay + 0.08 + Math.random() * 0.55;
+      this.playRealCrackerSnap(crackDelay, 0.4 + Math.random() * 0.4);
     }
   }
 
-  // FX: Sparkler Crackle
+  // FX: Real Sparkler Sizzling / Frying Crackle
   playSparklerCrackle() {
     this.init();
     if (this.isMuted) return;
     const now = this.ctx.currentTime;
-    for (let i = 0; i < 3; i++) {
-      this.playChimeTone(2400 + Math.random() * 2000, now + i * 0.03, 0.04, 0.12);
+
+    for (let i = 0; i < 4; i++) {
+      const delay = i * 0.025 + Math.random() * 0.015;
+      const size = Math.floor(this.ctx.sampleRate * 0.03);
+      const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < size; j++) {
+        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (size * 0.3));
+      }
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.value = 3200 + Math.random() * 4500;
+      f.Q.value = 4.0;
+
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.3, now + delay);
+      g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.03);
+
+      src.connect(f);
+      f.connect(g);
+      g.connect(this.masterGain);
+      src.start(now + delay);
     }
   }
 

@@ -122,7 +122,9 @@ class BirthdayScene {
 
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    this.camera.position.set(-3.52, 10.82, 31.82);
+
+    const initCam = this.getCelebrationCameraCoords();
+    this.camera.position.set(initCam.pos.x, initCam.pos.y, initCam.pos.z);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -138,8 +140,8 @@ class BirthdayScene {
     this.controls.dampingFactor = 0.05;
     this.controls.maxPolarAngle = Math.PI / 2 + 0.05;
     this.controls.minDistance = 5;
-    this.controls.maxDistance = 50;
-    this.controls.target.set(0.00, 2.50, 0.00);
+    this.controls.maxDistance = 65;
+    this.controls.target.set(initCam.target.x, initCam.target.y, initCam.target.z);
 
     this.setupLighting();
     this.createFloorAndStage();
@@ -207,6 +209,24 @@ class BirthdayScene {
     };
   }
 
+  getCelebrationCameraCoords() {
+    const dev = this.getDeviceProfile();
+    if (dev.type === 'mobile' || dev.isPortrait) {
+      // User's exact approved phone angle:
+      // camera: { x: 0.25, y: 14.97, z: 52.42 }, target: { x: -0.22, y: 2.80, z: -0.03 }
+      return {
+        pos: { x: 0.25, y: 14.97, z: 52.42 },
+        target: { x: -0.22, y: 2.80, z: -0.03 }
+      };
+    } else {
+      // User's approved desktop/laptop angle:
+      return {
+        pos: { x: -3.52, y: 10.82, z: 31.82 },
+        target: { x: 0.00, y: 2.50, z: 0.00 }
+      };
+    }
+  }
+
   applyAdaptiveLayout() {
     const dev = this.getDeviceProfile();
 
@@ -216,19 +236,14 @@ class BirthdayScene {
     document.body.classList.add(dev.isPortrait ? 'orientation-portrait' : 'orientation-landscape');
 
     // 2. Adaptive FOV & Camera Framing for Mobile / Tablet / Desktop
-    if (dev.type === 'mobile') {
-      // Mobile portrait view: broaden FOV so Left Stand Board, Center Cake, and Right Photo Frame fit in vertical view
-      if (dev.isPortrait) {
-        this.camera.fov = Math.min(66, Math.max(52, 45 / dev.aspect * 0.72));
-      } else {
-        this.camera.fov = 48;
-      }
+    if (dev.type === 'mobile' || dev.isPortrait) {
+      this.camera.fov = 45;
       if (this.controls) {
         this.controls.minDistance = 6;
-        this.controls.maxDistance = 55;
+        this.controls.maxDistance = 65;
       }
     } else if (dev.type === 'tablet') {
-      this.camera.fov = dev.isPortrait ? 54 : 48;
+      this.camera.fov = dev.isPortrait ? 50 : 45;
       if (this.controls) {
         this.controls.minDistance = 5;
         this.controls.maxDistance = 50;
@@ -941,60 +956,14 @@ class BirthdayScene {
     this.standBoardGroup.add(legBack);
 
     // Canvas with "HAPPY BIRTHDAY" lettering
-    const boardCanvas = document.createElement('canvas');
-    boardCanvas.width = 512;
-    boardCanvas.height = 680;
-    const ctx = boardCanvas.getContext('2d');
+    this.boardCanvas = document.createElement('canvas');
+    this.boardCanvas.width = 512;
+    this.boardCanvas.height = 680;
+    this.drawStandBoardTexture('Shubham Sharnam', '22');
 
-    // Royal midnight background
-    const grad = ctx.createLinearGradient(0, 0, 512, 680);
-    grad.addColorStop(0, '#1f0d3d');
-    grad.addColorStop(0.5, '#0f0520');
-    grad.addColorStop(1, '#06020c');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 680);
-
-    // Gold filigree double border
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(10, 10, 492, 660);
-    ctx.lineWidth = 4;
-    ctx.strokeRect(22, 22, 468, 636);
-
-    // Celebratory Texts
-    ctx.fillStyle = '#ffd700';
-    ctx.font = '900 34px Outfit, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('✨ SPECIAL DAY ✨', 256, 95);
-
-    ctx.font = '900 62px Outfit, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = '#ffd700';
-    ctx.shadowBlur = 18;
-    ctx.fillText('HAPPY', 256, 210);
-    ctx.fillText('BIRTHDAY', 256, 285);
-    ctx.shadowBlur = 0;
-
-    // Gold divider ribbon
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(80, 335);
-    ctx.lineTo(432, 335);
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffd700';
-    ctx.font = '900 44px Outfit, sans-serif';
-    ctx.fillText('SHUBHAM', 256, 415);
-    ctx.fillText('SHARNAM', 256, 480);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 32px Outfit, sans-serif';
-    ctx.fillText('👑 22 YEARS OF JOY 👑', 256, 570);
-
-    const boardTex = new THREE.CanvasTexture(boardCanvas);
+    this.boardTex = new THREE.CanvasTexture(this.boardCanvas);
     const boardFaceMat = new THREE.MeshStandardMaterial({
-      map: boardTex,
+      map: this.boardTex,
       roughness: 0.25,
       metalness: 0.15
     });
@@ -1058,14 +1027,76 @@ class BirthdayScene {
     this.scene.add(this.standBoardGroup);
   }
 
-  drawDefaultPhotoTexture(customImg = null) {
+  drawStandBoardTexture(name = 'Shubham Sharnam', age = '22') {
+    if (!this.boardCanvas) return;
+    const ctx = this.boardCanvas.getContext('2d');
+
+    // Royal midnight background
+    const grad = ctx.createLinearGradient(0, 0, 512, 680);
+    grad.addColorStop(0, '#1f0d3d');
+    grad.addColorStop(0.5, '#0f0520');
+    grad.addColorStop(1, '#06020c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 680);
+
+    // Gold filigree double border
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(10, 10, 492, 660);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(22, 22, 468, 636);
+
+    // Celebratory Texts
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 34px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ SPECIAL DAY ✨', 256, 95);
+
+    ctx.font = '900 62px Outfit, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 18;
+    ctx.fillText('HAPPY', 256, 210);
+    ctx.fillText('BIRTHDAY', 256, 285);
+    ctx.shadowBlur = 0;
+
+    // Gold divider ribbon
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(80, 335);
+    ctx.lineTo(432, 335);
+    ctx.stroke();
+
+    const nameUpper = (name || 'SHUBHAM').toUpperCase();
+    const parts = nameUpper.split(' ');
+    ctx.fillStyle = '#ffd700';
+    if (parts.length > 1) {
+      ctx.font = '900 44px Outfit, sans-serif';
+      ctx.fillText(parts[0], 256, 415);
+      ctx.fillText(parts.slice(1).join(' '), 256, 480);
+    } else {
+      ctx.font = '900 48px Outfit, sans-serif';
+      ctx.fillText(nameUpper, 256, 440);
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 32px Outfit, sans-serif';
+    ctx.fillText(`👑 ${age || 22} YEARS OF JOY 👑`, 256, 570);
+
+    if (this.boardTex) this.boardTex.needsUpdate = true;
+  }
+
+  drawDefaultPhotoTexture(customImg = null, name = 'Shubham Sharnam', age = '22') {
+    if (!this.photoCanvas) return;
     const ctx = this.photoCanvas.getContext('2d');
     if (customImg) {
+      this.currentCustomPhotoImg = customImg;
       ctx.drawImage(customImg, 0, 0, 512, 680);
       // Gold subtle border overlay
       ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 12;
-      ctx.strokeRect(6, 6, 500, 668);
+      ctx.lineWidth = 14;
+      ctx.strokeRect(7, 7, 498, 666);
       return;
     }
 
@@ -1103,16 +1134,24 @@ class BirthdayScene {
 
     // Name & Age text
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 38px Outfit, sans-serif';
-    ctx.fillText('SHUBHAM SHARNAM', 256, 510);
+    ctx.font = 'bold 36px Outfit, sans-serif';
+    ctx.fillText((name || 'SHUBHAM').toUpperCase(), 256, 510);
 
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 32px Outfit, sans-serif';
-    ctx.fillText('Age 22', 256, 565);
+    ctx.fillText(`Age ${age || 22}`, 256, 565);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '22px Outfit, sans-serif';
     ctx.fillText('Tap + to Add Photo', 256, 625);
+  }
+
+  updateCelebrantInfo3D(name, age) {
+    this.drawStandBoardTexture(name, age);
+    this.drawDefaultPhotoTexture(this.currentCustomPhotoImg, name, age);
+    if (this.photoTexture) this.photoTexture.needsUpdate = true;
+    if (this.boardTex) this.boardTex.needsUpdate = true;
+    this.createNumericCandles(parseInt(age) || 22);
   }
 
   updateUserPhoto(imgElement) {
@@ -1834,19 +1873,20 @@ class BirthdayScene {
           setTimeout(() => banner.classList.remove('active'), 4000);
         }
 
-        // After 3 seconds firecrackers finish -> smoothly return camera to grand angle: (x: -3.52, y: 10.82, z: 31.82), target: (0, 2.5, 0)
+        // After 3 seconds firecrackers finish -> smoothly return camera to celebration angle (mobile vs desktop)
         setTimeout(() => {
+          const grandCam = this.getCelebrationCameraCoords();
           gsap.to(this.camera.position, {
-            x: -3.52,
-            y: 10.82,
-            z: 31.82,
+            x: grandCam.pos.x,
+            y: grandCam.pos.y,
+            z: grandCam.pos.z,
             duration: 1.6,
             ease: 'power2.inOut'
           });
           gsap.to(this.controls.target, {
-            x: 0.00,
-            y: 2.50,
-            z: 0.00,
+            x: grandCam.target.x,
+            y: grandCam.target.y,
+            z: grandCam.target.z,
             duration: 1.6,
             ease: 'power2.inOut',
             onComplete: () => {
@@ -2318,8 +2358,9 @@ class BirthdayScene {
   setCameraView(viewName) {
     const duration = 1.2;
     if (viewName === 'orbit') {
-      gsap.to(this.camera.position, { x: -3.52, y: 10.82, z: 31.82, duration, ease: 'power2.inOut' });
-      gsap.to(this.controls.target, { x: 0.00, y: 2.50, z: 0.00, duration, ease: 'power2.inOut' });
+      const grandCam = this.getCelebrationCameraCoords();
+      gsap.to(this.camera.position, { x: grandCam.pos.x, y: grandCam.pos.y, z: grandCam.pos.z, duration, ease: 'power2.inOut' });
+      gsap.to(this.controls.target, { x: grandCam.target.x, y: grandCam.target.y, z: grandCam.target.z, duration, ease: 'power2.inOut' });
     } else if (viewName === 'cake') {
       gsap.to(this.camera.position, { x: 0.00, y: 7.31, z: 18.45, duration, ease: 'power2.inOut' });
       gsap.to(this.controls.target, { x: 0.00, y: 2.80, z: 0.00, duration, ease: 'power2.inOut' });

@@ -142,17 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
     currentStoryStep = 'balloons';
 
     // Smoothly animate camera to exact angle: (x: -3.52, y: 10.82, z: 31.82), target: (x: 0.00, y: 2.50, z: 0.00)
+    const grandCam = scene.getCelebrationCameraCoords();
     gsap.to(scene.camera.position, {
-      x: -3.52,
-      y: 10.82,
-      z: 31.82,
+      x: grandCam.pos.x,
+      y: grandCam.pos.y,
+      z: grandCam.pos.z,
       duration: 1.6,
       ease: 'power2.out'
     });
     gsap.to(scene.controls.target, {
-      x: 0.00,
-      y: 2.50,
-      z: 0.00,
+      x: grandCam.target.x,
+      y: grandCam.target.y,
+      z: grandCam.target.z,
       duration: 1.6,
       ease: 'power2.out'
     });
@@ -258,8 +259,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* =========================================================
-     URL PARAMETERS & SHARING
+     URL PARAMETERS & SHARING (PHOTO + NAME + AGE + THEME)
      ========================================================= */
+  let currentPhotoDataUrl = null;
+  try {
+    currentPhotoDataUrl = localStorage.getItem('birthday_custom_photo') || null;
+  } catch(e) {}
+
+  function compressImage(img, maxWidth = 320, maxHeight = 420, quality = 0.72) {
+    const canvas = document.createElement('canvas');
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
   function parseUrlParams() {
     const params = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, '?'));
     if (params.has('name')) {
@@ -276,6 +306,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (params.has('theme')) {
       activeTheme = params.get('theme');
+    }
+
+    // Check shared photo in URL hash or localStorage
+    let sharedPhoto = params.get('photo');
+    if (!sharedPhoto) {
+      try {
+        sharedPhoto = localStorage.getItem('birthday_custom_photo');
+      } catch(e) {}
+    }
+
+    if (sharedPhoto) {
+      currentPhotoDataUrl = sharedPhoto;
+      const img = new Image();
+      img.onload = () => {
+        if (scene) scene.updateUserPhoto(img);
+      };
+      img.src = sharedPhoto;
     }
 
     updateCelebrantInfo();
@@ -296,12 +343,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     giftCustomWish.textContent = `"${customWish}"`;
     document.title = `✨ Happy Birthday ${celebrantName}! 🎉`;
+
+    // Real-time update to 3D Stand Board, Numeric Candles & Photo Frame
+    if (scene && scene.updateCelebrantInfo3D) {
+      scene.updateCelebrantInfo3D(celebrantName, celebrantAge);
+    }
   }
 
   function generateShareUrl() {
     const url = new URL(window.location.href);
     url.search = '';
-    url.hash = `name=${encodeURIComponent(celebrantName)}&age=${encodeURIComponent(celebrantAge)}&wish=${encodeURIComponent(customWish)}&theme=${encodeURIComponent(activeTheme)}`;
+    const params = new URLSearchParams();
+    params.set('name', celebrantName);
+    params.set('age', celebrantAge);
+    params.set('wish', customWish);
+    params.set('theme', activeTheme);
+    if (currentPhotoDataUrl) {
+      params.set('photo', currentPhotoDataUrl);
+    }
+    url.hash = params.toString();
     return url.toString();
   }
 
@@ -536,7 +596,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
-        img.onload = () => scene.updateUserPhoto(img);
+        img.onload = () => {
+          const compressed = compressImage(img);
+          currentPhotoDataUrl = compressed;
+          try {
+            localStorage.setItem('birthday_custom_photo', compressed);
+          } catch(err) {}
+          scene.updateUserPhoto(img);
+        };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
