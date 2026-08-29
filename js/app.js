@@ -19,11 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const curtainContainer = document.getElementById('curtain-container');
   const btnStartCelebration = document.getElementById('btn-start-celebration');
   const guidedStoryBar = document.getElementById('guided-story-bar');
-  const stepBurstBalloons = document.getElementById('step-burst-balloons');
-  const balloonCountText = document.getElementById('balloon-count-text');
+  const mainScreenQuestCard = document.getElementById('main-screen-quest-card');
+  const questTitleText = document.getElementById('quest-title-text');
+  const questDescText = document.getElementById('quest-desc-text');
+  const questBalloonCount = document.getElementById('quest-balloon-count');
   const stepBurnCandles = document.getElementById('step-burn-candles');
   const stepCutCake = document.getElementById('step-cut-cake');
   const stepOpenGift = document.getElementById('step-open-gift');
+  const tapGiftCard = document.getElementById('tap-gift-card');
   const freePlayBottomBar = document.getElementById('free-play-bottom-bar');
 
   // Top Nav & Menu Drawer
@@ -138,6 +141,22 @@ document.addEventListener('DOMContentLoaded', () => {
     curtainContainer.classList.add('opened');
     currentStoryStep = 'balloons';
 
+    // Smoothly animate camera to exact angle: (x: -3.52, y: 10.82, z: 31.82), target: (x: 0.00, y: 2.50, z: 0.00)
+    gsap.to(scene.camera.position, {
+      x: -3.52,
+      y: 10.82,
+      z: 31.82,
+      duration: 1.6,
+      ease: 'power2.out'
+    });
+    gsap.to(scene.controls.target, {
+      x: 0.00,
+      y: 2.50,
+      z: 0.00,
+      duration: 1.6,
+      ease: 'power2.out'
+    });
+
     // Play chime sound
     if (window.birthdayAudio) {
       window.birthdayAudio.init();
@@ -151,19 +170,35 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =========================================================
-     STEP 2: BALLOONS POPPING TO REMOVE CLOTH
+     STEP 2: TO REVEAL CAKE - BURST BALLOONS AROUND CAKE
      ========================================================= */
   window.onTableBalloonPopped = (remaining) => {
-    if (remaining > 0) {
-      balloonCountText.textContent = `To remove cloth, burst all balloons on the table! 🎈 (${remaining} remaining)`;
-    } else {
-      balloonCountText.textContent = `✨ All balloons popped! Revealing the birthday cake...`;
+    if (questBalloonCount) questBalloonCount.textContent = remaining;
+    if (questDescText && remaining > 0) {
+      questDescText.textContent = `around the cake to reveal the surprise`;
+    }
+
+    // Update progress dots (gray out popped ones)
+    for (let i = 0; i < 5; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      if (dot) {
+        if (i < 5 - remaining) {
+          dot.classList.remove('active');
+        } else {
+          dot.classList.add('active');
+        }
+      }
+    }
+
+    if (remaining === 0) {
+      if (questTitleText) questTitleText.textContent = `✨ ALL BALLOONS BURST! ✨`;
+      if (questDescText) questDescText.textContent = `Revealing the Birthday Cake... 🎂`;
 
       // 1-second pause, then zoom in & lift cloth
       setTimeout(() => {
         scene.liftAndRemoveCloth(() => {
-          // Cloth removed -> Transition to Step 3 (Burn Candles)
-          stepBurstBalloons.classList.add('hidden');
+          // Cloth removed -> Hide main screen quest card and show Burn Candles button
+          if (mainScreenQuestCard) mainScreenQuestCard.classList.add('hidden');
           stepBurnCandles.classList.remove('hidden');
           currentStoryStep = 'burn-candles';
         });
@@ -197,17 +232,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =========================================================
-     STEP 5: OPEN GIFT BOX
+     STEP 5: BRING GIFT FORWARD & TAP TO OPEN
      ========================================================= */
   stepOpenGift.addEventListener('click', () => {
-    scene.openGift();
     stepOpenGift.classList.add('hidden');
+
+    // Fly gift box smoothly to front center
+    scene.presentGiftBoxToCenter(() => {
+      // Show "Tap Box to Open" notification
+      if (tapGiftCard) tapGiftCard.classList.remove('hidden');
+    });
 
     // Unlock full free-play dock
     guidedStoryBar.classList.add('hidden');
     freePlayBottomBar.classList.remove('hidden');
     currentStoryStep = 'free-play';
   });
+
+  // Clicking the floating "Tap Box to Open" badge
+  if (tapGiftCard) {
+    tapGiftCard.addEventListener('click', () => {
+      scene.openGift();
+      tapGiftCard.classList.add('hidden');
+    });
+  }
 
   /* =========================================================
      URL PARAMETERS & SHARING

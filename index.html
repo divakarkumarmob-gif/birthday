@@ -209,10 +209,12 @@
         </div>
       </div>
     </div>
+  </aside>
+
   <!-- =========================================================
        LIVE CAMERA DISTANCE & ANGLE TELEMETRY INSPECTOR HUD
        ========================================================= -->
-  <div class="camera-telemetry-hud show" id="camera-telemetry-hud">
+  <div class="camera-telemetry-hud" id="camera-telemetry-hud">
     <div class="hud-header">
       <div class="hud-title">
         <i class="fa-solid fa-compass-drafting"></i>
@@ -274,17 +276,33 @@
   </div>
 
   <!-- =========================================================
+       MAIN SCREEN FLOATING QUEST / TASK CARD (BOTTOM CENTER)
+       ========================================================= -->
+  <div class="main-screen-quest-card" id="main-screen-quest-card">
+    <div class="quest-glow-ring"></div>
+    <div class="quest-icon-wrap">
+      <span class="quest-floating-balloon">🎈</span>
+    </div>
+    <div class="quest-content">
+      <div class="quest-title-row">
+        <h2 class="quest-title" id="quest-title-text">BURST BALLOONS</h2>
+        <span class="quest-badge-counter" id="quest-badge-counter"><span id="quest-balloon-count">5</span> Left</span>
+      </div>
+      <p class="quest-subtitle" id="quest-desc-text">around the cake to reveal the surprise</p>
+      <div class="quest-progress-dots" id="quest-dots-container">
+        <span class="dot-balloon active" id="dot-0">🎈</span>
+        <span class="dot-balloon active" id="dot-1">🎈</span>
+        <span class="dot-balloon active" id="dot-2">🎈</span>
+        <span class="dot-balloon active" id="dot-3">🎈</span>
+        <span class="dot-balloon active" id="dot-4">🎈</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        GUIDED STEP STORY DOCK (DYNAMIC WORKFLOW)
        ========================================================= -->
   <div class="guided-story-bar" id="guided-story-bar">
-    <!-- Step 2: Burst Balloons Notice -->
-    <div class="story-step-card" id="step-burst-balloons">
-      <div class="step-icon-anim">🎈</div>
-      <div class="step-details">
-        <strong>Cake is hidden under the cloth!</strong>
-        <span id="balloon-count-text">To remove cloth, burst all balloons on the table! 🎈 (5 remaining)</span>
-      </div>
-    </div>
 
     <!-- Step 3: Burn Candle Button -->
     <button class="guided-action-btn hidden" id="step-burn-candles">
@@ -312,9 +330,19 @@
       <i class="fa-solid fa-gift"></i>
       <div class="btn-content-text">
         <strong>Open Gift Box 🎁</strong>
-        <small>Reveal special greeting</small>
+        <small>Bring gift forward</small>
       </div>
     </button>
+  </div>
+
+  <!-- Floating Tap Gift Box Notification (Shows when gift floats to front) -->
+  <div class="tap-gift-card hidden" id="tap-gift-card">
+    <div class="tap-gift-pulse"></div>
+    <div class="tap-gift-icon">👆</div>
+    <div class="tap-gift-content">
+      <strong>Tap Box to Open 🎁</strong>
+      <small>Click the floating gift box to unwrap!</small>
+    </div>
   </div>
 
   <!-- Free Play Bottom Control Bar (Unlocked after story flow) -->

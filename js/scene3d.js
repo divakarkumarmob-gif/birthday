@@ -122,7 +122,7 @@ class BirthdayScene {
 
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    this.camera.position.set(0, 7.5, 21);
+    this.camera.position.set(-3.52, 10.82, 31.82);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -138,8 +138,8 @@ class BirthdayScene {
     this.controls.dampingFactor = 0.05;
     this.controls.maxPolarAngle = Math.PI / 2 + 0.05;
     this.controls.minDistance = 5;
-    this.controls.maxDistance = 45;
-    this.controls.target.set(0, 2.5, 0);
+    this.controls.maxDistance = 50;
+    this.controls.target.set(0.00, 2.50, 0.00);
 
     this.setupLighting();
     this.createFloorAndStage();
@@ -148,6 +148,9 @@ class BirthdayScene {
     this.createBirthdayCake();
     this.createClothCover();
     this.createTableBalloons(5);
+    this.createPartyFriends();
+    this.createPhotoFrame();
+    this.createStandBoardWithLights();
     this.createCornerPolesAndDiwaliLights();
     this.createSurpriseGift();
     this.createDiscoBall();
@@ -156,6 +159,18 @@ class BirthdayScene {
     window.addEventListener('resize', this.onWindowResize.bind(this));
     this.renderer.domElement.addEventListener('pointerdown', this.onPointerDown.bind(this));
     window.addEventListener('pointermove', this.onPointerMove.bind(this));
+
+    // Reset controls state on window blur/focus (prevents spinning on file dialog open/close)
+    window.addEventListener('blur', () => {
+      if (this.controls) {
+        this.controls.state = -1;
+      }
+    });
+    window.addEventListener('focus', () => {
+      if (this.controls) {
+        this.controls.state = -1;
+      }
+    });
 
     this.animate();
   }
@@ -208,35 +223,80 @@ class BirthdayScene {
   createBackgroundDecor() {
     this.decorGroup = new THREE.Group();
 
-    // 1. Semi-Circular 3D "HAPPY BIRTHDAY" Arch Banner
-    const bannerText = "HAPPY  BIRTHDAY  SHUBHAM";
-    const letters = bannerText.split('');
-    const totalLetters = letters.length;
-    const archRadius = 10.5;
-    const archCenterY = 5.8;
-    const startAngle = Math.PI * 0.85;
-    const endAngle = Math.PI * 0.15;
+    // 1. Semi-Circular 3D "HAPPY BIRTHDAY" Curved Arch Banner
+    const bannerWords = ["H", "A", "P", "P", "Y", "•", "B", "I", "R", "T", "H", "D", "A", "Y"];
+    const totalLetters = bannerWords.length;
+    const archRadius = 9.8;
+    const archCenterY = 5.2;
+    const startAngle = Math.PI * 0.88;
+    const endAngle = Math.PI * 0.12;
 
-    const blockGeo = new THREE.BoxGeometry(0.55, 0.65, 0.15);
-    const blockMat = new THREE.MeshStandardMaterial({
+    const goldFrameMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
-      metalness: 0.85,
-      roughness: 0.15,
-      emissive: 0x332200
+      metalness: 0.9,
+      roughness: 0.15
     });
 
-    letters.forEach((char, i) => {
-      if (char === ' ') return;
+    bannerWords.forEach((char, i) => {
       const t = i / (totalLetters - 1);
       const angle = startAngle + t * (endAngle - startAngle);
       const x = Math.cos(angle) * archRadius;
-      const y = archCenterY + Math.sin(angle) * 3.5;
-      const z = -4.5;
+      const y = archCenterY + Math.sin(angle) * 4.2;
+      const z = -4.4;
 
-      const letterMesh = new THREE.Mesh(blockGeo, blockMat);
-      letterMesh.position.set(x, y, z);
-      letterMesh.rotation.z = angle - Math.PI / 2;
-      this.decorGroup.add(letterMesh);
+      const letterGroup = new THREE.Group();
+      letterGroup.position.set(x, y, z);
+      letterGroup.rotation.z = angle - Math.PI / 2; // tangent to curve
+
+      // Letter Block Base (Gold Beveled Badge)
+      const isBullet = char === "•";
+      const blockWidth = isBullet ? 0.45 : 0.88;
+      const blockHeight = isBullet ? 0.45 : 1.05;
+
+      const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(blockWidth, blockHeight, 0.18), goldFrameMat);
+      blockMesh.castShadow = true;
+      letterGroup.add(blockMesh);
+
+      // Canvas for high-def Typography Letter
+      const letterCanvas = document.createElement('canvas');
+      letterCanvas.width = 128;
+      letterCanvas.height = 160;
+      const ctx = letterCanvas.getContext('2d');
+
+      // Gradient background
+      const grad = ctx.createLinearGradient(0, 0, 128, 160);
+      grad.addColorStop(0, '#780206');
+      grad.addColorStop(1, '#1a0004');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 160);
+
+      // Gold border
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, 118, 150);
+
+      // Golden Letter Text
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 88px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = '#ffe066';
+      ctx.shadowBlur = 12;
+      ctx.fillText(char, 64, 82);
+
+      const letterTex = new THREE.CanvasTexture(letterCanvas);
+      const letterFaceMat = new THREE.MeshStandardMaterial({
+        map: letterTex,
+        roughness: 0.2,
+        metalness: 0.1,
+        emissive: 0x331100
+      });
+
+      const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(blockWidth - 0.08, blockHeight - 0.08), letterFaceMat);
+      facePlane.position.z = 0.1;
+      letterGroup.add(facePlane);
+
+      this.decorGroup.add(letterGroup);
     });
 
     // 2. Decorative Ghalar / Bunting Garland Arch & Side Cascades down to the Floor
@@ -566,6 +626,425 @@ class BirthdayScene {
   }
 
   /* =========================================================
+     4-5 3D PARTY FRIENDS / CHARACTERS BEHIND CAKE
+     ========================================================= */
+  createPartyFriends() {
+    this.friendsGroup = new THREE.Group();
+    this.partyFriends = [];
+
+    const friendConfigs = [
+      { x: -4.4, z: -2.0, shirtColor: 0xff0055, hatColor: 0xffd700, skinColor: 0xfcd5b5 },
+      { x: -2.2, z: -2.8, shirtColor: 0x00e676, hatColor: 0x00f2fe, skinColor: 0xf3c19d },
+      { x: 0.0,  z: -3.2, shirtColor: 0xffd700, hatColor: 0xff0055, skinColor: 0xfcd5b5 },
+      { x: 2.2,  z: -2.8, shirtColor: 0x00f2fe, hatColor: 0xb721ff, skinColor: 0xf3c19d },
+      { x: 4.4,  z: -2.0, shirtColor: 0xb721ff, hatColor: 0xffd700, skinColor: 0xfcd5b5 }
+    ];
+
+    friendConfigs.forEach((cfg, idx) => {
+      const friend = new THREE.Group();
+
+      // Shirt / Torso (Taller & Proportional)
+      const shirtMat = new THREE.MeshStandardMaterial({ color: cfg.shirtColor, roughness: 0.45 });
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.54, 2.2, 16), shirtMat);
+      torso.position.y = 2.3;
+      torso.castShadow = true;
+      friend.add(torso);
+
+      // Head (Larger & clearer)
+      const headMat = new THREE.MeshStandardMaterial({ color: cfg.skinColor, roughness: 0.4 });
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.44, 16, 16), headMat);
+      head.position.y = 3.65;
+      head.castShadow = true;
+      friend.add(head);
+
+      // Smiling Eyes
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), eyeMat);
+      eyeL.position.set(-0.14, 3.72, 0.38);
+      friend.add(eyeL);
+
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), eyeMat);
+      eyeR.position.set(0.14, 3.72, 0.38);
+      friend.add(eyeR);
+
+      // Party Conical Hat with pompom (Tall & Vibrant)
+      const hatMat = new THREE.MeshStandardMaterial({ color: cfg.hatColor, roughness: 0.25 });
+      const hat = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.85, 16), hatMat);
+      hat.position.set(0, 4.45, 0);
+      hat.rotation.z = (idx % 2 === 0 ? -0.15 : 0.15);
+      friend.add(hat);
+
+      const pompom = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      pompom.position.set(0, 4.92, 0);
+      friend.add(pompom);
+
+      // Arms (for waving / clapping)
+      const armGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.85, 12);
+      armGeo.translate(0, -0.42, 0);
+
+      const leftArm = new THREE.Mesh(armGeo, shirtMat);
+      leftArm.position.set(-0.55, 3.1, 0);
+      leftArm.rotation.z = Math.PI / 4;
+      leftArm.rotation.x = -Math.PI / 4;
+      friend.add(leftArm);
+
+      const rightArm = new THREE.Mesh(armGeo, shirtMat);
+      rightArm.position.set(0.55, 3.1, 0);
+      rightArm.rotation.z = -Math.PI / 4;
+      rightArm.rotation.x = -Math.PI / 4;
+      friend.add(rightArm);
+
+      // Initial placement (hidden below stage)
+      friend.position.set(cfg.x, -6.0, cfg.z);
+      friend.scale.set(0.01, 0.01, 0.01);
+
+      friend.userData = {
+        baseX: cfg.x,
+        baseZ: cfg.z,
+        targetY: 1.4,
+        isRevealed: false,
+        leftArm,
+        rightArm,
+        isClapping: false,
+        wobbleOffset: idx * 1.2
+      };
+
+      this.friendsGroup.add(friend);
+      this.partyFriends.push(friend);
+    });
+
+    this.scene.add(this.friendsGroup);
+  }
+
+  revealPartyFriends() {
+    this.partyFriends.forEach((friend, i) => {
+      friend.userData.isRevealed = true;
+      gsap.to(friend.scale, {
+        x: 1.25, y: 1.25, z: 1.25,
+        duration: 0.85,
+        delay: 0.12 * i,
+        ease: 'back.out(2)'
+      });
+      gsap.to(friend.position, {
+        y: 1.4,
+        duration: 0.9,
+        delay: 0.12 * i,
+        ease: 'back.out(1.8)'
+      });
+    });
+  }
+
+  /* =========================================================
+     3D PHOTO FRAME ON RIGHT SIDE (ENLARGED & EASEL STAND)
+     ========================================================= */
+  createPhotoFrame() {
+    this.photoFrameGroup = new THREE.Group();
+
+    // Gold Ornate Beveled Outer Frame (Enlarged)
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      metalness: 0.9,
+      roughness: 0.15
+    });
+    const frameBorder = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.1, 0.14), frameMat);
+    frameBorder.position.y = 2.4;
+    frameBorder.castShadow = true;
+    this.photoFrameGroup.add(frameBorder);
+
+    // Tripod Easel Stand Legs (Floor to Frame)
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x3d2714, roughness: 0.5, metalness: 0.3 });
+    const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 3.2, 12);
+
+    const legL = new THREE.Mesh(legGeo, legMat);
+    legL.position.set(-0.85, 1.4, -0.05);
+    legL.rotation.z = 0.12;
+    this.photoFrameGroup.add(legL);
+
+    const legR = new THREE.Mesh(legGeo, legMat);
+    legR.position.set(0.85, 1.4, -0.05);
+    legR.rotation.z = -0.12;
+    this.photoFrameGroup.add(legR);
+
+    const legBack = new THREE.Mesh(legGeo, legMat);
+    legBack.position.set(0, 1.4, -0.7);
+    legBack.rotation.x = -0.32;
+    this.photoFrameGroup.add(legBack);
+
+    // Canvas Texture with Shubham Sharnam celebrant portrait
+    this.photoCanvas = document.createElement('canvas');
+    this.photoCanvas.width = 512;
+    this.photoCanvas.height = 680;
+    this.drawDefaultPhotoTexture();
+
+    this.photoTexture = new THREE.CanvasTexture(this.photoCanvas);
+    this.photoTexture.needsUpdate = true;
+
+    const photoMat = new THREE.MeshStandardMaterial({
+      map: this.photoTexture,
+      roughness: 0.25,
+      metalness: 0.1
+    });
+
+    this.photoPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 2.8), photoMat);
+    this.photoPlane.position.set(0, 2.4, 0.08);
+    this.photoPlane.userData = { type: 'photo-frame' };
+    this.photoFrameGroup.add(this.photoPlane);
+
+    // Glowing 3D "+" Add/Change Photo Badge on Top-Right Corner
+    const badgeGroup = new THREE.Group();
+    badgeGroup.position.set(1.05, 3.7, 0.2);
+
+    const badgeOrb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x0088cc, roughness: 0.2 })
+    );
+    badgeGroup.add(badgeOrb);
+
+    // 3D "+" symbol (cross)
+    const crossMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.08, 0.08), crossMat);
+    crossH.position.z = 0.26;
+    badgeGroup.add(crossH);
+
+    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.32, 0.08), crossMat);
+    crossV.position.z = 0.26;
+    badgeGroup.add(crossV);
+
+    badgeGroup.userData = { type: 'photo-frame' };
+    this.photoFrameGroup.add(badgeGroup);
+    this.photoBadge = badgeGroup;
+
+    // Position on right side at 2x distance from cake (2x Size Scale)
+    this.photoFrameGroup.scale.set(1.9, 1.9, 1.9);
+    this.photoFrameGroup.position.set(12.5, 0.0, 1.0);
+    this.photoFrameGroup.rotation.y = -Math.PI / 5.2;
+    this.photoFrameGroup.rotation.x = -0.06;
+    this.photoFrameGroup.userData = { type: 'photo-frame' };
+
+    this.scene.add(this.photoFrameGroup);
+  }
+
+  /* =========================================================
+     3D HAPPY BIRTHDAY STAND BOARD WITH HANGING LIGHTS (LEFT SIDE - 2X SIZE & 2X DISTANCE)
+     ========================================================= */
+  createStandBoardWithLights() {
+    this.standBoardGroup = new THREE.Group();
+
+    // Gold/Wood Ornate Frame
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      metalness: 0.85,
+      roughness: 0.2
+    });
+    const boardFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.2, 0.15), frameMat);
+    boardFrame.position.y = 2.4;
+    boardFrame.castShadow = true;
+    this.standBoardGroup.add(boardFrame);
+
+    // Tripod Easel Stand Legs
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x3d2714, roughness: 0.5, metalness: 0.3 });
+    const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 3.2, 12);
+
+    const legL = new THREE.Mesh(legGeo, legMat);
+    legL.position.set(-0.9, 1.4, -0.05);
+    legL.rotation.z = 0.12;
+    this.standBoardGroup.add(legL);
+
+    const legR = new THREE.Mesh(legGeo, legMat);
+    legR.position.set(0.9, 1.4, -0.05);
+    legR.rotation.z = -0.12;
+    this.standBoardGroup.add(legR);
+
+    const legBack = new THREE.Mesh(legGeo, legMat);
+    legBack.position.set(0, 1.4, -0.7);
+    legBack.rotation.x = -0.32;
+    this.standBoardGroup.add(legBack);
+
+    // Canvas with "HAPPY BIRTHDAY" lettering
+    const boardCanvas = document.createElement('canvas');
+    boardCanvas.width = 512;
+    boardCanvas.height = 680;
+    const ctx = boardCanvas.getContext('2d');
+
+    // Royal midnight background
+    const grad = ctx.createLinearGradient(0, 0, 512, 680);
+    grad.addColorStop(0, '#1f0d3d');
+    grad.addColorStop(0.5, '#0f0520');
+    grad.addColorStop(1, '#06020c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 680);
+
+    // Gold filigree double border
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(10, 10, 492, 660);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(22, 22, 468, 636);
+
+    // Celebratory Texts
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 34px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ SPECIAL DAY ✨', 256, 95);
+
+    ctx.font = '900 62px Outfit, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 18;
+    ctx.fillText('HAPPY', 256, 210);
+    ctx.fillText('BIRTHDAY', 256, 285);
+    ctx.shadowBlur = 0;
+
+    // Gold divider ribbon
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(80, 335);
+    ctx.lineTo(432, 335);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 44px Outfit, sans-serif';
+    ctx.fillText('SHUBHAM', 256, 415);
+    ctx.fillText('SHARNAM', 256, 480);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 32px Outfit, sans-serif';
+    ctx.fillText('👑 22 YEARS OF JOY 👑', 256, 570);
+
+    const boardTex = new THREE.CanvasTexture(boardCanvas);
+    const boardFaceMat = new THREE.MeshStandardMaterial({
+      map: boardTex,
+      roughness: 0.25,
+      metalness: 0.15
+    });
+
+    const boardPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.9), boardFaceMat);
+    boardPlane.position.set(0, 2.4, 0.085);
+    this.standBoardGroup.add(boardPlane);
+
+    // Hanging Multi-Colored Diwali Fairy Light String draped over the board
+    const bulbColors = [0xff0044, 0xffd700, 0x00f2fe, 0x00e676, 0xb721ff, 0xff8c00];
+    const bulbGeo = new THREE.SphereGeometry(0.1, 12, 12);
+
+    for (let b = 0; b < 16; b++) {
+      const t = b / 15;
+      // Catenary drape from top-left to top-center to top-right and down sides
+      let bx, by;
+      if (t < 0.2) {
+        // Left side drape
+        bx = -1.25;
+        by = 1.0 + (t / 0.2) * 2.8;
+      } else if (t > 0.8) {
+        // Right side drape
+        bx = 1.25;
+        by = 3.8 - ((t - 0.8) / 0.2) * 2.8;
+      } else {
+        // Top drooping arch
+        const topT = (t - 0.2) / 0.6;
+        bx = -1.25 + topT * 2.5;
+        by = 3.8 - Math.sin(topT * Math.PI) * 0.45;
+      }
+
+      const col = bulbColors[b % bulbColors.length];
+      const bulbMat = new THREE.MeshStandardMaterial({
+        color: col,
+        emissive: col,
+        emissiveIntensity: 0.9,
+        roughness: 0.1
+      });
+
+      const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+      bulbMesh.position.set(bx, by, 0.18);
+      this.standBoardGroup.add(bulbMesh);
+
+      // Add into dynamic diwaliBulbs animation array
+      if (this.diwaliBulbs) {
+        this.diwaliBulbs.push({
+          mat: bulbMat,
+          baseColor: col,
+          phase: Math.random() * Math.PI * 2,
+          speed: 3 + Math.random() * 4
+        });
+      }
+    }
+
+    // Position on left side at 2x distance from cake (2x Size Scale)
+    this.standBoardGroup.scale.set(1.9, 1.9, 1.9);
+    this.standBoardGroup.position.set(-12.5, 0.0, 1.0);
+    this.standBoardGroup.rotation.y = Math.PI / 5.2;
+    this.standBoardGroup.rotation.x = -0.06;
+
+    this.scene.add(this.standBoardGroup);
+  }
+
+  drawDefaultPhotoTexture(customImg = null) {
+    const ctx = this.photoCanvas.getContext('2d');
+    if (customImg) {
+      ctx.drawImage(customImg, 0, 0, 512, 680);
+      // Gold subtle border overlay
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 12;
+      ctx.strokeRect(6, 6, 500, 668);
+      return;
+    }
+
+    // Default Handsome Celebratory Portrait Card
+    const grad = ctx.createLinearGradient(0, 0, 512, 680);
+    grad.addColorStop(0, '#2d114d');
+    grad.addColorStop(0.5, '#190a30');
+    grad.addColorStop(1, '#0b0417');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 680);
+
+    // Gold decorative border
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(10, 10, 492, 660);
+
+    // Celebratory Badge
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 36px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ BIRTHDAY STAR ✨', 256, 90);
+
+    // Silhouette / Avatar circle
+    ctx.beginPath();
+    ctx.arc(256, 280, 140, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+    ctx.fill();
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Crown / Star Icon
+    ctx.font = '90px sans-serif';
+    ctx.fillText('👑', 256, 310);
+
+    // Name & Age text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 38px Outfit, sans-serif';
+    ctx.fillText('SHUBHAM SHARNAM', 256, 510);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 32px Outfit, sans-serif';
+    ctx.fillText('Age 22', 256, 565);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '22px Outfit, sans-serif';
+    ctx.fillText('Tap + to Add Photo', 256, 625);
+  }
+
+  updateUserPhoto(imgElement) {
+    if (!this.photoCanvas || !this.photoTexture) return;
+    this.drawDefaultPhotoTexture(imgElement);
+    this.photoTexture.needsUpdate = true;
+    if (window.confetti) {
+      window.confetti({ particleCount: 50, spread: 70, origin: { x: 0.75, y: 0.5 } });
+    }
+  }
+
+  /* =========================================================
      3D BIRTHDAY CAKE & NUMERIC "22" CANDLES
      ========================================================= */
   createBirthdayCake() {
@@ -592,6 +1071,7 @@ class BirthdayScene {
     const tier1 = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 1.3, 48), this.cakeBaseMat);
     tier1.position.y = 1.95;
     tier1.castShadow = true;
+    this.tier1Mesh = tier1;
     this.cakeGroup.add(tier1);
 
     this.frostingMat = new THREE.MeshStandardMaterial({
@@ -617,6 +1097,7 @@ class BirthdayScene {
     const tier2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 1.1, 48), this.cakeTopMat);
     tier2.position.y = 3.15;
     tier2.castShadow = true;
+    this.tier2Mesh = tier2;
     this.cakeGroup.add(tier2);
 
     // Drips
@@ -771,21 +1252,24 @@ class BirthdayScene {
 
     if (window.birthdayAudio) window.birthdayAudio.playGiftOpen();
 
-    // Zoom Camera into the Cake Table
+    // Zoom Camera into the Cake Table (User's chosen post-balloon angle)
     gsap.to(this.camera.position, {
-      x: 0,
-      y: 5.0,
-      z: 9.0,
+      x: 0.00,
+      y: 7.31,
+      z: 18.45,
       duration: 1.6,
       ease: 'power2.inOut'
     });
     gsap.to(this.controls.target, {
-      x: 0,
-      y: 2.8,
-      z: 0,
+      x: 0.00,
+      y: 2.80,
+      z: 0.00,
       duration: 1.6,
       ease: 'power2.inOut'
     });
+
+    // Reveal the 4-5 Party Friends cheering behind the cake
+    this.revealPartyFriends();
 
     // Lift cloth upwards and fade away
     gsap.to(this.clothCover.position, {
@@ -858,7 +1342,10 @@ class BirthdayScene {
 
       balloonMesh.userData = {
         type: 'table-balloon',
-        basePos: balloonMesh.position.clone(),
+        baseAngle: angle,
+        orbitRadius: radius,
+        baseHeight: height,
+        orbitSpeed: 0.45,
         floatSpeed: 1.4 + Math.random() * 0.4,
         wobbleOffset: Math.random() * 5,
         color: col,
@@ -982,18 +1469,25 @@ class BirthdayScene {
      CUT THE CAKE & 3-SECOND MULTI-COLOR FIREWORKS + SONG
      ========================================================= */
   cutCakeAndCelebrate(onFinishedFireworks) {
-    if (this.isCakeSliced) return;
-    this.isCakeSliced = true;
+    if (this.cakeIsCut) return;
+    this.cakeIsCut = true;
 
-    if (window.birthdayAudio) {
-      window.birthdayAudio.playSliceSound();
-    }
+    // Pause all rotation / orbiting for 2 seconds so celebrant can watch center cut
+    this.isOrbitPaused = true;
+    setTimeout(() => {
+      this.isOrbitPaused = false;
+    }, 2000);
 
-    // 1. Golden Chef Knife Cut Animation
+    // 1. Chef's Golden Knife Animation - Directly in Dead Center Front
     if (!this.cakeKnife) {
       this.cakeKnife = new THREE.Group();
-      const bladeMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
-      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.8, 2.2), bladeMat);
+
+      const bladeMat = new THREE.MeshStandardMaterial({
+        color: 0xe0e0e0,
+        metalness: 0.95,
+        roughness: 0.1
+      });
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.8, 0.4), bladeMat);
       blade.position.set(0, 0.9, 0);
       this.cakeKnife.add(blade);
 
@@ -1005,60 +1499,249 @@ class BirthdayScene {
       this.scene.add(this.cakeKnife);
     }
 
-    this.cakeKnife.position.set(0, 7.5, 1.5);
+    // Knife starts right in dead center front
+    this.cakeKnife.position.set(0.0, 7.5, 2.0);
     this.cakeKnife.visible = true;
 
     gsap.timeline()
       .to(this.cakeKnife.position, { y: 2.3, duration: 0.6, ease: 'power2.in' })
-      .to(this.cakeKnife.position, { y: 6.5, x: 3.5, duration: 0.5, ease: 'power2.out', onComplete: () => {
+      .to(this.cakeKnife.position, { y: 6.5, duration: 0.5, ease: 'power2.out', onComplete: () => {
         this.cakeKnife.visible = false;
       }})
       .add(() => {
-        // Create Detached Cake Slice Wedge with interior sponge
+        // 1. Cut the Main Cake directly in the DEAD CENTER FRONT (symmetrical 45° wedge gap)
+        const gapHalf = Math.PI / 8; // 22.5 deg each side
+        const centerAngle = Math.PI / 2; // 90 deg = dead center front (+Z)
+        const cutStart = centerAngle - gapHalf; // 3π/8 (67.5 deg)
+        const cutEnd = centerAngle + gapHalf;   // 5π/8 (112.5 deg)
+        const remLen = Math.PI * 2 - (cutEnd - cutStart); // 7π/4 (315 deg)
+
+        // Cut Bottom Tier (leaving center gap)
+        if (this.tier1Mesh) {
+          this.tier1Mesh.geometry.dispose();
+          this.tier1Mesh.geometry = new THREE.CylinderGeometry(2.8, 2.8, 1.3, 48, 1, false, cutEnd, remLen);
+        }
+
+        // Cut Top Tier (leaving center gap)
+        if (this.tier2Mesh) {
+          this.tier2Mesh.geometry.dispose();
+          this.tier2Mesh.geometry = new THREE.CylinderGeometry(1.8, 1.8, 1.1, 48, 1, false, cutEnd, remLen);
+        }
+
+        // --- FULLY COVER AND SEAL MAIN CAKE GAP WALLS WITH RICH CAKE LAYERS ---
+        const spongeMat = new THREE.MeshStandardMaterial({ color: 0xffeedb, roughness: 0.75 });
+        const fudgeMat = new THREE.MeshStandardMaterial({ color: 0x3d1f0d, roughness: 0.45 });
+        const berryMat = new THREE.MeshStandardMaterial({ color: 0xc2185b, roughness: 0.55 });
+
+        // A. Left Cut Wall (Tier 1 + Tier 2)
+        // Spans from (0, y, 0) to (R * cos(cutEnd), y, R * sin(cutEnd))
+        const leftWallGroup = new THREE.Group();
+        leftWallGroup.position.set(0, 0, 0);
+        leftWallGroup.rotation.y = -cutEnd + Math.PI / 2;
+
+        // Tier 1 Left Sponge Wall
+        const leftT1Sponge = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.3, 0.06), spongeMat);
+        leftT1Sponge.position.set(1.4, 1.95, 0);
+        leftWallGroup.add(leftT1Sponge);
+
+        // Tier 1 Left Chocolate Fudge Layer
+        const leftT1Fudge = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.16, 0.08), fudgeMat);
+        leftT1Fudge.position.set(1.4, 1.95, 0);
+        leftWallGroup.add(leftT1Fudge);
+
+        // Tier 1 Left Berry Cream Layer
+        const leftT1Berry = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.1, 0.08), berryMat);
+        leftT1Berry.position.set(1.4, 2.25, 0);
+        leftWallGroup.add(leftT1Berry);
+
+        // Tier 2 Left Sponge Wall
+        const leftT2Sponge = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.06), spongeMat);
+        leftT2Sponge.position.set(0.9, 3.15, 0);
+        leftWallGroup.add(leftT2Sponge);
+
+        // Tier 2 Left Chocolate Fudge Layer
+        const leftT2Fudge = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.14, 0.08), fudgeMat);
+        leftT2Fudge.position.set(0.9, 3.15, 0);
+        leftWallGroup.add(leftT2Fudge);
+
+        this.cakeGroup.add(leftWallGroup);
+
+        // B. Right Cut Wall (Tier 1 + Tier 2)
+        // Spans from (0, y, 0) to (R * cos(cutStart), y, R * sin(cutStart))
+        const rightWallGroup = new THREE.Group();
+        rightWallGroup.position.set(0, 0, 0);
+        rightWallGroup.rotation.y = -cutStart + Math.PI / 2;
+
+        // Tier 1 Right Sponge Wall
+        const rightT1Sponge = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.3, 0.06), spongeMat);
+        rightT1Sponge.position.set(1.4, 1.95, 0);
+        rightWallGroup.add(rightT1Sponge);
+
+        // Tier 1 Right Chocolate Fudge Layer
+        const rightT1Fudge = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.16, 0.08), fudgeMat);
+        rightT1Fudge.position.set(1.4, 1.95, 0);
+        rightWallGroup.add(rightT1Fudge);
+
+        // Tier 1 Right Berry Cream Layer
+        const rightT1Berry = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.1, 0.08), berryMat);
+        rightT1Berry.position.set(1.4, 2.25, 0);
+        rightWallGroup.add(rightT1Berry);
+
+        // Tier 2 Right Sponge Wall
+        const rightT2Sponge = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.06), spongeMat);
+        rightT2Sponge.position.set(0.9, 3.15, 0);
+        rightWallGroup.add(rightT2Sponge);
+
+        // Tier 2 Right Chocolate Fudge Layer
+        const rightT2Fudge = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.14, 0.08), fudgeMat);
+        rightT2Fudge.position.set(0.9, 3.15, 0);
+        rightWallGroup.add(rightT2Fudge);
+
+        this.cakeGroup.add(rightWallGroup);
+
+        // Center Apex Column (Sealing the inside corner)
+        const centerPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4, 16), spongeMat);
+        centerPillar.position.set(0, 2.5, 0);
+        this.cakeGroup.add(centerPillar);
+
+        // --- 2. CREATE FULLY ENCLOSED & PACKED 3D CAKE SLICE WEDGE ---
         if (!this.cakeSliceGroup) {
           this.cakeSliceGroup = new THREE.Group();
-          const sliceGeo = new THREE.CylinderGeometry(2.85, 2.85, 1.3, 16, 1, false, 0, Math.PI / 4);
-          const spongeMat = new THREE.MeshStandardMaterial({ color: 0xffeedb, roughness: 0.8 });
-          const sliceMesh = new THREE.Mesh(sliceGeo, spongeMat);
-          sliceMesh.position.y = 1.95;
-          this.cakeSliceGroup.add(sliceMesh);
 
-          const miniPlate = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.9, 0.1, 24), this.standMat);
-          miniPlate.position.y = 1.25;
+          // Helper to create solid closed wedge geometry via 2D sector extrusion
+          const createSolidWedge = (radius, height, mat) => {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            const segments = 16;
+            for (let i = 0; i <= segments; i++) {
+              const a = -gapHalf + (i / segments) * (2 * gapHalf);
+              const px = radius * Math.sin(a);
+              const py = radius * Math.cos(a);
+              shape.lineTo(px, py);
+            }
+            shape.lineTo(0, 0);
+
+            const extrudeSettings = {
+              depth: height,
+              bevelEnabled: true,
+              bevelSegments: 2,
+              steps: 1,
+              bevelSize: 0.02,
+              bevelThickness: 0.02
+            };
+            const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            geo.center();
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = Math.PI / 2;
+            return mesh;
+          };
+
+          // Tier 1 Solid Enclosed Wedge
+          const wedgeT1 = createSolidWedge(2.8, 1.3, this.cakeBaseMat);
+          wedgeT1.position.set(0.0, 1.95, 1.3);
+          wedgeT1.castShadow = true;
+          this.cakeSliceGroup.add(wedgeT1);
+
+          // Tier 1 Left Cut Face Sponge
+          const sliceL1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.3, 0.05), spongeMat);
+          sliceL1.position.set(0.55, 1.95, 1.3);
+          sliceL1.rotation.y = gapHalf;
+          this.cakeSliceGroup.add(sliceL1);
+
+          const sliceLFudge1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.16, 0.06), fudgeMat);
+          sliceLFudge1.position.set(0.55, 1.95, 1.3);
+          sliceLFudge1.rotation.y = gapHalf;
+          this.cakeSliceGroup.add(sliceLFudge1);
+
+          // Tier 1 Right Cut Face Sponge
+          const sliceR1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.3, 0.05), spongeMat);
+          sliceR1.position.set(-0.55, 1.95, 1.3);
+          sliceR1.rotation.y = -gapHalf;
+          this.cakeSliceGroup.add(sliceR1);
+
+          const sliceRFudge1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.16, 0.06), fudgeMat);
+          sliceRFudge1.position.set(-0.55, 1.95, 1.3);
+          sliceRFudge1.rotation.y = -gapHalf;
+          this.cakeSliceGroup.add(sliceRFudge1);
+
+          // Tier 2 Solid Enclosed Wedge
+          const wedgeT2 = createSolidWedge(1.8, 1.1, this.cakeTopMat);
+          wedgeT2.position.set(0.0, 3.15, 0.85);
+          wedgeT2.castShadow = true;
+          this.cakeSliceGroup.add(wedgeT2);
+
+          // Tier 2 Left Cut Face Sponge
+          const sliceL2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.05), spongeMat);
+          sliceL2.position.set(0.35, 3.15, 0.85);
+          sliceL2.rotation.y = gapHalf;
+          this.cakeSliceGroup.add(sliceL2);
+
+          // Tier 2 Right Cut Face Sponge
+          const sliceR2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.05), spongeMat);
+          sliceR2.position.set(-0.35, 3.15, 0.85);
+          sliceR2.rotation.y = -gapHalf;
+          this.cakeSliceGroup.add(sliceR2);
+
+          // Glossy Fresh Strawberry on top of the slice
+          const sliceBerry = new THREE.Mesh(
+            new THREE.ConeGeometry(0.18, 0.35, 16),
+            new THREE.MeshStandardMaterial({ color: 0xd90429, roughness: 0.3 })
+          );
+          sliceBerry.position.set(0.0, 3.82, 1.2);
+          sliceBerry.rotation.x = Math.PI;
+          this.cakeSliceGroup.add(sliceBerry);
+
+          // Mini Gold Serving Plate with lip
+          const miniPlate = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.5, 0.12, 32), this.standMat);
+          miniPlate.position.set(0.0, 1.25, 1.4);
+          miniPlate.castShadow = true;
           this.cakeSliceGroup.add(miniPlate);
 
           this.scene.add(this.cakeSliceGroup);
         }
 
-        // Slide slice forward onto plate
+        // Slide the completely packed slice smoothly forward and to the side onto the table
         gsap.to(this.cakeSliceGroup.position, {
-          x: 4.2,
-          z: 2.8,
-          duration: 1.2,
+          x: 3.8,
+          z: 3.2,
+          duration: 1.4,
+          ease: 'power2.out'
+        });
+        gsap.to(this.cakeSliceGroup.rotation, {
+          y: -Math.PI / 8,
+          duration: 1.4,
           ease: 'power2.out'
         });
 
-        // 2. Zoom Camera Out to Wide Panoramic View
+        // 2. Smoothly Tilt Camera towards the Sky for Fireworks
         gsap.to(this.camera.position, {
-          x: 0,
-          y: 8.5,
-          z: 22,
-          duration: 1.6,
+          x: 0.00,
+          y: 15.5,
+          z: 34.0,
+          duration: 2.0,
           ease: 'power2.inOut'
         });
         gsap.to(this.controls.target, {
-          x: 0,
-          y: 3.0,
-          z: 0,
-          duration: 1.6,
+          x: 0.00,
+          y: 13.5,
+          z: 0.00,
+          duration: 2.0,
           ease: 'power2.inOut'
         });
 
-        // 3. Start Happy Birthday Song
-        if (window.birthdayAudio && !window.birthdayAudio.isPlayingMusic) {
-          window.birthdayAudio.playBirthdaySong();
+        // 3. Start Audience Applause, Cheering & Happy Birthday Song
+        if (window.birthdayAudio) {
+          window.birthdayAudio.playApplauseAndCheer();
+          if (!window.birthdayAudio.isPlayingMusic) {
+            window.birthdayAudio.playBirthdaySong();
+          }
           const wave = document.getElementById('sound-wave');
           if (wave) wave.classList.add('playing');
+        }
+
+        // Friends behind cake start clapping enthusiastically
+        if (this.partyFriends) {
+          this.partyFriends.forEach(f => { f.userData.isClapping = true; });
         }
 
         // 4. Start 3-Second Multi-Color Firecracker Barrage (Red, Blue, Gold, Emerald, Magenta)
@@ -1071,9 +1754,28 @@ class BirthdayScene {
           setTimeout(() => banner.classList.remove('active'), 4000);
         }
 
-        // Callback after 3 seconds for next step (Open Gift)
+        // After 3 seconds firecrackers finish -> smoothly return camera to grand angle: (x: -3.52, y: 10.82, z: 31.82), target: (0, 2.5, 0)
         setTimeout(() => {
-          if (onFinishedFireworks) onFinishedFireworks();
+          gsap.to(this.camera.position, {
+            x: -3.52,
+            y: 10.82,
+            z: 31.82,
+            duration: 1.6,
+            ease: 'power2.inOut'
+          });
+          gsap.to(this.controls.target, {
+            x: 0.00,
+            y: 2.50,
+            z: 0.00,
+            duration: 1.6,
+            ease: 'power2.inOut',
+            onComplete: () => {
+              // Wait 2 seconds at normal angle before offering Open Gift
+              setTimeout(() => {
+                if (onFinishedFireworks) onFinishedFireworks();
+              }, 2000);
+            }
+          });
         }, 3200);
       });
   }
@@ -1232,26 +1934,109 @@ class BirthdayScene {
     this.scene.add(this.giftGroup);
   }
 
+  presentGiftBoxToCenter(onPresentedCallback) {
+    if (this.giftPresented || this.giftOpened) return;
+    this.giftPresented = true;
+
+    if (window.birthdayAudio) window.birthdayAudio.playGiftOpen();
+
+    // Lift and smoothly fly gift box directly to front center
+    gsap.to(this.giftGroup.position, {
+      x: 0.0,
+      y: 5.2,
+      z: 14.0,
+      duration: 1.6,
+      ease: 'back.out(1.3)'
+    });
+    gsap.to(this.giftGroup.scale, {
+      x: 1.5,
+      y: 1.5,
+      z: 1.5,
+      duration: 1.6,
+      ease: 'back.out(1.3)'
+    });
+    gsap.to(this.giftGroup.rotation, {
+      x: 0.2,
+      y: 0.4,
+      z: 0.0,
+      duration: 1.6,
+      ease: 'power2.out',
+      onComplete: () => {
+        if (onPresentedCallback) onPresentedCallback();
+      }
+    });
+
+    if (window.confetti) {
+      window.confetti({ particleCount: 40, spread: 70, origin: { x: 0.5, y: 0.45 } });
+    }
+  }
+
   openGift() {
     if (this.giftOpened) return;
     this.giftOpened = true;
 
+    // Hide tap gift card if present
+    const tapCard = document.getElementById('tap-gift-card');
+    if (tapCard) tapCard.classList.add('hidden');
+
     if (window.birthdayAudio) window.birthdayAudio.playGiftOpen();
 
     gsap.to(this.giftGroup.rotation, {
-      z: 0.15, yoyo: true, repeat: 3, duration: 0.08,
+      z: 0.2, yoyo: true, repeat: 4, duration: 0.08,
       onComplete: () => {
-        gsap.to(this.giftLid.position, { y: 4.5, x: 2.0, z: 2.0, duration: 0.8, ease: 'power2.out' });
-        gsap.to(this.giftLid.rotation, { x: 1.5, z: -1.2, duration: 0.8 });
+        // 1. Lid pops off excitedly
+        gsap.to(this.giftLid.position, { y: 6.0, x: 2.0, z: 2.5, duration: 0.8, ease: 'power2.out' });
+        gsap.to(this.giftLid.rotation, { x: 1.8, z: -1.6, duration: 0.8 });
         this.spawnGiftStars();
 
-        // Launch celebratory fireworks in background
+        // 2. Launch celebratory fireworks in background
         this.start3SecondFirecrackers();
 
+        // 3. Show Birthday Wish Greeting Modal
         setTimeout(() => {
           const giftModal = document.getElementById('gift-modal');
           if (giftModal) giftModal.classList.add('show');
         }, 500);
+
+        // 4. Smoothly glide the open gift box back to its original spot on stage
+        setTimeout(() => {
+          gsap.to(this.giftGroup.position, {
+            x: 5.5,
+            y: 0.0,
+            z: 3.5,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          });
+          gsap.to(this.giftGroup.scale, {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          });
+          gsap.to(this.giftGroup.rotation, {
+            x: 0.0,
+            y: -Math.PI / 6,
+            z: 0.0,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          });
+          // Gently land the detached open lid beside the box
+          gsap.to(this.giftLid.position, {
+            x: 1.6,
+            y: 0.2,
+            z: 0.8,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          });
+          gsap.to(this.giftLid.rotation, {
+            x: 0.35,
+            y: 0.6,
+            z: -0.2,
+            duration: 1.8,
+            ease: 'power2.inOut'
+          });
+        }, 1200);
       }
     });
   }
@@ -1426,7 +2211,7 @@ class BirthdayScene {
       let hitObj = intersects[0].object;
 
       while (hitObj.parent && hitObj.parent !== this.scene) {
-        if (hitObj.userData && (hitObj.userData.type === 'table-balloon' || hitObj.userData.type === 'gift')) {
+        if (hitObj.userData && (hitObj.userData.type === 'table-balloon' || hitObj.userData.type === 'gift' || hitObj.userData.type === 'photo-frame')) {
           break;
         }
         hitObj = hitObj.parent;
@@ -1436,6 +2221,16 @@ class BirthdayScene {
         this.popTableBalloon(hitObj);
       } else if (hitObj.userData && hitObj.userData.type === 'gift') {
         this.openGift();
+      } else if (hitObj.userData && hitObj.userData.type === 'photo-frame') {
+        // Prevent OrbitControls from capturing mouse drag when file picker dialog opens
+        if (this.controls) {
+          this.controls.enabled = false;
+          setTimeout(() => { if (this.controls) this.controls.enabled = true; }, 500);
+        }
+        const inputPhoto = document.getElementById('input-photo');
+        if (inputPhoto) {
+          setTimeout(() => { inputPhoto.click(); }, 50);
+        }
       }
     }
   }
@@ -1443,11 +2238,11 @@ class BirthdayScene {
   setCameraView(viewName) {
     const duration = 1.2;
     if (viewName === 'orbit') {
-      gsap.to(this.camera.position, { x: 0, y: 7.5, z: 21, duration, ease: 'power2.inOut' });
-      gsap.to(this.controls.target, { x: 0, y: 2.5, z: 0, duration, ease: 'power2.inOut' });
+      gsap.to(this.camera.position, { x: -3.52, y: 10.82, z: 31.82, duration, ease: 'power2.inOut' });
+      gsap.to(this.controls.target, { x: 0.00, y: 2.50, z: 0.00, duration, ease: 'power2.inOut' });
     } else if (viewName === 'cake') {
-      gsap.to(this.camera.position, { x: 0, y: 4.8, z: 7.5, duration, ease: 'power2.inOut' });
-      gsap.to(this.controls.target, { x: 0, y: 3.2, z: 0, duration, ease: 'power2.inOut' });
+      gsap.to(this.camera.position, { x: 0.00, y: 7.31, z: 18.45, duration, ease: 'power2.inOut' });
+      gsap.to(this.controls.target, { x: 0.00, y: 2.80, z: 0.00, duration, ease: 'power2.inOut' });
     } else if (viewName === 'gift') {
       gsap.to(this.camera.position, { x: 7.5, y: 3.2, z: 6.5, duration, ease: 'power2.inOut' });
       gsap.to(this.controls.target, { x: 5.5, y: 1.0, z: 3.5, duration, ease: 'power2.inOut' });
@@ -1520,21 +2315,57 @@ class BirthdayScene {
       });
     }
 
-    // 5. Background side balloons wobble
+    // 5. Party Friends Animations (Joyful Swaying, Waving & Clapping)
+    if (this.partyFriends) {
+      this.partyFriends.forEach(friend => {
+        const u = friend.userData;
+        if (u.isRevealed) {
+          if (u.isClapping) {
+            // Energetic jumping & rapid synchronized hand clapping
+            friend.position.y = Math.abs(Math.sin(time * 8 + u.wobbleOffset)) * 0.35;
+            const clapAngle = Math.sin(time * 16) * 0.45;
+            u.leftArm.rotation.z = Math.PI / 4 + clapAngle;
+            u.rightArm.rotation.z = -Math.PI / 4 - clapAngle;
+          } else {
+            // Gentle joyful swaying and arm waving
+            friend.position.y = Math.sin(time * 3 + u.wobbleOffset) * 0.08;
+            u.leftArm.rotation.x = -Math.PI / 4 + Math.sin(time * 4 + u.wobbleOffset) * 0.25;
+            u.rightArm.rotation.x = -Math.PI / 4 + Math.cos(time * 4 + u.wobbleOffset) * 0.25;
+          }
+        }
+      });
+    }
+
+    // 6. Photo Frame + Badge Pulsing Glow
+    if (this.photoBadge) {
+      const pulse = 1.0 + Math.sin(time * 5) * 0.15;
+      this.photoBadge.scale.set(pulse, pulse, pulse);
+    }
+
+    // 7. Background side balloons wobble
     this.generalBalloons.forEach(b => {
       const u = b.userData;
       b.position.y = u.basePos.y + Math.sin(time * u.floatSpeed + u.wobbleOffset) * 0.25;
       b.rotation.z = Math.sin(time * 1.5 + u.wobbleOffset) * 0.05;
     });
 
-    // 5. Table Balloons Float
+    // 8. Table Balloons Orbit & Rotate Around the Cake
     this.tableBalloons.forEach(b => {
       const u = b.userData;
-      if (!u.isPopped) {
-        b.position.y = u.basePos.y + Math.sin(time * u.floatSpeed + u.wobbleOffset) * 0.35;
+      if (!u.isPopped && !this.isOrbitPaused) {
+        const curAngle = u.baseAngle + time * u.orbitSpeed;
+        b.position.x = Math.cos(curAngle) * u.orbitRadius;
+        b.position.z = Math.sin(curAngle) * u.orbitRadius;
+        b.position.y = u.baseHeight + Math.sin(time * u.floatSpeed + u.wobbleOffset) * 0.35;
         b.rotation.z = Math.sin(time * 1.5 + u.wobbleOffset) * 0.08;
       }
     });
+
+    // 9. Floating Gift Box when presented in front
+    if (this.giftGroup && this.giftPresented && !this.giftOpened) {
+      this.giftGroup.position.y = 5.2 + Math.sin(time * 3) * 0.15;
+      this.giftGroup.rotation.y = 0.4 + Math.sin(time * 1.5) * 0.12;
+    }
 
     // 6. Confetti
     if (this.confettiList) {

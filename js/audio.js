@@ -455,6 +455,65 @@ class BirthdayAudio {
     osc.start(now);
     osc.stop(now + 0.45);
   }
+
+  // FX: Audience Clapping / Cheering Applause
+  playApplauseAndCheer() {
+    this.init();
+    if (this.isMuted) return;
+
+    const now = this.ctx.currentTime;
+    const duration = 2.8;
+
+    // 1. Crowd Cheering Harmonized Synth Whoops
+    const cheerNotes = [523.25, 659.25, 783.99, 1046.50];
+    cheerNotes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq * 0.9, now);
+      osc.frequency.linearRampToValueAtTime(freq * 1.15, now + 0.6);
+      osc.frequency.linearRampToValueAtTime(freq, now + duration);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.2 + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now + idx * 0.05);
+      osc.stop(now + duration);
+    });
+
+    // 2. Rapid Hand Clapping Bursts (Simulated crowd claps)
+    for (let c = 0; c < 38; c++) {
+      const clapTime = now + Math.random() * duration;
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.04);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(800 + Math.random() * 800, clapTime);
+      filter.Q.setValueAtTime(2.0, clapTime);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.12 + Math.random() * 0.12, clapTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.04);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      noise.start(clapTime);
+    }
+  }
 }
 
 window.birthdayAudio = new BirthdayAudio();
