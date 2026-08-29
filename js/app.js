@@ -263,9 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* =========================================================
      URL PARAMETERS & SHARING (PHOTO + NAME + AGE + THEME)
      ========================================================= */
-  let currentPhotoDataUrl = null;
+  let currentPhotoDataUrl = 'photo.jpg';
   try {
-    currentPhotoDataUrl = localStorage.getItem('birthday_custom_photo') || null;
+    currentPhotoDataUrl = localStorage.getItem('birthday_custom_photo') || 'photo.jpg';
   } catch(e) {}
 
   function compressImage(img, maxWidth = 200, maxHeight = 260, quality = 0.52) {
@@ -310,27 +310,19 @@ document.addEventListener('DOMContentLoaded', () => {
       activeTheme = params.get('theme');
     }
 
-    // Check shared photo in URL hash or localStorage
-    let sharedPhoto = params.get('photo');
-    if (sharedPhoto) {
-      currentPhotoDataUrl = sharedPhoto;
-      try {
-        localStorage.setItem('birthday_custom_photo', sharedPhoto);
-      } catch(e) {}
-    } else {
-      try {
-        sharedPhoto = localStorage.getItem('birthday_custom_photo');
-      } catch(e) {}
+    // Check shared photo in URL hash, localStorage, or permanent hardcoded photo.jpg
+    let sharedPhoto = params.get('photo') || localStorage.getItem('birthday_custom_photo') || 'photo.jpg';
+    currentPhotoDataUrl = sharedPhoto;
+    if (inputPhotoUrl && sharedPhoto.startsWith('http')) {
+      inputPhotoUrl.value = sharedPhoto;
     }
 
-    if (sharedPhoto) {
-      currentPhotoDataUrl = sharedPhoto;
-      const img = new Image();
-      img.onload = () => {
-        if (scene) scene.updateUserPhoto(img);
-      };
-      img.src = sharedPhoto;
-    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (scene) scene.updateUserPhoto(img);
+    };
+    img.src = sharedPhoto;
 
     updateCelebrantInfo();
     applyTheme(activeTheme);
@@ -365,9 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     params.set('age', celebrantAge || '22');
     params.set('wish', customWish || 'Happy Birthday!');
     params.set('theme', activeTheme || 'royal-gold');
-    if (includePhoto && currentPhotoDataUrl) {
-      params.set('photo', currentPhotoDataUrl);
-    }
+    params.set('photo', (includePhoto && currentPhotoDataUrl) ? currentPhotoDataUrl : 'photo.jpg');
     url.hash = params.toString();
     return url.toString();
   }

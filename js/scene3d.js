@@ -1051,6 +1051,14 @@ class BirthdayScene {
     this.photoTexture = new THREE.CanvasTexture(this.photoCanvas);
     this.photoTexture.needsUpdate = true;
 
+    // Hardcoded permanent default photo
+    const defaultImg = new Image();
+    defaultImg.onload = () => {
+      this.drawDefaultPhotoTexture(defaultImg, 'Shubham Sharnam', '22');
+      if (this.photoTexture) this.photoTexture.needsUpdate = true;
+    };
+    defaultImg.src = 'photo.jpg';
+
     const photoMat = new THREE.MeshStandardMaterial({
       map: this.photoTexture,
       roughness: 0.25,
@@ -1267,10 +1275,21 @@ class BirthdayScene {
   drawDefaultPhotoTexture(customImg = null, name = 'Shubham Sharnam', age = '22') {
     if (!this.photoCanvas) return;
     const ctx = this.photoCanvas.getContext('2d');
-    if (customImg) {
+    if (customImg && customImg.width > 0) {
       this.currentCustomPhotoImg = customImg;
-      ctx.drawImage(customImg, 0, 0, 512, 680);
-      // Gold subtle border overlay
+      const imgAspect = customImg.width / customImg.height;
+      const canvasAspect = 512 / 680;
+      let sx = 0, sy = 0, sw = customImg.width, sh = customImg.height;
+      if (imgAspect > canvasAspect) {
+        sw = customImg.height * canvasAspect;
+        sx = (customImg.width - sw) / 2;
+      } else {
+        sh = customImg.width / canvasAspect;
+        sy = (customImg.height - sh) / 2;
+      }
+      ctx.drawImage(customImg, sx, sy, sw, sh, 0, 0, 512, 680);
+
+      // Gold elegant border overlay
       ctx.strokeStyle = '#ffd700';
       ctx.lineWidth = 14;
       ctx.strokeRect(7, 7, 498, 666);
