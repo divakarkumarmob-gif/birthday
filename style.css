@@ -5466,6 +5466,415 @@ body.disco-active .disco-overlay {
 
 
 /* =========================================================
+   LOGIN TABS (NEW USER / RETURNING USER)
+   ========================================================= */
+.login-tab-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.login-tab-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.login-tab-btn.active {
+  background: linear-gradient(135deg, rgba(255,117,140,0.4), rgba(255,176,70,0.25));
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(255,117,140,0.25);
+}
+
+.login-tab-content {
+  display: none;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+.login-tab-content.active {
+  display: block;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.neon-user-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.returning-badge {
+  background: rgba(0, 220, 150, 0.12);
+  border: 1px solid rgba(0, 220, 150, 0.3);
+  color: #00dc96;
+}
+
+.new-badge {
+  background: rgba(255, 183, 77, 0.12);
+  border: 1px solid rgba(255, 183, 77, 0.3);
+  color: #ffb74d;
+}
+
+/* =========================================================
+   DELETE ACCOUNT CORNER BUTTON
+   ========================================================= */
+.creator-welcome-banner {
+  position: relative;
+}
+
+.btn-delete-account-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8px 14px;
+  background: rgba(220, 50, 50, 0.15);
+  border: 1px solid rgba(220, 50, 50, 0.4);
+  color: #ff6b6b;
+  border-radius: 10px;
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-delete-account-corner:hover {
+  background: rgba(220, 50, 50, 0.3);
+  border-color: rgba(220, 50, 50, 0.7);
+  color: #ff4040;
+  box-shadow: 0 4px 20px rgba(220, 50, 50, 0.3);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   DELETE ACCOUNT MODAL
+   ========================================================= */
+#delete-account-modal {
+  z-index: 99998 !important;
+}
+
+.delete-account-card {
+  max-width: 520px;
+  width: 94%;
+  padding: 32px 28px 24px;
+  background: linear-gradient(145deg, rgba(20, 8, 8, 0.97), rgba(30, 10, 10, 0.95));
+  border: 1px solid rgba(220, 50, 50, 0.35);
+  box-shadow: 0 0 40px rgba(220, 50, 50, 0.2), 0 24px 60px rgba(0,0,0,0.8);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.delete-modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.delete-warning-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(220, 50, 50, 0.2);
+  border: 2px solid rgba(220, 50, 50, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #ff6b6b;
+  margin: 0 auto 14px;
+  animation: pulseRed 2s ease infinite;
+}
+
+@keyframes pulseRed {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 50, 50, 0.4); }
+  50%       { box-shadow: 0 0 0 10px rgba(220, 50, 50, 0); }
+}
+
+.delete-modal-header h2 {
+  font-size: 1.35rem;
+  color: #ff6b6b;
+  margin-bottom: 6px;
+}
+
+.delete-modal-header p {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+}
+
+/* Data Preview */
+.delete-data-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.delete-category {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.delete-cat-header {
+  padding: 9px 14px;
+  background: rgba(220, 50, 50, 0.1);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.delete-cat-items {
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+}
+
+.delete-data-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.delete-data-item .item-label {
+  color: rgba(255,255,255,0.45);
+  min-width: 90px;
+  font-size: 0.75rem;
+}
+
+.delete-data-item .item-val {
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.no-data-tag {
+  color: rgba(255,255,255,0.35);
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
+/* Confirm Section */
+.delete-confirm-section {
+  margin-bottom: 16px;
+}
+
+.delete-confirm-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-feedback-msg {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(220, 50, 50, 0.15);
+  border: 1px solid rgba(220, 50, 50, 0.35);
+  color: #ff6b6b;
+}
+
+.delete-feedback-msg.success {
+  background: rgba(0, 200, 100, 0.12);
+  border-color: rgba(0, 200, 100, 0.35);
+  color: #00dc96;
+}
+
+/* Progress Bar */
+.delete-progress-wrap {
+  margin-bottom: 16px;
+}
+
+.delete-progress-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 10px;
+  animation: blink 1.2s ease infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.delete-progress-bar {
+  height: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.delete-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff4040, #ff8c00);
+  border-radius: 6px;
+  transition: width 0.6s ease;
+  box-shadow: 0 0 10px rgba(255, 64, 64, 0.6);
+}
+
+.delete-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.delete-step-item {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.6);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+.delete-step-item.done {
+  color: #00dc96;
+}
+
+.delete-step-item.done::before {
+  content: '✅';
+}
+
+.delete-step-item.pending::before {
+  content: '⏳';
+}
+
+/* Done State */
+.delete-done-state {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.delete-done-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  animation: heartbreak 0.5s ease;
+}
+
+@keyframes heartbreak {
+  0% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+.delete-done-state h3 {
+  font-size: 1.2rem;
+  color: #ff6b6b;
+  margin-bottom: 8px;
+}
+
+.delete-done-state p {
+  font-size: 0.83rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.6;
+}
+
+/* Footer Buttons */
+.delete-modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-delete-confirm {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(192, 57, 43, 0.5);
+}
+
+.btn-delete-confirm:hover {
+  background: linear-gradient(135deg, #a93226, #c0392b);
+  box-shadow: 0 6px 28px rgba(192, 57, 43, 0.7);
+  transform: translateY(-2px);
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-delete-cancel {
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.7);
+  font-family: var(--font-main);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-cancel:hover {
+  background: rgba(255,255,255,0.13);
+  color: #fff;
+}
+
+/* =========================================================
    NEON GLASSY LOGIN POPUP MODAL
    ========================================================= */
 .neon-glass-login-card {
@@ -6203,5 +6612,696 @@ body.disco-active .disco-overlay {
   .link-actions-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================================================
+   LOGIN TABS (NEW USER / RETURNING USER)
+   ========================================================= */
+.login-tab-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  background: rgba(30, 8, 26, 0.7);
+  border: 1px solid rgba(255, 117, 140, 0.25);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.login-tab-btn {
+  flex: 1;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-main, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+
+.login-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.login-tab-btn.active {
+  background: linear-gradient(135deg, #ff0a54, #ff477e);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(255, 10, 84, 0.4);
+}
+
+.login-tab-content {
+  display: none;
+}
+
+.login-tab-content.active {
+  display: block;
+  animation: fadeInModal 0.3s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.neon-user-type-badge {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.neon-user-type-badge.returning-badge {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  color: #a3ffc7;
+}
+
+.neon-user-type-badge.new-badge {
+  background: rgba(255, 183, 3, 0.1);
+  border: 1px solid rgba(255, 183, 3, 0.35);
+  color: #ffd166;
+}
+
+.neon-warning-note {
+  background: rgba(255, 77, 109, 0.12);
+  border-left: 3px solid #ff4d6d;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  color: #ffb3c1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.neon-warning-note i {
+  color: #ff4d6d;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   CREATOR DASHBOARD CORNER DELETE BUTTON
+   ========================================================= */
+.btn-delete-account-corner {
+  background: rgba(255, 40, 80, 0.15);
+  border: 1px solid rgba(255, 77, 109, 0.5);
+  color: #ff758c;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: var(--font-main, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-delete-account-corner:hover {
+  background: rgba(255, 40, 80, 0.35);
+  border-color: #ff0a54;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 10, 84, 0.45);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   DELETE ACCOUNT MODAL (DATA PREVIEW & PROGRESS)
+   ========================================================= */
+.delete-account-card {
+  max-width: 540px !important;
+  width: 92% !important;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: linear-gradient(155deg, #220819 0%, #140210 100%) !important;
+  border: 1.5px solid rgba(255, 77, 109, 0.45) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 45px rgba(255, 10, 84, 0.25) !important;
+  border-radius: 20px;
+  padding: 28px !important;
+}
+
+.delete-modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.delete-warning-icon {
+  font-size: 2.4rem;
+  color: #ff4d6d;
+  animation: pulseDelete 1.8s infinite;
+}
+
+@keyframes pulseDelete {
+  0% { transform: scale(1); filter: drop-shadow(0 0 4px #ff4d6d); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 16px #ff0a54); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 4px #ff4d6d); }
+}
+
+.delete-modal-header h2 {
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin: 10px 0 6px;
+  font-weight: 800;
+}
+
+.delete-modal-header p {
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.delete-data-preview {
+  background: rgba(35, 10, 28, 0.75);
+  border: 1px solid rgba(255, 117, 140, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.delete-category {
+  margin-bottom: 14px;
+}
+
+.delete-category:last-child {
+  margin-bottom: 0;
+}
+
+.delete-cat-header {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #ff758c;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-cat-items {
+  padding-left: 6px;
+  font-size: 0.82rem;
+}
+
+.delete-data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.delete-data-item .item-label {
+  color: rgba(255, 180, 200, 0.8);
+}
+
+.delete-data-item .item-val {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.no-data-tag {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.delete-confirm-section {
+  margin-bottom: 18px;
+}
+
+.delete-confirm-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffccd5;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-feedback-msg {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.delete-feedback-msg.error {
+  background: rgba(255, 40, 80, 0.2);
+  border: 1px solid #ff4d6d;
+  color: #ff85a1;
+}
+
+.delete-progress-wrap {
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(30, 8, 25, 0.9);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+}
+
+.delete-progress-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ff758c;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.delete-progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.delete-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff0a54, #ff477e, #8a2be2);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.delete-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.delete-step-item {
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-step-item.pending {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.delete-step-item.in-progress {
+  color: #ffd166;
+  font-weight: 700;
+  background: rgba(255, 183, 3, 0.1);
+}
+
+.delete-step-item.done {
+  color: #00ff88;
+  font-weight: 600;
+  background: rgba(0, 255, 136, 0.08);
+}
+
+.delete-done-state {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.delete-done-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.delete-done-state h3 {
+  color: #ff4d6d;
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.delete-done-state p {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.delete-modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-delete-confirm {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #d90429, #ef233c);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-main, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(217, 4, 41, 0.5);
+  transition: all 0.25s ease;
+}
+
+.btn-delete-confirm:hover {
+  background: linear-gradient(135deg, #ef233c, #ff4d6d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(239, 35, 60, 0.7);
+}
+
+.btn-delete-cancel {
+  width: 100%;
+  padding: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  font-family: var(--font-main, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* =========================================================
+   IDLE ACCOUNT RETENTION BANNER (CREATOR FORM)
+   ========================================================= */
+.idle-policy-banner {
+  background: rgba(255, 183, 3, 0.08);
+  border: 1px dashed rgba(255, 183, 3, 0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 16px 0 10px;
+  font-size: 0.83rem;
+  color: #ffd166;
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.idle-policy-banner i {
+  font-size: 1.3rem;
+  color: #ffb703;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   48-HOUR LINK EXPIRY CARD & LIVE COUNTDOWN
+   ========================================================= */
+.link-expiry-card {
+  margin: 18px 0;
+  background: linear-gradient(135deg, rgba(35, 10, 32, 0.95), rgba(20, 4, 18, 0.95));
+  border: 1.5px solid rgba(255, 117, 140, 0.35);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 10, 84, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-expiry-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.expiry-icon-pulse {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 10, 84, 0.15);
+  border: 1.5px solid #ff4d6d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff758c;
+  font-size: 1.25rem;
+  animation: pulseExpiry 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseExpiry {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 10, 84, 0.4); }
+  70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(255, 10, 84, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 10, 84, 0); }
+}
+
+.expiry-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.expiry-badge-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.3px;
+}
+
+.expiry-badge-title i {
+  color: #ff4d6d;
+}
+
+.expiry-exact-date {
+  font-size: 0.83rem;
+  color: #ffb3c1;
+  font-weight: 600;
+}
+
+.expiry-countdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.countdown-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.countdown-label i {
+  color: #ffd166;
+}
+
+.expiry-countdown-chips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.countdown-chip {
+  background: linear-gradient(135deg, rgba(255, 10, 84, 0.35), rgba(138, 43, 226, 0.35));
+  border: 1px solid rgba(255, 117, 140, 0.5);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  min-width: 44px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(255, 10, 84, 0.3);
+}
+
+.countdown-chip-sep {
+  font-weight: 900;
+  color: #ff758c;
+  animation: blinkSep 1s infinite;
+}
+
+@keyframes blinkSep {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* =========================================================
+   PERMANENT AUTO-DELETION POLICY NOTE
+   ========================================================= */
+.link-deletion-policy-note {
+  margin: 14px 0 18px;
+  background: rgba(255, 77, 109, 0.1);
+  border-left: 3.5px solid #ff4d6d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.policy-note-icon {
+  font-size: 1.4rem;
+  color: #ff4d6d;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.policy-note-content {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.policy-note-content strong {
+  color: #ff85a1;
+}
+
+.policy-note-content p {
+  margin: 4px 0 8px;
+  color: #ffe5ec;
+}
+
+.policy-subnote {
+  font-size: 0.78rem;
+  color: rgba(255, 179, 193, 0.85);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+.policy-subnote i {
+  color: #ff4d6d;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   EXPIRED LINK OVERLAY (48-HOUR TIMEOUT FULLSCREEN MODAL)
+   ========================================================= */
+.expired-link-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 1, 8, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.expired-link-overlay.hidden {
+  display: none !important;
+}
+
+.expired-link-card {
+  max-width: 480px;
+  width: 100%;
+  background: linear-gradient(155deg, #240718 0%, #12020e 100%);
+  border: 1.5px solid rgba(255, 77, 109, 0.4);
+  border-radius: 22px;
+  padding: 34px 26px;
+  text-align: center;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(255, 10, 84, 0.2);
+  animation: fadeInModal 0.4s ease;
+}
+
+.expired-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  animation: pulseExpiry 2.2s infinite;
+}
+
+.expired-link-card h2 {
+  font-size: 1.7rem;
+  color: #ffffff;
+  margin: 0 0 10px;
+  font-weight: 800;
+}
+
+.expired-main-desc {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.expired-security-badge {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 24px;
+  font-size: 0.82rem;
+  color: #a3ffc7;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.expired-security-badge i {
+  color: #00ff88;
+  font-size: 1.2rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.btn-expired-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff0a54, #ff477e, #8a2be2);
+  color: #ffffff;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 8px 30px rgba(255, 10, 84, 0.4);
+  transition: all 0.25s ease;
+}
+
+.btn-expired-home:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(255, 10, 84, 0.6);
+  color: #ffffff;
 }
 

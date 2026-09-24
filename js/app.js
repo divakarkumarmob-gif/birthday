@@ -1080,6 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         if (scene) scene.updateUserPhoto(img);
+        updateMemoriesPhoto(sharedPhoto);
       };
       img.src = sharedPhoto;
     } else {
@@ -1094,6 +1095,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateCelebrantInfo() {
     const isCustom = celebrantName && celebrantName !== 'Birthday Star';
+    const displayName = isCustom ? celebrantName : 'My Love';
+
     if (isCustom) {
       displayNameText.textContent = celebrantName;
       celebrantTitle.textContent = `Happy Birthday ${celebrantName}!`;
@@ -1115,10 +1118,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     giftCustomWish.textContent = `"${customWish}"`;
 
+    // --- Update Curtain Intro Screen ---
+    const introHeadline = document.querySelector('.intro-headline');
+    const introSubtext = document.querySelector('.intro-subtext');
+    const introSparkle = document.querySelector('.intro-sparkle-badge');
+    if (introHeadline) introHeadline.textContent = `Happy Birthday ${displayName}! ✨`;
+    if (introSubtext && customWish && customWish !== 'Happy Birthday!') {
+      introSubtext.textContent = customWish.length > 80 ? customWish.substring(0, 80) + '...' : customWish;
+    }
+
+    // --- Update Romantic Chat Screen Hero ---
+    const romanticHeroTitle = document.querySelector('.romantic-hero-title');
+    const romanticHeroSub = document.querySelector('.romantic-hero-subtitle');
+    if (romanticHeroTitle) romanticHeroTitle.textContent = `Happy Birthday, ${displayName}! 💖`;
+    if (romanticHeroSub && customWish && customWish !== 'Happy Birthday!') {
+      const shortWish = customWish.length > 90 ? customWish.substring(0, 90) + '...' : customWish;
+      romanticHeroSub.textContent = `"${shortWish}"`;
+    }
+
     // Real-time update to 3D Stand Board, Numeric Candles & Photo Frame
     if (scene && scene.updateCelebrantInfo3D) {
       scene.updateCelebrantInfo3D(celebrantName, celebrantAge);
     }
+  }
+
+  // --- Inject uploaded photo into all memory/polaroid frames ---
+  function updateMemoriesPhoto(photoUrl) {
+    if (!photoUrl) return;
+
+    // Polaroids modal (from menu drawer)
+    const polaroidImg1 = document.getElementById('polaroid-img-1');
+    const polaroidEmpty1 = document.getElementById('polaroid-empty-1');
+    if (polaroidImg1) {
+      polaroidImg1.src = photoUrl;
+      polaroidImg1.classList.remove('hidden');
+      if (polaroidEmpty1) polaroidEmpty1.style.display = 'none';
+    }
+    const polaroidImg2 = document.getElementById('polaroid-img-2');
+    const polaroidEmpty2 = document.getElementById('polaroid-empty-2');
+    if (polaroidImg2) {
+      polaroidImg2.src = photoUrl;
+      polaroidImg2.classList.remove('hidden');
+      if (polaroidEmpty2) polaroidEmpty2.style.display = 'none';
+    }
+
+    // Book memories modal polaroid cards (CSS background)
+    const polaroidImg1Card = document.querySelector('.polaroid-img-1');
+    const polaroidImg2Card = document.querySelector('.polaroid-img-2');
+    const polaroidImg3Card = document.querySelector('.polaroid-img-3');
+    const polaroidImg4Card = document.querySelector('.polaroid-img-4');
+    const applyBg = (el) => {
+      if (el) {
+        el.style.backgroundImage = `url('${photoUrl}')`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center top';
+        const icon = el.querySelector('.polaroid-center-icon');
+        if (icon) icon.style.display = 'none';
+      }
+    };
+    applyBg(polaroidImg1Card);
+    applyBg(polaroidImg2Card);
+    applyBg(polaroidImg3Card);
+    applyBg(polaroidImg4Card);
   }
 
   function generateShareUrl(includePhoto = true) {
@@ -1407,6 +1468,7 @@ document.addEventListener('DOMContentLoaded', () => {
       customWish = inputWish ? (inputWish.value.trim() || 'Happy Birthday!') : 'Happy Birthday!';
 
       updateCelebrantInfo();
+      if (currentPhotoDataUrl) updateMemoriesPhoto(currentPhotoDataUrl);
       if (customizeModal) customizeModal.classList.remove('show');
       if (scene) scene.start3SecondFirecrackers();
     });
@@ -1432,6 +1494,7 @@ document.addEventListener('DOMContentLoaded', () => {
               localStorage.setItem('birthday_custom_photo', compressed);
             } catch(err) {}
             if (scene) scene.updateUserPhoto(img);
+            updateMemoriesPhoto(compressed);
 
             const formData = new FormData();
             formData.append('image', file);
@@ -1663,6 +1726,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (bookCardMemories) {
     bookCardMemories.addEventListener('click', () => {
+      // Inject current photo into memories modal when it opens
+      if (currentPhotoDataUrl) updateMemoriesPhoto(currentPhotoDataUrl);
       if (modalBookMemories) modalBookMemories.classList.add('show');
       if (window.birthdayAudio) {
         try { window.birthdayAudio.playGiftOpen(); } catch(e) {}
@@ -1683,8 +1748,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Safarnama: Dynamically populate from chat answers ---
+  function renderSafarnamaChapters() {
+    const chaptersScroll = document.querySelector('.safarnama-chapters-scroll');
+    if (!chaptersScroll) return;
+
+    const history = getSavedChatHistory();
+    const name = celebrantName && celebrantName !== 'Birthday Star' ? celebrantName : 'Tum';
+
+    // Default romantic chapters (always shown)
+    const defaultChapters = [
+      {
+        num: '01', title: `Jab ${name} Zindagi Me Aaye 🌸`,
+        text: `Ek aam sa din tha, lekin jab ${name} meri zindagi me aayi, toh har lamha khaas ban gaya. Tumhari muskurahat ne dil ko ek aisi sukoon di jo pehle kabhi mehsoos nahi hui thi.`
+      },
+      {
+        num: '02', title: `Der Raat Ki Baatein & Silly Fights 🥰`,
+        text: `Wo ghanton phone par baatein karna, bina kisi wajah ke muskurana, choti-choti baaton par ruthna aur phir ek pyare se sorry par maan jana... Ye saare pal mere dil ke sabse kareeb hain.`
+      },
+      {
+        num: '03', title: `Har Kadam Par Saath 🤝`,
+        text: `Chahe din achha ho ya mushkil, tumne hamesha meri himmat badhayi hai. Tum sirf meri girlfriend nahi, meri sabse achhi dost aur meri sabse badi taakat ho.`
+      },
+      {
+        num: '04', title: `Aaj, Kal Aur Hamesha ❤️`,
+        text: `Aaj ${name} ke is khaas janamdin par, main rab se bas yahi dua karta hu ki tumhari har khwahish puri ho. Happy Birthday My Love! 💖`,
+        highlight: true
+      }
+    ];
+
+    let html = '';
+
+    // Default chapters
+    defaultChapters.forEach(ch => {
+      html += `
+        <div class="safarnama-chapter-card${ch.highlight ? ' highlight-chapter' : ''}">
+          <div class="chapter-badge">Chapter ${ch.num}</div>
+          <h3 class="chapter-title">${ch.title}</h3>
+          <p class="chapter-text">${ch.text}</p>
+        </div>`;
+    });
+
+    // Add chapters from chat answers if any
+    if (history.length > 0) {
+      html += `
+        <div class="safarnama-chapter-card" style="background: linear-gradient(135deg, rgba(255,117,140,0.12), rgba(255,200,124,0.08)); border-left: 3px solid #ff758c;">
+          <div class="chapter-badge" style="background: linear-gradient(135deg, #ff758c, #ffd700);">Her Words 💬</div>
+          <h3 class="chapter-title">${name} Ki Apni Zuban Se... 💕</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">`;
+      history.forEach((item, idx) => {
+        html += `
+            <div style="padding: 10px 12px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+              <div style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 4px;">Q${idx+1}: ${item.question || ''}</div>
+              <div style="font-size: 0.9rem; color: #ffb3c1; font-style: italic;">"${item.reply || ''}"</div>
+            </div>`;
+      });
+      html += `
+          </div>
+        </div>`;
+    }
+
+    chaptersScroll.innerHTML = html;
+  }
+
   if (bookCardSafarnama) {
     bookCardSafarnama.addEventListener('click', () => {
+      renderSafarnamaChapters();
       if (modalBookSafarnama) modalBookSafarnama.classList.add('show');
       if (window.birthdayAudio) {
         try { window.birthdayAudio.playGiftOpen(); } catch(e) {}
@@ -1717,10 +1846,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const portalLoginModal = document.getElementById('portal-login-modal');
   const closeLoginModal = document.getElementById('close-login-modal');
   const portalLoginForm = document.getElementById('portal-login-form');
+  const portalRegisterForm = document.getElementById('portal-register-form');
   const loginUsername = document.getElementById('login-username');
   const loginPassword = document.getElementById('login-password');
+  const registerUsername = document.getElementById('register-username');
+  const registerPassword = document.getElementById('register-password');
   const btnToggleLoginPwd = document.getElementById('btn-toggle-login-pwd');
+  const btnToggleRegPwd = document.getElementById('btn-toggle-reg-pwd');
   const btnLoginHelp = document.getElementById('btn-login-help');
+  const tabBtnReturning = document.getElementById('tab-btn-returning');
+  const tabBtnNew = document.getElementById('tab-btn-new');
 
   const portalCreatorDashboard = document.getElementById('portal-creator-dashboard');
   const loggedUserName = document.getElementById('logged-user-name');
@@ -1745,6 +1880,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnLogoutPortal = document.getElementById('btn-logout-portal');
 
   let selectedCreatorMode = 'gf';
+  let currentPortalUser = null; // tracks logged-in username key
 
   // 1. Landing Screen CTAs
   if (btnPortalOpenLogin) {
@@ -1786,58 +1922,248 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Login Form Submission & Authentication
+  // --- Helper: Save current form data to localStorage keyed by username ---
+  function saveUserFormData(userKey) {
+    if (!userKey) return;
+    const data = {
+      name: creatorInputName ? creatorInputName.value : '',
+      nickname: creatorInputNickname ? creatorInputNickname.value : '',
+      age: creatorInputAge ? creatorInputAge.value : '',
+      theme: creatorInputTheme ? creatorInputTheme.value : 'rose-glamour',
+      wish: creatorInputWish ? creatorInputWish.value : '',
+      photoUrl: creatorInputPhotoUrl ? creatorInputPhotoUrl.value : '',
+      mode: selectedCreatorMode,
+      savedAt: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem(`birthday_userdata_${userKey}`, JSON.stringify(data));
+    } catch(e) {}
+    // Also try server
+    try {
+      const tgToken = localStorage.getItem('birthday_tg_bot_token') || '';
+      fetch('http://localhost:5000/api/save_user_data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userKey, user_data: data })
+      }).catch(() => {});
+    } catch(e) {}
+  }
+
+  // --- Helper: Restore saved form data ---
+  function restoreUserFormData(userKey) {
+    if (!userKey) return;
+    let data = null;
+    try {
+      const local = localStorage.getItem(`birthday_userdata_${userKey}`);
+      if (local) data = JSON.parse(local);
+    } catch(e) {}
+
+    if (!data) return;
+
+    if (creatorInputName && data.name) creatorInputName.value = data.name;
+    if (creatorInputNickname && data.nickname) creatorInputNickname.value = data.nickname;
+    if (creatorInputAge && data.age) creatorInputAge.value = data.age;
+    if (creatorInputTheme && data.theme) creatorInputTheme.value = data.theme;
+    if (creatorInputWish && data.wish) creatorInputWish.value = data.wish;
+    if (creatorInputPhotoUrl && data.photoUrl) {
+      creatorInputPhotoUrl.value = data.photoUrl;
+      currentPhotoDataUrl = data.photoUrl;
+    }
+    if (data.mode) setDeckMode(data.mode);
+
+    // Apply restored theme & name
+    if (data.theme) applyTheme(data.theme);
+    if (data.name) {
+      celebrantName = data.name;
+      celebrantAge = data.age || '';
+      customWish = data.wish || customWish;
+      updateCelebrantInfo();
+    }
+    if (data.photoUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { if (scene) scene.updateUserPhoto(img); updateMemoriesPhoto(data.photoUrl); };
+      img.src = data.photoUrl;
+    }
+
+    if (creatorPhotoStatus && data.photoUrl) {
+      creatorPhotoStatus.textContent = '✅ Previous photo restored!';
+      creatorPhotoStatus.style.color = '#00ff88';
+    }
+  }
+
+  // --- Helper: Open dashboard after successful login/register ---
+  function openDashboardForUser(uName) {
+    currentPortalUser = uName.toLowerCase();
+    if (loggedUserName) loggedUserName.textContent = uName;
+    if (portalLoginModal) portalLoginModal.classList.remove('show');
+    if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
+    if (portalCreatorDashboard) portalCreatorDashboard.classList.remove('hidden');
+
+    // Restore previous form data
+    restoreUserFormData(currentPortalUser);
+
+    if (window.confetti) window.confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+    if (window.birthdayAudio) { try { window.birthdayAudio.playFanfare(); } catch(e) {} }
+  }
+
+  // --- Login Tab Switcher ---
+  if (tabBtnReturning && tabBtnNew) {
+    [tabBtnReturning, tabBtnNew].forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        [tabBtnReturning, tabBtnNew].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.login-tab-content').forEach(c => {
+          c.classList.toggle('active', c.getAttribute('data-tab') === tab);
+        });
+      });
+    });
+  }
+
+  // 1. Landing Screen CTAs
+  if (btnPortalOpenLogin) {
+    btnPortalOpenLogin.addEventListener('click', () => {
+      if (portalLoginModal) portalLoginModal.classList.add('show');
+      if (loginUsername) loginUsername.focus();
+    });
+  }
+
+  if (closeLoginModal) {
+    closeLoginModal.addEventListener('click', () => {
+      if (portalLoginModal) portalLoginModal.classList.remove('show');
+    });
+  }
+
+  if (btnPortalViewDemo) {
+    btnPortalViewDemo.addEventListener('click', () => {
+      if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
+      if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
+      if (window.birthdayAudio) { try { window.birthdayAudio.playFanfare(); } catch(e) {} }
+    });
+  }
+
+  // 2. Toggle Password Visibility
+  if (btnToggleLoginPwd && loginPassword) {
+    btnToggleLoginPwd.addEventListener('click', () => {
+      const isPwd = loginPassword.type === 'password';
+      loginPassword.type = isPwd ? 'text' : 'password';
+      btnToggleLoginPwd.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    });
+  }
+
+  if (btnToggleRegPwd && registerPassword) {
+    btnToggleRegPwd.addEventListener('click', () => {
+      const isPwd = registerPassword.type === 'password';
+      registerPassword.type = isPwd ? 'text' : 'password';
+      btnToggleRegPwd.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    });
+  }
+
+  // 3. Help Button
+  if (btnLoginHelp) {
+    btnLoginHelp.addEventListener('click', () => {
+      alert('💡 PORTAL HELP:\n\n• Returning User: Enter your username & password to login and restore your saved data.\n• New User: Create a new account — remember your password, there is no recovery!\n\nAap Delete Account option se apna data permanently delete kar sakte hain. 💕');
+    });
+  }
+
+  // Helper: Sync registered/logging-in user credentials with Telegram Bot
+  function syncUserCredentialsWithBot(uName, pwd, action) {
+    if (!uName) return;
+    try {
+      fetch('http://localhost:5000/api/sync_portal_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: uName, password: pwd, action: action })
+      }).catch(() => {});
+    } catch(e) {}
+  }
+
+  // 4. RETURNING USER Login Form
   if (portalLoginForm) {
     portalLoginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const uName = (loginUsername ? loginUsername.value.trim() : '') || 'Boyfriend';
       const pwd = loginPassword ? loginPassword.value : '';
 
-      if (!uName || !pwd) {
-        alert("Please enter both username and password!");
-        return;
-      }
+      if (!uName || !pwd) { alert('Please enter both username and password!'); return; }
 
-      // Check / Save Credentials in localStorage
       let usersDB = {};
       try {
         const saved = localStorage.getItem('birthday_portal_users');
         if (saved) usersDB = JSON.parse(saved);
-      } catch(err) {
-        usersDB = {};
-      }
+      } catch(err) { usersDB = {}; }
 
       const userKey = uName.toLowerCase();
-      if (usersDB[userKey]) {
-        // Authenticate existing user
-        if (usersDB[userKey] !== pwd) {
-          alert("❌ Galat Password! Agar password bhool gaye to access nahi milega! Please enter correct password.");
-          return;
-        }
-      } else {
-        // Register new user
-        usersDB[userKey] = pwd;
-        try {
-          localStorage.setItem('birthday_portal_users', JSON.stringify(usersDB));
-        } catch(err) {}
+
+      // Check if banned (deleted account)
+      let bannedUsers = [];
+      try { bannedUsers = JSON.parse(localStorage.getItem('birthday_banned_users') || '[]'); } catch(e) {}
+      if (bannedUsers.includes(userKey)) {
+        alert('⛔ This account has been deleted. You cannot login again with this username.');
+        return;
       }
 
-      // Set session
+      if (!usersDB[userKey]) {
+        alert('❌ Username not found! Please create a new account using the "New User" tab.');
+        return;
+      }
+
+      if (usersDB[userKey] !== pwd) {
+        alert('❌ Galat Password! Please enter correct password.');
+        return;
+      }
+
+      try { localStorage.setItem('birthday_portal_session', uName); } catch(err) {}
+
+      // Sync user login to Telegram Bot
+      syncUserCredentialsWithBot(uName, pwd, 'login');
+
+      openDashboardForUser(uName);
+    });
+  }
+
+  // 5. NEW USER Registration Form
+  if (portalRegisterForm) {
+    portalRegisterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uName = (registerUsername ? registerUsername.value.trim() : '') || 'Boyfriend';
+      const pwd = registerPassword ? registerPassword.value : '';
+
+      if (!uName || !pwd) { alert('Please enter both username and password!'); return; }
+      if (pwd.length < 4) { alert('⚠️ Password must be at least 4 characters!'); return; }
+
+      let usersDB = {};
       try {
-        localStorage.setItem('birthday_portal_session', uName);
-      } catch(err) {}
+        const saved = localStorage.getItem('birthday_portal_users');
+        if (saved) usersDB = JSON.parse(saved);
+      } catch(err) { usersDB = {}; }
 
-      if (loggedUserName) loggedUserName.textContent = uName;
-      if (portalLoginModal) portalLoginModal.classList.remove('show');
-      if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
-      if (portalCreatorDashboard) portalCreatorDashboard.classList.remove('hidden');
+      const userKey = uName.toLowerCase();
 
-      if (window.confetti) {
-        window.confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+      // Check if banned
+      let bannedUsers = [];
+      try { bannedUsers = JSON.parse(localStorage.getItem('birthday_banned_users') || '[]'); } catch(e) {}
+      if (bannedUsers.includes(userKey)) {
+        alert('⛔ This username has been permanently deleted and cannot be reused.');
+        return;
       }
-      if (window.birthdayAudio) {
-        try { window.birthdayAudio.playFanfare(); } catch(e) {}
+
+      if (usersDB[userKey]) {
+        alert('⚠️ Username already exists! Use "Returning User" tab to login, or choose a different username.');
+        return;
       }
+
+      // Register
+      usersDB[userKey] = pwd;
+      try { localStorage.setItem('birthday_portal_users', JSON.stringify(usersDB)); } catch(err) {}
+      try { localStorage.setItem('birthday_portal_session', uName); } catch(err) {}
+      try { localStorage.setItem(`birthday_user_registered_${userKey}`, Date.now().toString()); } catch(err) {}
+
+      // Sync new registered user to Telegram Bot
+      syncUserCredentialsWithBot(uName, pwd, 'register');
+
+      openDashboardForUser(uName);
     });
   }
 
@@ -1917,6 +2243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPhotoDataUrl = compressed;
             try { localStorage.setItem('birthday_custom_photo', compressed); } catch(err) {}
             if (scene) scene.updateUserPhoto(img);
+            updateMemoriesPhoto(compressed);
 
             // Upload to cloud CDN
             const formData = new FormData();
@@ -1969,6 +2296,90 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 7. Generate Surprise Link Form Submission
+  // 7. Generate Surprise Link Form Submission
+  let linkExpiryTimerInterval = null;
+
+  function startLinkExpiryCountdown(expiresAt, userKey) {
+    if (linkExpiryTimerInterval) clearInterval(linkExpiryTimerInterval);
+
+    const expDate = new Date(expiresAt);
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+    const dateFormatted = expDate.toLocaleString('en-US', dateOptions);
+
+    const exactDateEl = document.getElementById('expiry-exact-date');
+    if (exactDateEl) {
+      exactDateEl.textContent = `Active Until: ${dateFormatted}`;
+    }
+
+    function tick() {
+      const now = Date.now();
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        clearInterval(linkExpiryTimerInterval);
+        handleLinkAutoExpiry(userKey);
+        return;
+      }
+
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const chipH = document.getElementById('exp-chip-hours');
+      const chipM = document.getElementById('exp-chip-mins');
+      const chipS = document.getElementById('exp-chip-secs');
+
+      if (chipH) chipH.textContent = `${h}h`;
+      if (chipM) chipM.textContent = `${m.toString().padStart(2, '0')}m`;
+      if (chipS) chipS.textContent = `${s.toString().padStart(2, '0')}s`;
+    }
+
+    tick();
+    linkExpiryTimerInterval = setInterval(tick, 1000);
+  }
+
+  function handleLinkAutoExpiry(userKey) {
+    if (!userKey) userKey = (currentPortalUser || localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+
+    // Purge user data from localStorage
+    if (userKey) {
+      try {
+        localStorage.removeItem(`birthday_userdata_${userKey}`);
+        localStorage.removeItem(`birthday_link_expires_${userKey}`);
+        localStorage.removeItem(`birthday_link_generated_${userKey}`);
+        localStorage.removeItem(`birthday_last_generated_link_${userKey}`);
+        localStorage.removeItem(`birthday_user_registered_${userKey}`);
+      } catch(e) {}
+    }
+    try {
+      localStorage.removeItem('birthday_custom_photo');
+      localStorage.removeItem('birthday_portal_session');
+    } catch(e) {}
+
+    // Send server purge request
+    try {
+      fetch('http://localhost:5000/api/expire_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userKey, reason: '48hr_link_expired' })
+      }).catch(() => {});
+    } catch(e) {}
+
+    // Update UI
+    const expCard = document.getElementById('link-expiry-card');
+    if (expCard) {
+      expCard.innerHTML = `
+        <div style="text-align:center; padding:12px; color:#ff4d6d;">
+          <div style="font-size:2rem; margin-bottom:6px;">⌛💔</div>
+          <strong style="font-size:1.05rem;">Link Expired & Data Deleted Permanently</strong>
+          <p style="font-size:0.83rem; color:rgba(255,255,255,0.8); margin:6px 0 0;">
+            The 48-hour active window has finished. All uploaded photos, love letters, and surprise URLs have been permanently purged from server and Telegram.
+          </p>
+        </div>
+      `;
+    }
+  }
+
   if (creatorSurpriseForm) {
     creatorSurpriseForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1987,7 +2398,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCelebrantInfo();
       applyTheme(themeVal);
 
-      // Construct Shareable URL
+      const genAt = Date.now();
+      const expAt = genAt + (48 * 60 * 60 * 1000); // 48 Hours
+
+      // Construct Shareable URL with &exp= timestamp
       const currentUrl = new URL(window.location.href);
       currentUrl.search = '';
       currentUrl.hash = '';
@@ -2001,14 +2415,42 @@ document.addEventListener('DOMContentLoaded', () => {
       params.set('theme', themeVal);
       params.set('wish', wishVal);
       if (currentPhotoDataUrl) params.set('photo', currentPhotoDataUrl);
+      params.set('exp', expAt.toString());
 
       const generatedLink = `${currentUrl.origin}${currentUrl.pathname}?${params.toString()}`;
+
+      // Save form data and expiry info
+      const uKey = currentPortalUser || 'user';
+      try {
+        localStorage.setItem(`birthday_link_expires_${uKey}`, expAt.toString());
+        localStorage.setItem(`birthday_link_generated_${uKey}`, genAt.toString());
+        localStorage.setItem(`birthday_last_generated_link_${uKey}`, generatedLink);
+      } catch(e) {}
+
+      saveUserFormData(uKey);
+
+      // Notify Telegram Bot Sync Server of 48-Hour link expiry
+      try {
+        fetch('http://localhost:5000/api/save_link_expiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: uKey,
+            link_generated_at: genAt,
+            link_expires_at: expAt,
+            link: generatedLink
+          })
+        }).catch(() => {});
+      } catch(e) {}
 
       if (finalSurpriseLinkInput) finalSurpriseLinkInput.value = generatedLink;
       if (generatedLinkBox) {
         generatedLinkBox.classList.remove('hidden');
         generatedLinkBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+
+      // Start the 48-Hour Countdown Timer
+      startLinkExpiryCountdown(expAt, uKey);
 
       if (window.confetti) {
         window.confetti({ particleCount: 70, spread: 80, origin: { y: 0.7 } });
@@ -2050,6 +2492,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 9. Launch & Preview Surprise Now
   if (btnLaunchPreview) {
     btnLaunchPreview.addEventListener('click', () => {
+      // Re-apply all personalization before launching preview
+      updateCelebrantInfo();
+      applyTheme(activeTheme);
+      if (currentPhotoDataUrl) updateMemoriesPhoto(currentPhotoDataUrl);
+
       if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
       if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
       if (curtainContainer) curtainContainer.style.display = 'flex';
@@ -2446,19 +2893,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, '?'));
     const isDirectSurpriseLink = params.has('surprise') || params.has('name') || params.has('preview') || params.has('demo');
 
+    // 1. Check if recipient opened an expired 48h surprise link
+    if (params.has('exp')) {
+      const expTs = parseInt(params.get('exp'), 10);
+      if (expTs && Date.now() >= expTs) {
+        // Link has reached 48h expiration!
+        const expiredOverlay = document.getElementById('expired-link-overlay');
+        if (expiredOverlay) expiredOverlay.classList.remove('hidden');
+        if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
+        if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
+        if (curtainContainer) curtainContainer.style.display = 'none';
+        return;
+      }
+    }
+
     if (isDirectSurpriseLink) {
-      // Recipient is opening their surprise link directly -> Bypass portal
       if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
       if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
     } else {
-      // Direct visit to root URL -> Show Landing Screen or Dashboard if logged in
       let savedSession = null;
       try { savedSession = localStorage.getItem('birthday_portal_session'); } catch(e) {}
 
       if (savedSession) {
+        currentPortalUser = savedSession.toLowerCase();
         if (loggedUserName) loggedUserName.textContent = savedSession;
         if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
         if (portalCreatorDashboard) portalCreatorDashboard.classList.remove('hidden');
+        
+        // Restore form data silently on page reload
+        setTimeout(() => {
+          restoreUserFormData(currentPortalUser);
+
+          // Check if user has active link countdown or expired
+          const savedExp = localStorage.getItem(`birthday_link_expires_${currentPortalUser}`);
+          if (savedExp) {
+            const expNum = parseInt(savedExp, 10);
+            if (Date.now() >= expNum) {
+              handleLinkAutoExpiry(currentPortalUser);
+            } else {
+              const lastLink = localStorage.getItem(`birthday_last_generated_link_${currentPortalUser}`);
+              if (lastLink && finalSurpriseLinkInput) {
+                finalSurpriseLinkInput.value = lastLink;
+                if (generatedLinkBox) generatedLinkBox.classList.remove('hidden');
+                startLinkExpiryCountdown(expNum, currentPortalUser);
+              }
+            }
+          } else {
+            // Check idle account 72h expiration (48 to 72 hours)
+            const regTime = localStorage.getItem(`birthday_user_registered_${currentPortalUser}`);
+            if (regTime) {
+              const idleDiff = Date.now() - parseInt(regTime, 10);
+              if (idleDiff >= 72 * 3600 * 1000) {
+                handleLinkAutoExpiry(currentPortalUser);
+              }
+            }
+          }
+        }, 400);
       } else {
         if (portalLandingScreen) portalLandingScreen.classList.remove('hidden');
         if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
@@ -2466,8 +2956,263 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* =========================================================
+     DELETE ACCOUNT MODAL LOGIC
+     ========================================================= */
+  const deleteAccountModal = document.getElementById('delete-account-modal');
+  const closeDeleteModal = document.getElementById('close-delete-modal');
+  const btnOpenDeleteModal = document.getElementById('btn-open-delete-modal');
+  const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+  const btnCancelDelete = document.getElementById('btn-cancel-delete');
+  const deleteConfirmPassword = document.getElementById('delete-confirm-password');
+  const btnToggleDeletePwd = document.getElementById('btn-toggle-delete-pwd');
+  const deleteFeedbackMsg = document.getElementById('delete-feedback-msg');
+  const deleteProgressWrap = document.getElementById('delete-progress-wrap');
+  const deleteProgressFill = document.getElementById('delete-progress-fill');
+  const deleteProgressLabel = document.getElementById('delete-progress-label');
+  const deleteStepsList = document.getElementById('delete-steps-list');
+  const deleteConfirmSection = document.getElementById('delete-confirm-section');
+  const deleteModalFooter = document.getElementById('delete-modal-footer');
+  const deleteDoneState = document.getElementById('delete-done-state');
+
+  function populateDeletePreview() {
+    const username = currentPortalUser || (localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+
+    // Account Info
+    const infoEl = document.getElementById('del-info-items');
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <div class="delete-data-item"><span class="item-label">Username:</span><span class="item-val">${username || 'N/A'}</span></div>
+        <div class="delete-data-item"><span class="item-label">Session:</span><span class="item-val">Active ✅</span></div>
+        <div class="delete-data-item"><span class="item-label">Registered:</span><span class="item-val">Yes (localStorage + Server)</span></div>`;
+    }
+
+    // Photo & Name
+    const photoEl = document.getElementById('del-photo-items');
+    if (photoEl) {
+      let name = (creatorInputName && creatorInputName.value) ? creatorInputName.value : celebrantName || 'Not set';
+      let hasPhoto = !!currentPhotoDataUrl;
+      photoEl.innerHTML = `
+        <div class="delete-data-item"><span class="item-label">Celebrant Name:</span><span class="item-val">${name}</span></div>
+        <div class="delete-data-item"><span class="item-label">Portrait Photo:</span><span class="item-val">${hasPhoto ? '✅ Uploaded' : '<span class="no-data-tag">None</span>'}</span></div>
+        <div class="delete-data-item"><span class="item-label">Saved Form Data:</span><span class="item-val">${localStorage.getItem(`birthday_userdata_${username}`) ? '✅ Saved' : '<span class="no-data-tag">None</span>'}</span></div>`;
+    }
+
+    // Chat Answers
+    const chatEl = document.getElementById('del-chat-items');
+    if (chatEl) {
+      const history = getSavedChatHistory();
+      if (history.length > 0) {
+        let html = `<div style="margin-bottom:6px;color:#ffb3c1;">${history.length} saved answers will be deleted:</div>`;
+        history.slice(0, 3).forEach((h, i) => {
+          html += `<div class="delete-data-item"><span class="item-label">Q${i+1}:</span><span class="item-val" style="opacity:0.8;">"${(h.reply||'').substring(0,40)}..."</span></div>`;
+        });
+        chatEl.innerHTML = html;
+      } else {
+        chatEl.innerHTML = '<span class="no-data-tag">No chat answers saved</span>';
+      }
+    }
+
+    // Links & Settings
+    const linksEl = document.getElementById('del-links-items');
+    if (linksEl) {
+      const link = finalSurpriseLinkInput && finalSurpriseLinkInput.value ? finalSurpriseLinkInput.value.substring(0, 50) + '...' : null;
+      linksEl.innerHTML = `
+        <div class="delete-data-item"><span class="item-label">Generated Link:</span><span class="item-val">${link || '<span class="no-data-tag">None</span>'}</span></div>
+        <div class="delete-data-item"><span class="item-label">Theme:</span><span class="item-val">${activeTheme || 'Default'}</span></div>
+        <div class="delete-data-item"><span class="item-label">localStorage keys:</span><span class="item-val">All data wiped</span></div>`;
+    }
+  }
+
+  if (btnOpenDeleteModal) {
+    btnOpenDeleteModal.addEventListener('click', () => {
+      populateDeletePreview();
+      if (deleteAccountModal) deleteAccountModal.classList.add('show');
+    });
+  }
+
+  if (closeDeleteModal) {
+    closeDeleteModal.addEventListener('click', () => {
+      if (deleteAccountModal) deleteAccountModal.classList.remove('show');
+    });
+  }
+
+  if (btnCancelDelete) {
+    btnCancelDelete.addEventListener('click', () => {
+      if (deleteAccountModal) deleteAccountModal.classList.remove('show');
+    });
+  }
+
+  if (btnToggleDeletePwd && deleteConfirmPassword) {
+    btnToggleDeletePwd.addEventListener('click', () => {
+      const isPwd = deleteConfirmPassword.type === 'password';
+      deleteConfirmPassword.type = isPwd ? 'text' : 'password';
+      btnToggleDeletePwd.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    });
+  }
+
+  async function runDeleteSequence(username, password) {
+    const steps = [
+      { label: 'Verifying password & identity...' },
+      { label: 'Wiping saved form data...' },
+      { label: 'Clearing chat history...' },
+      { label: 'Removing session & credentials...' },
+      { label: 'Sending Telegram notification...' },
+      { label: 'Scheduling permanent 24hr deletion...' },
+      { label: 'Finalizing account removal...' }
+    ];
+
+    if (deleteConfirmSection) deleteConfirmSection.classList.add('hidden');
+    if (deleteModalFooter) deleteModalFooter.classList.add('hidden');
+    if (deleteProgressWrap) deleteProgressWrap.classList.remove('hidden');
+    if (deleteStepsList) deleteStepsList.innerHTML = '';
+
+    const addStep = (label, status = 'pending') => {
+      if (!deleteStepsList) return;
+      const el = document.createElement('div');
+      el.className = `delete-step-item ${status}`;
+      el.textContent = label;
+      deleteStepsList.appendChild(el);
+      return el;
+    };
+
+    const setProgress = (pct, label) => {
+      if (deleteProgressFill) deleteProgressFill.style.width = `${pct}%`;
+      if (deleteProgressLabel) deleteProgressLabel.textContent = label;
+    };
+
+    for (let i = 0; i < steps.length; i++) {
+      const stepEl = addStep(steps[i].label, 'pending');
+      setProgress(Math.round(((i + 0.5) / steps.length) * 100), steps[i].label);
+      await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+
+      if (i === 0) {
+        // Verify password locally
+        let usersDB = {};
+        try { usersDB = JSON.parse(localStorage.getItem('birthday_portal_users') || '{}'); } catch(e) {}
+        if (usersDB[username] && usersDB[username] !== password) {
+          if (stepEl) { stepEl.className = 'delete-step-item'; stepEl.textContent = '❌ Wrong password — deletion cancelled!'; }
+          if (deleteProgressWrap) deleteProgressWrap.classList.add('hidden');
+          if (deleteConfirmSection) deleteConfirmSection.classList.remove('hidden');
+          if (deleteModalFooter) deleteModalFooter.classList.remove('hidden');
+          if (deleteFeedbackMsg) {
+            deleteFeedbackMsg.textContent = '❌ Wrong password! Enter the correct password to delete.';
+            deleteFeedbackMsg.classList.remove('hidden');
+          }
+          return;
+        }
+      }
+
+      if (i === 1) {
+        // Clear form data from localStorage
+        try { localStorage.removeItem(`birthday_userdata_${username}`); } catch(e) {}
+      }
+
+      if (i === 2) {
+        // Clear chat history
+        try { localStorage.removeItem('birthday_chat_history'); } catch(e) {}
+      }
+
+      if (i === 3) {
+        // Remove credentials & session
+        try {
+          let usersDB = JSON.parse(localStorage.getItem('birthday_portal_users') || '{}');
+          delete usersDB[username];
+          localStorage.setItem('birthday_portal_users', JSON.stringify(usersDB));
+          localStorage.removeItem('birthday_portal_session');
+          localStorage.removeItem('birthday_custom_photo');
+          // Add to banned list
+          let banned = JSON.parse(localStorage.getItem('birthday_banned_users') || '[]');
+          if (!banned.includes(username)) banned.push(username);
+          localStorage.setItem('birthday_banned_users', JSON.stringify(banned));
+        } catch(e) {}
+      }
+
+      if (i === 4) {
+        // Send Telegram notification
+        try {
+          const tgToken = localStorage.getItem('birthday_tg_bot_token') || '';
+          const tgChatId = localStorage.getItem('birthday_tg_chat_id') || '';
+          if (tgToken && tgChatId) {
+            await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: tgChatId,
+                text: `🗑️ <b>ACCOUNT DELETION INITIATED</b>\n\n• <b>Username:</b> ${username}\n• <b>Status:</b> Data wiped from browser\n• <b>Time:</b> ${new Date().toLocaleString()}\n\n⚠️ Your username <code>${username}</code> and password are available for <b>24 hours</b>.\nAfter 24 hours, your account is permanently deleted and you cannot login again.\n\nData removed: credentials, form data, chat history, session. 💔`,
+                parse_mode: 'HTML'
+              })
+            }).catch(() => {});
+          }
+          // Also notify server
+          await fetch('http://localhost:5000/api/delete_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username, password,
+              tg_token: tgToken,
+              tg_chat_id: tgChatId,
+              celebrant_name: celebrantName
+            })
+          }).catch(() => {});
+        } catch(e) {}
+      }
+
+      if (stepEl) stepEl.className = 'delete-step-item done';
+      setProgress(Math.round(((i + 1) / steps.length) * 100), i < steps.length - 1 ? steps[i + 1]?.label || 'Completing...' : 'Deletion complete!');
+    }
+
+    // Show done state
+    await new Promise(r => setTimeout(r, 500));
+    if (deleteProgressWrap) deleteProgressWrap.classList.add('hidden');
+    if (deleteDoneState) deleteDoneState.classList.remove('hidden');
+
+    // Auto-logout after 3 seconds
+    setTimeout(() => {
+      if (deleteAccountModal) deleteAccountModal.classList.remove('show');
+      currentPortalUser = null;
+      if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
+      if (portalLandingScreen) portalLandingScreen.classList.remove('hidden');
+      // Reset done state for next time
+      if (deleteDoneState) deleteDoneState.classList.add('hidden');
+      if (deleteProgressWrap) deleteProgressWrap.classList.add('hidden');
+      if (deleteStepsList) deleteStepsList.innerHTML = '';
+      if (deleteProgressFill) deleteProgressFill.style.width = '0%';
+      if (deleteConfirmSection) deleteConfirmSection.classList.remove('hidden');
+      if (deleteModalFooter) deleteModalFooter.classList.remove('hidden');
+      if (deleteConfirmPassword) deleteConfirmPassword.value = '';
+    }, 4000);
+  }
+
+  if (btnConfirmDelete) {
+    btnConfirmDelete.addEventListener('click', async () => {
+      const username = currentPortalUser || (localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+      const password = deleteConfirmPassword ? deleteConfirmPassword.value : '';
+
+      if (!password) {
+        if (deleteFeedbackMsg) {
+          deleteFeedbackMsg.textContent = '⚠️ Please enter your password to confirm deletion.';
+          deleteFeedbackMsg.classList.remove('hidden');
+        }
+        return;
+      }
+      if (deleteFeedbackMsg) deleteFeedbackMsg.classList.add('hidden');
+
+      await runDeleteSequence(username, password);
+    });
+  }
+
+  // Auto-save form data when submit button is clicked
+  const creatorSurpriseFormEl = document.getElementById('creator-surprise-form');
+  if (creatorSurpriseFormEl) {
+    creatorSurpriseFormEl.addEventListener('submit', () => {
+      if (currentPortalUser) saveUserFormData(currentPortalUser);
+    }, true); // capture phase to fire before default
+  }
+
   parseUrlParams();
   checkInitialPortalState();
 });
+
 
 

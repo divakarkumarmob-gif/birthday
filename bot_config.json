@@ -1,8 +1,77 @@
 {
-  "bot_token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
-  "owner_chat_id": "",
-  "web_app_url": "http://localhost:8000",
+  "bot_token": "8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8",
+  "owner_chat_id": "7034154766",
+  "web_app_url": "http://localhost:8000/",
   "api_port": 5000,
   "user_credentials": {},
-  "saved_answers": []
+  "saved_answers": [
+    {
+      "question": "Hey prettiest girl... 💕 Do you know who is the luckiest guy in the entire universe today? (Hint: The one typing this for you ❤️)",
+      "reply": "Aww so sweet! 💕",
+      "celebrant": "priya",
+      "time": "15:12"
+    },
+    {
+      "question": "What is the one thing that made you smile the most this past year? 🥰",
+      "reply": "Your sweet surprises 🎁",
+      "celebrant": "priya",
+      "time": "15:12"
+    },
+    {
+      "question": "If you could make one magical birthday wish right this second, what would it be? ✨",
+      "reply": "Lots of happiness & love 🌸",
+      "celebrant": "priya",
+      "time": "15:12"
+    },
+    {
+      "question": "What is your absolute favorite memory of us together so far? 💕",
+      "reply": "Our late night talks 🌙",
+      "celebrant": "priya",
+      "time": "15:14"
+    },
+    {
+      "question": "Are you ready to step into your grand 3D birthday surprise wonderland now, my princess? 👑🎂",
+      "reply": "Can't wait! 🎉",
+      "celebrant": "priya",
+      "time": "15:14"
+    }
+  ],
+  "registered_users": {
+    "7034154766": {
+      "id": 7034154766,
+      "name": "Anshh",
+      "username": "@Mr_anssh00",
+      "status": "active",
+      "joined_at": "24 Sep 2026, 03:10 PM",
+      "last_seen": "24 Sep 2026, 03:32 PM"
+    }
+  },
+  "portal_user_data": {},
+  "scheduled_deletions": [
+    {
+      "username": "testuser",
+      "delete_at": 1790332100.8122437,
+      "delete_at_readable": "24 Sep 2026, 03:58 PM",
+      "tg_chat_id": "7034154766"
+    }
+  ],
+  "link_expiries": {
+    "rahul": {
+      "generated_at": 1790246325986,
+      "expires_at": 1790419125986,
+      "expires_at_sec": 1790419125.986,
+      "link": "",
+      "created_str": "24 Sep 2026, 04:08 PM"
+    }
+  },
+  "birthday_portal_users": {
+    "priya": {
+      "username": "priya",
+      "password": "priyapassword123",
+      "registered_at": "24 Sep 2026, 04:32 PM",
+      "last_login": "24 Sep 2026, 04:32 PM",
+      "last_login_date": "2026-09-24",
+      "last_login_ts": 1790247735.2411008
+    }
+  }
 }

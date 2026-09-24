@@ -187,7 +187,7 @@
   </div>
 
   <!-- =========================================================
-       NEON GLASSY LOGIN POPUP MODAL
+       NEON GLASSY LOGIN POPUP MODAL (New User / Returning User)
        ========================================================= -->
   <div class="modal-overlay" id="portal-login-modal">
     <div class="modal-card neon-glass-login-card">
@@ -195,40 +195,148 @@
       
       <div class="neon-login-header">
         <div class="neon-lock-badge"><i class="fa-solid fa-fingerprint"></i></div>
-        <h2>Boyfriend Login Portal 🔐</h2>
-        <p>Enter your username and password to create or access your birthday surprise.</p>
+        <h2>Birthday Portal 🔐</h2>
+        <p id="login-modal-sub">Login or create your secure surprise account</p>
       </div>
 
-      <form id="portal-login-form" class="neon-login-form">
+      <!-- Tab Switcher -->
+      <div class="login-tab-switcher">
+        <button class="login-tab-btn active" id="tab-btn-returning" data-tab="returning">
+          <i class="fa-solid fa-user-check"></i> Returning User
+        </button>
+        <button class="login-tab-btn" id="tab-btn-new" data-tab="new">
+          <i class="fa-solid fa-user-plus"></i> New User
+        </button>
+      </div>
+
+      <!-- Returning User Form -->
+      <form id="portal-login-form" class="neon-login-form login-tab-content active" data-tab="returning">
         <div class="neon-input-group">
-          <label><i class="fa-solid fa-user"></i> Your Name / Username</label>
+          <label><i class="fa-solid fa-user"></i> Your Username</label>
           <input type="text" id="login-username" placeholder="e.g. Rahul / Romeo" required autocomplete="username">
         </div>
-
         <div class="neon-input-group">
           <label><i class="fa-solid fa-key"></i> Secret Password</label>
           <div class="password-input-wrap">
-            <input type="password" id="login-password" placeholder="Create or enter password..." required autocomplete="current-password">
+            <input type="password" id="login-password" placeholder="Enter your password..." required autocomplete="current-password">
             <button type="button" class="btn-toggle-pwd" id="btn-toggle-login-pwd" title="Show/Hide Password"><i class="fa-solid fa-eye"></i></button>
           </div>
         </div>
-
-        <!-- Warning Note -->
-        <div class="neon-warning-note">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span><strong>Note:</strong> Agar password bhool gaye to surprise access nahi milega! Please remember your secret password.</span>
+        <div class="neon-user-type-badge returning-badge">
+          <i class="fa-solid fa-rotate-left"></i> Welcome back! Your saved data will be restored.
         </div>
-
         <div class="login-actions-row">
           <button type="submit" class="btn-neon-start" id="btn-login-start">
             <span class="btn-shine"></span>
-            <i class="fa-solid fa-rocket"></i> Start & Authenticate 🚀
+            <i class="fa-solid fa-right-to-bracket"></i> Login & Restore 🚀
           </button>
           <button type="button" class="btn-neon-help" id="btn-login-help">
-            <i class="fa-solid fa-circle-question"></i> Need Help? ❓
+            <i class="fa-solid fa-circle-question"></i> Help ❓
           </button>
         </div>
       </form>
+
+      <!-- New User Form -->
+      <form id="portal-register-form" class="neon-login-form login-tab-content" data-tab="new">
+        <div class="neon-input-group">
+          <label><i class="fa-solid fa-user-pen"></i> Create Username</label>
+          <input type="text" id="register-username" placeholder="e.g. Rahul / Romeo" required autocomplete="username">
+        </div>
+        <div class="neon-input-group">
+          <label><i class="fa-solid fa-shield-halved"></i> Create Secret Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="register-password" placeholder="Create a strong password..." required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-reg-pwd" title="Show/Hide Password"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="neon-warning-note">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span><strong>Remember!</strong> Password bhool gaye to surprise access nahi milega. Koi recovery nahi hoga!</span>
+        </div>
+        <div class="neon-user-type-badge new-badge">
+          <i class="fa-solid fa-sparkles"></i> New account will be created & synced with Telegram!
+        </div>
+        <div class="login-actions-row">
+          <button type="submit" class="btn-neon-start" id="btn-register-start">
+            <span class="btn-shine"></span>
+            <i class="fa-solid fa-rocket"></i> Create Account 🎉
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       DELETE ACCOUNT MODAL (Full Data Review + Deletion Progress)
+       ========================================================= -->
+  <div class="modal-overlay" id="delete-account-modal">
+    <div class="modal-card delete-account-card">
+      <button class="modal-close" id="close-delete-modal">&times;</button>
+
+      <div class="delete-modal-header">
+        <div class="delete-warning-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+        <h2>Delete My Account ⚠️</h2>
+        <p>This action is <strong>irreversible</strong>. All your data will be permanently wiped.</p>
+      </div>
+
+      <!-- Data Preview Section -->
+      <div class="delete-data-preview" id="delete-data-preview">
+        <div class="delete-category">
+          <div class="delete-cat-header"><i class="fa-solid fa-user"></i> Account Info</div>
+          <div class="delete-cat-items" id="del-info-items">Loading...</div>
+        </div>
+        <div class="delete-category">
+          <div class="delete-cat-header"><i class="fa-solid fa-image"></i> Saved Photo & Name</div>
+          <div class="delete-cat-items" id="del-photo-items">Loading...</div>
+        </div>
+        <div class="delete-category">
+          <div class="delete-cat-header"><i class="fa-solid fa-comments"></i> Chat Answers</div>
+          <div class="delete-cat-items" id="del-chat-items">Loading...</div>
+        </div>
+        <div class="delete-category">
+          <div class="delete-cat-header"><i class="fa-solid fa-link"></i> Generated Links & Settings</div>
+          <div class="delete-cat-items" id="del-links-items">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Password Confirm -->
+      <div class="delete-confirm-section" id="delete-confirm-section">
+        <div class="delete-confirm-label">
+          <i class="fa-solid fa-lock"></i> Enter your password to confirm deletion:
+        </div>
+        <div class="password-input-wrap">
+          <input type="password" id="delete-confirm-password" placeholder="Enter your secret password...">
+          <button type="button" class="btn-toggle-pwd" id="btn-toggle-delete-pwd"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="delete-feedback-msg hidden" id="delete-feedback-msg"></div>
+      </div>
+
+      <!-- Progress Bar (shown during deletion) -->
+      <div class="delete-progress-wrap hidden" id="delete-progress-wrap">
+        <div class="delete-progress-label" id="delete-progress-label">Initiating deletion...</div>
+        <div class="delete-progress-bar">
+          <div class="delete-progress-fill" id="delete-progress-fill"></div>
+        </div>
+        <div class="delete-steps-list" id="delete-steps-list"></div>
+      </div>
+
+      <!-- Done State -->
+      <div class="delete-done-state hidden" id="delete-done-state">
+        <div class="delete-done-icon">💔</div>
+        <h3>Account Deleted</h3>
+        <p>A Telegram message has been sent confirming deletion.<br>Your credentials remain available for <strong>24 hours</strong> then are permanently gone.</p>
+      </div>
+
+      <!-- Action Button -->
+      <div class="delete-modal-footer" id="delete-modal-footer">
+        <button class="btn-delete-confirm" id="btn-confirm-delete">
+          <i class="fa-solid fa-trash-can"></i> Delete Everything Permanently
+        </button>
+        <button class="btn-delete-cancel" id="btn-cancel-delete">
+          <i class="fa-solid fa-xmark"></i> Cancel, Keep My Account
+        </button>
+      </div>
     </div>
   </div>
 
@@ -247,6 +355,10 @@
         </div>
         <h1 class="creator-welcome-title">Welcome to Birthday Studio! ✨</h1>
         <p class="creator-welcome-sub">Choose who this magical surprise is for and fill in the sweet details:</p>
+        <!-- Delete Account Button (Top Right) -->
+        <button class="btn-delete-account-corner" id="btn-open-delete-modal" title="Delete My Account">
+          <i class="fa-solid fa-trash-can"></i> Delete Account
+        </button>
       </div>
 
       <!-- 3D Overlapping / Stacked Cards Selector: "For BF" vs "For GF" -->
@@ -344,6 +456,12 @@
             </div>
           </div>
 
+          <!-- Idle Account Auto-Deletion Notice (Before Link Generation) -->
+          <div class="idle-policy-banner">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span><strong>Data & URL Retention Policy:</strong> When you generate a surprise link, your data & URL remain active for <strong>48 hours</strong>. If you do not generate a link, your account data will be permanently deleted after <strong>48 to 72 hours</strong>.</span>
+          </div>
+
           <!-- Generate Link Button -->
           <div class="creator-form-submit-row">
             <button type="submit" class="btn-generate-surprise-link" id="btn-generate-surprise-link">
@@ -368,6 +486,40 @@
             </button>
           </div>
           <div class="copy-feedback" id="final-copy-feedback"><i class="fa-solid fa-circle-check"></i> Surprise Link copied to clipboard! Send with love ❤️</div>
+
+          <!-- Link Active Duration & Expiry Time Card -->
+          <div class="link-expiry-card" id="link-expiry-card">
+            <div class="link-expiry-header">
+              <div class="expiry-icon-pulse"><i class="fa-solid fa-clock"></i></div>
+              <div class="expiry-header-text">
+                <span class="expiry-badge-title"><i class="fa-solid fa-hourglass-half"></i> Link Active Window: 48 Hours</span>
+                <span class="expiry-exact-date" id="expiry-exact-date">Active Until: Calculating...</span>
+              </div>
+            </div>
+            <div class="expiry-countdown-row">
+              <span class="countdown-label"><i class="fa-solid fa-stopwatch"></i> Auto-Delete Countdown:</span>
+              <div class="expiry-countdown-chips" id="expiry-countdown-chips">
+                <span class="countdown-chip" id="exp-chip-hours">47h</span>
+                <span class="countdown-chip-sep">:</span>
+                <span class="countdown-chip" id="exp-chip-mins">59m</span>
+                <span class="countdown-chip-sep">:</span>
+                <span class="countdown-chip" id="exp-chip-secs">59s</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permanent Deletion Policy Note -->
+          <div class="link-deletion-policy-note">
+            <div class="policy-note-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="policy-note-content">
+              <strong>⚠️ Permanent Auto-Deletion Policy:</strong>
+              <p>Your data and URL will be deleted permanently after <strong>48 hrs</strong> after link generation. If you do not generate a link, your data will be deleted permanently after <strong>48 to 72 hrs</strong>.</p>
+              <div class="policy-subnote">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>When this timer ends, all uploaded photos, messages, girlfriend chat replies, and account data are automatically & permanently erased from both Telegram and the server.</span>
+              </div>
+            </div>
+          </div>
 
           <div class="link-actions-grid">
             <button type="button" class="btn-launch-preview" id="btn-launch-preview">
@@ -1680,13 +1832,33 @@
     </div>
   </section>
 
+  <!-- =========================================================
+       EXPIRED LINK OVERLAY (48-Hour Expiry Lock)
+       ========================================================= -->
+  <div class="expired-link-overlay hidden" id="expired-link-overlay">
+    <div class="expired-link-card">
+      <div class="expired-icon">⏳💔</div>
+      <h2>Surprise Link Expired</h2>
+      <p class="expired-main-desc">This birthday surprise link was active for <strong>48 hours</strong> and has now reached its expiration time.</p>
+      
+      <div class="expired-security-badge">
+        <i class="fa-solid fa-shield-check"></i>
+        <span><strong>Data Purged:</strong> All uploaded photos, personal wishes, chat messages, and user records have been permanently erased from the server and Telegram for privacy.</span>
+      </div>
+
+      <a href="./" class="btn-expired-home">
+        <i class="fa-solid fa-sparkles"></i> Create a New Birthday Surprise 🎉
+      </a>
+    </div>
+  </div>
+
   <!-- Real Firecrackers Video & Real-time Chroma-Key Canvas Overlay -->
   <video id="firecrackers-video" src="firecrackers.mp4" playsinline preload="auto" crossorigin="anonymous" style="display: none;"></video>
   <canvas id="firecrackers-canvas" class="firecrackers-canvas-overlay"></canvas>
 
   <!-- Scripts -->
-  <script src="js/audio.js?v=18"></script>
-  <script src="js/scene3d.js?v=18"></script>
-  <script src="js/app.js?v=18"></script>
+  <script src="js/audio.js?v=21"></script>
+  <script src="js/scene3d.js?v=21"></script>
+  <script src="js/app.js?v=21"></script>
 </body>
 </html>
