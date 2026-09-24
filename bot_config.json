@@ -7,36 +7,6 @@
   "saved_answers": [
     {
       "question": "Hey prettiest girl... 💕 Do you know who is the luckiest guy in the entire universe today? (Hint: The one typing this for you ❤️)",
-      "reply": "Aww so sweet! 💕",
-      "celebrant": "priya",
-      "time": "15:12"
-    },
-    {
-      "question": "What is the one thing that made you smile the most this past year? 🥰",
-      "reply": "Your sweet surprises 🎁",
-      "celebrant": "priya",
-      "time": "15:12"
-    },
-    {
-      "question": "If you could make one magical birthday wish right this second, what would it be? ✨",
-      "reply": "Lots of happiness & love 🌸",
-      "celebrant": "priya",
-      "time": "15:12"
-    },
-    {
-      "question": "What is your absolute favorite memory of us together so far? 💕",
-      "reply": "Our late night talks 🌙",
-      "celebrant": "priya",
-      "time": "15:14"
-    },
-    {
-      "question": "Are you ready to step into your grand 3D birthday surprise wonderland now, my princess? 👑🎂",
-      "reply": "Can't wait! 🎉",
-      "celebrant": "priya",
-      "time": "15:14"
-    },
-    {
-      "question": "Hey prettiest girl... 💕 Do you know who is the luckiest guy in the entire universe today? (Hint: The one typing this for you ❤️)",
       "reply": "hii",
       "celebrant": "jaan",
       "time": "20:12"
@@ -95,15 +65,21 @@
       "delete_at": 1790347407.238636,
       "delete_at_readable": "24 Sep 2026, 08:13 PM",
       "tg_chat_id": "7034154766"
+    },
+    {
+      "username": "rahul",
+      "delete_at": 1790353661.1126606,
+      "delete_at_readable": "24 Sep 2026, 09:57 PM",
+      "tg_chat_id": "7034154766"
     }
   ],
   "link_expiries": {
     "rahul": {
-      "generated_at": 1790267070536,
-      "expires_at": 0,
-      "expires_at_sec": 0.0,
-      "token": "l65gqk",
-      "created_str": "24 Sep 2026, 09:54 PM"
+      "generated_at": 1790267237021,
+      "expires_at": 1790440037021,
+      "expires_at_sec": 1790440037.021,
+      "link": "http://localhost:8000/?s=085ymj",
+      "created_str": "24 Sep 2026, 09:57 PM"
     },
     "ram": {
       "generated_at": 1790260849222,
@@ -494,6 +470,22 @@
         "time": "20:41",
         "timestamp": 1790262674.15028
       }
+    ],
+    "rahul": [
+      {
+        "action": "curtains_opened",
+        "details": "Opened Royal Velvet Curtains & Started Celebration 💖",
+        "icon": "👑",
+        "time": "21:55",
+        "timestamp": 1790267139.5394962
+      },
+      {
+        "action": "curtains_opened",
+        "details": "Opened Royal Velvet Curtains & Started Celebration 💖",
+        "icon": "👑",
+        "time": "21:56",
+        "timestamp": 1790267207.7110474
+      }
     ]
   },
   "live_chats": {
@@ -659,6 +651,14 @@
       "last_login": "24 Sep 2026, 08:14 PM",
       "last_login_date": "2026-09-24",
       "last_login_ts": 1790261044.951844
+    },
+    "dk": {
+      "username": "dk",
+      "password": "1234",
+      "registered_at": "24 Sep 2026, 09:58 PM",
+      "last_login": "24 Sep 2026, 09:58 PM",
+      "last_login_date": "2026-09-24",
+      "last_login_ts": 1790267293.414435
     }
   },
   "short_surprise_links": {
@@ -706,6 +706,46 @@
         "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_0.jpg"
       ],
       "token": "l65gqk"
+    },
+    "085ymj": {
+      "username": "rahul",
+      "surprise": "1",
+      "u": "rahul",
+      "mode": "gf",
+      "name": "priya",
+      "nickname": "queen",
+      "age": "22",
+      "theme": "rose-glamour",
+      "wish": "Happy Birthday to the most amazing, gorgeous, and loving girl in the whole world! Thank you for bringing endless joy, warmth, and magic into my life. Every single day with you is my favorite day. May all your sweetest dreams come true today and forever! 💖✨",
+      "photo": "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_1.jpg",
+      "memories": [
+        "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_3.jpg",
+        "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_1.jpg",
+        "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_2.jpg",
+        "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_4.jpg",
+        "https://api.telegram.org/file/bot8845203919:AAEOKVwNqw5Q6yn2DJbx5JL-uWMqQa57hL8/photos/file_5.jpg"
+      ],
+      "safarnama": [
+        {
+          "heading": "Jab Tum Zindagi Me Aaye 🌸",
+          "description": "Ek aam sa din tha, lekin jab tum meri zindagi me aayi, toh har lamha khaas ban gaya. Tumhari muskurahat ne dil ko ek aisi sukoon di jo pehle kabhi mehsoos nahi hui thi."
+        },
+        {
+          "heading": "Der Raat Ki Baatein & Silly Fights 🥰",
+          "description": "Wo ghanton phone par baatein karna, bina kisi wajah ke muskurana, choti-choti baaton par ruthna aur phir ek pyare se sorry par maan jana... Ye saare pal mere dil ke sabse kareeb hain."
+        },
+        {
+          "heading": "Har Kadam Par Saath 🤝",
+          "description": "Chahe din achha ho ya mushkil, tumne hamesha meri himmat badhayi hai. Tum sirf meri girlfriend nahi, meri sabse achhi dost aur meri sabse badi taakat ho."
+        },
+        {
+          "heading": "Aaj, Kal Aur Hamesha ❤️",
+          "description": "Aaj tumhare is khaas janamdin par, main rab se bas yahi dua karta hu ki tumhari har khwahish puri ho. Tumhari aankhon me hamesha khushi ke aansu hon aur hothon par pyari hasi. Happy Birthday My Love! 💖"
+        }
+      ],
+      "exp": 1790440037021,
+      "gen_at": 1790267237021,
+      "token": "085ymj"
     }
   }
 }
