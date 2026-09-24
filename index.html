@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>✨ Happy Birthday Shubham Sharnam! 🎉</title>
-  <meta name="description" content="An interactive 3D birthday celebration story for Shubham Sharnam (Age 22) with royal curtain reveal, balloon bursting, cake cutting, fireworks, and gifts!">
+  <title>💖 Happy Birthday My Love! ✨</title>
+  <meta name="description" content="A magical and romantic 3D birthday celebration with falling rose petals, glowing heart balloons, memory polaroids, fairy lights, and a sweet love letter.">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&family=Sacramento&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Sacramento&family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- App Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=18">
 
   <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -24,10 +24,368 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="theme-midnight-gold">
+<body class="theme-rose-glamour">
 
   <!-- =========================================================
-       STEP 1: ROYAL CURTAIN WELCOME INTRO SCREEN
+       STEP 0: MASTER INDEX & APP OVERVIEW LANDING SCREEN
+       ========================================================= -->
+  <section class="portal-landing-screen" id="portal-landing-screen">
+    <div class="portal-landing-backdrop"></div>
+    <div class="portal-ambient-glows"></div>
+
+    <!-- Upper Left Fixed ENV Test Button -->
+    <button type="button" class="portal-env-topleft-btn" id="btn-portal-topleft-env" title="Open Admin ENV & Telegram Bot Setup" onclick="document.getElementById('admin-env-modal').classList.add('show');">
+      <span class="env-pulse-dot"></span>
+      <i class="fa-solid fa-terminal"></i>
+      <span class="env-text-label">ENV</span>
+    </button>
+
+    <div class="portal-landing-container">
+      
+      <!-- Top Brand Header -->
+      <div class="portal-brand-header">
+        <div class="portal-sparkle-pill">
+          <i class="fa-solid fa-sparkles"></i> NEXT-GEN 3D BIRTHDAY EXPERIENCE <i class="fa-solid fa-sparkles"></i>
+        </div>
+        <h1 class="portal-hero-title">Birthday Surprise Universe ✨</h1>
+        <p class="portal-hero-tagline">
+          Create an unforgettable, personalized 3D birthday celebration with animated velvet curtains, love albums, live typewriter chat, direct treats ordering, and a magical 3D cake wonderland.
+        </p>
+      </div>
+
+      <!-- App Feature Index Cards -->
+      <div class="portal-feature-index-grid">
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div class="index-card-info">
+            <h3>1. Royal Curtain Welcome</h3>
+            <p>Animated velvet curtains with gold fringes and customized greeting cards.</p>
+          </div>
+        </div>
+
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+          <div class="index-card-info">
+            <h3>2. Memories & Safarnama</h3>
+            <p>Dual 3D photo albums and romantic poetic journey diaries.</p>
+          </div>
+        </div>
+
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-comments"></i></div>
+          <div class="index-card-info">
+            <h3>3. Live Typewriter Chat</h3>
+            <p>Real-time live typing questions with saved answers in chat history.</p>
+          </div>
+        </div>
+
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div class="index-card-info">
+            <h3>4. Full-Screen Treats Store</h3>
+            <p>Direct 1-tap ordering from Zomato, Swiggy, Blinkit, Amazon, Flipkart, Meesho & Shopsy.</p>
+          </div>
+        </div>
+
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-cake-candles"></i></div>
+          <div class="index-card-info">
+            <h3>5. 3D WebGL Celebration</h3>
+            <p>Interactive 3D Heart Balloons, Cake Cutting, Candle Lighting & Fireworks.</p>
+          </div>
+        </div>
+
+        <div class="portal-index-card">
+          <div class="index-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <div class="index-card-info">
+            <h3>6. Shareable Cloud Link</h3>
+            <p>Generate permanent shareable surprise links with photo hosting & QR codes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Login & Start CTA -->
+      <div class="portal-landing-footer">
+        <button type="button" class="btn-portal-login" id="btn-portal-open-login" onclick="document.getElementById('portal-login-modal').classList.add('show');">
+          <span class="btn-shine"></span>
+          <i class="fa-solid fa-lock-open"></i> Login to Create / Access Surprise 🚀
+        </button>
+        <button type="button" class="btn-portal-guest" id="btn-portal-view-demo">
+          <i class="fa-solid fa-play"></i> Quick Preview Surprise World 💖
+        </button>
+        <button type="button" class="btn-portal-sandbox" id="btn-portal-open-sandbox" onclick="document.getElementById('admin-env-modal').classList.add('show');">
+          <i class="fa-brands fa-telegram"></i> ⚙️ Admin ENV & Telegram Bot Setup 🤖
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================
+       ADMIN ENVIRONMENT (ENV) & TELEGRAM BOT CONFIG MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="admin-env-modal">
+    <div class="modal-card admin-env-card">
+      <button type="button" class="modal-close" id="close-admin-env-modal" onclick="document.getElementById('admin-env-modal').classList.remove('show');">&times;</button>
+      
+      <div class="admin-env-header">
+        <div class="admin-tg-icon-badge"><i class="fa-brands fa-telegram"></i></div>
+        <h2>Admin ENV & Telegram Bot Setup ⚙️</h2>
+        <p>Configure your Telegram Bot token so the project connects with your Telegram bot for live chat alerts and surprise sync.</p>
+        
+        <div class="env-bot-status-pill" id="env-bot-status-badge">
+          <span class="status-indicator-dot" id="env-status-dot"></span>
+          <span id="env-status-text">Checking Bot Status...</span>
+        </div>
+      </div>
+
+      <form id="admin-env-form" class="admin-env-form" autocomplete="off" onsubmit="return false;">
+        
+        <div class="env-form-group">
+          <label><i class="fa-solid fa-key"></i> Telegram Bot Token (BOT_TOKEN)</label>
+          <div class="password-input-wrap">
+            <input type="password" id="env-bot-token" placeholder="Paste Bot Token (e.g. 7123456789:AAFx...)" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-env-token" title="Show / Mask Token">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+          <span class="env-field-hint">💡 Bot Token apne Telegram me <b>@BotFather</b> se lein. Saved token masked <b>(••••••)</b> rahega.</span>
+        </div>
+
+        <div class="env-form-group">
+          <label><i class="fa-solid fa-id-badge"></i> Your Telegram Chat ID (OWNER_CHAT_ID)</label>
+          <div class="env-input-wrapper">
+            <input type="text" id="env-chat-id" placeholder="e.g. 1234567890 (optional, auto-detected on /start)">
+          </div>
+          <span class="env-field-hint">💡 Jahan par aapko girlfriend ke live answers aur notifications chahiye.</span>
+        </div>
+
+        <div class="env-form-group">
+          <label><i class="fa-solid fa-globe"></i> Web App Host URL (WEB_APP_URL)</label>
+          <div class="env-input-wrapper">
+            <input type="text" id="env-web-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+          </div>
+        </div>
+
+        <div class="admin-env-actions">
+          <button type="button" class="btn-env-save" id="btn-env-save">
+            <span class="btn-shine"></span>
+            <i class="fa-solid fa-floppy-disk"></i> Save & Connect Bot 💾
+          </button>
+          
+          <button type="button" class="btn-env-test" id="btn-env-test-ping">
+            <i class="fa-solid fa-bolt"></i> Real Verify & Ping ⚡
+          </button>
+        </div>
+        
+        <div class="env-feedback-toast hidden" id="env-feedback-toast">
+          <i class="fa-solid fa-circle-check" id="env-feedback-icon"></i>
+          <span id="env-feedback-msg">Environment settings saved and verified!</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       NEON GLASSY LOGIN POPUP MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="portal-login-modal">
+    <div class="modal-card neon-glass-login-card">
+      <button class="modal-close" id="close-login-modal">&times;</button>
+      
+      <div class="neon-login-header">
+        <div class="neon-lock-badge"><i class="fa-solid fa-fingerprint"></i></div>
+        <h2>Boyfriend Login Portal 🔐</h2>
+        <p>Enter your username and password to create or access your birthday surprise.</p>
+      </div>
+
+      <form id="portal-login-form" class="neon-login-form">
+        <div class="neon-input-group">
+          <label><i class="fa-solid fa-user"></i> Your Name / Username</label>
+          <input type="text" id="login-username" placeholder="e.g. Rahul / Romeo" required autocomplete="username">
+        </div>
+
+        <div class="neon-input-group">
+          <label><i class="fa-solid fa-key"></i> Secret Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="login-password" placeholder="Create or enter password..." required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-login-pwd" title="Show/Hide Password"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+
+        <!-- Warning Note -->
+        <div class="neon-warning-note">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span><strong>Note:</strong> Agar password bhool gaye to surprise access nahi milega! Please remember your secret password.</span>
+        </div>
+
+        <div class="login-actions-row">
+          <button type="submit" class="btn-neon-start" id="btn-login-start">
+            <span class="btn-shine"></span>
+            <i class="fa-solid fa-rocket"></i> Start & Authenticate 🚀
+          </button>
+          <button type="button" class="btn-neon-help" id="btn-login-help">
+            <i class="fa-solid fa-circle-question"></i> Need Help? ❓
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       POST-LOGIN CREATOR DASHBOARD WITH 3D STACKED DECK SELECTOR
+       ========================================================= -->
+  <section class="portal-creator-dashboard hidden" id="portal-creator-dashboard">
+    <div class="creator-dashboard-backdrop"></div>
+    
+    <div class="creator-dashboard-container">
+      
+      <!-- Top Welcome Banner -->
+      <div class="creator-welcome-banner">
+        <div class="creator-user-pill">
+          <span class="online-indicator"></span> Logged in as: <strong id="logged-user-name">Boyfriend</strong>
+        </div>
+        <h1 class="creator-welcome-title">Welcome to Birthday Studio! ✨</h1>
+        <p class="creator-welcome-sub">Choose who this magical surprise is for and fill in the sweet details:</p>
+      </div>
+
+      <!-- 3D Overlapping / Stacked Cards Selector: "For BF" vs "For GF" -->
+      <div class="deck-selector-section">
+        <div class="deck-selector-heading">
+          <span>✨ SELECT SURPRISE MODE ✨</span>
+        </div>
+
+        <div class="deck-cards-stage" id="deck-cards-stage">
+          
+          <!-- Card 1: For Girlfriend (Default active or switchable) -->
+          <div class="deck-card active-focus" id="deck-card-gf" data-mode="gf">
+            <div class="deck-card-glow"></div>
+            <div class="deck-card-content">
+              <div class="deck-avatar-badge">👸💖</div>
+              <h3 class="deck-card-title">For My Girlfriend</h3>
+              <p class="deck-card-tagline">Rose petals, romantic love albums, heart balloons, sweet live chat & chocolate treats.</p>
+              <div class="deck-active-status">
+                <i class="fa-solid fa-circle-check"></i> SELECTED (FRONT)
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: For Boyfriend (Layered behind with blur/tilt, click to bring front) -->
+          <div class="deck-card stacked-behind" id="deck-card-bf" data-mode="bf">
+            <div class="deck-card-glow"></div>
+            <div class="deck-card-content">
+              <div class="deck-avatar-badge">👦🔥</div>
+              <h3 class="deck-card-title">For My Boyfriend</h3>
+              <p class="deck-card-tagline">Midnight gold / neon theme, cute questions, gaming arcade, biryani treats & memory gallery.</p>
+              <div class="deck-active-status">
+                <i class="fa-solid fa-hand-pointer"></i> Click to Select (Bring to Front)
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p class="deck-switch-hint"><i class="fa-solid fa-arrows-rotate"></i> Tap the blurred back card anytime to switch mode!</p>
+      </div>
+
+      <!-- Dynamic Data Collection Form Below -->
+      <div class="creator-form-card">
+        <div class="creator-form-header">
+          <h3 id="creator-form-heading">💖 Fill Her Surprise Details</h3>
+          <p id="creator-form-subheading">Personalize name, romantic wish, and upload photo:</p>
+        </div>
+
+        <form id="creator-surprise-form">
+          <div class="creator-form-grid">
+            
+            <div class="form-field">
+              <label><i class="fa-solid fa-signature"></i> Celebrant's Real Name</label>
+              <input type="text" id="creator-input-name" placeholder="e.g. Ananya / Priya" required>
+            </div>
+
+            <div class="form-field">
+              <label><i class="fa-solid fa-crown"></i> Pet / Love Name</label>
+              <input type="text" id="creator-input-nickname" placeholder="e.g. My Queen / Princess / Jaan">
+            </div>
+
+            <div class="form-field">
+              <label><i class="fa-solid fa-cake-candles"></i> Age (Optional)</label>
+              <input type="number" id="creator-input-age" placeholder="e.g. 21" min="1" max="100">
+            </div>
+
+            <div class="form-field">
+              <label><i class="fa-solid fa-palette"></i> 3D Theme Style</label>
+              <select id="creator-input-theme">
+                <option value="rose-glamour">🌸 Rose Gold & Velvet Ruby (Romantic)</option>
+                <option value="midnight-gold">✨ Midnight Royal Gold (Luxury)</option>
+                <option value="cyber-neon">⚡ Cyber Neon Glow (Party & Modern)</option>
+                <option value="cosmic-purple">💜 Cosmic Nebula Violet</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="form-field full-width">
+            <label><i class="fa-solid fa-heart"></i> Heartfelt Birthday Message / Love Letter</label>
+            <textarea id="creator-input-wish" rows="3" placeholder="Write your sweetest birthday message here...">Happy Birthday to the most amazing, gorgeous, and loving person in the whole universe! Thank you for bringing endless joy, warmth, and magic into my life. Every single day with you is my favorite day!</textarea>
+          </div>
+
+          <!-- Photo Upload (Telegram Bot Cloud Sync Ready) -->
+          <div class="form-field full-width">
+            <label><i class="fa-solid fa-image"></i> Portrait Photo (Auto Cloud Hosted & TG Bot Sync)</label>
+            <div class="creator-photo-upload-box">
+              <input type="file" id="creator-input-photo" accept="image/*" class="file-input-hidden">
+              <label for="creator-input-photo" class="btn-creator-upload">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo from Device
+              </label>
+              <span id="creator-photo-status" class="creator-photo-status">Default Romantic 3D Badge Selected</span>
+            </div>
+            <div style="margin-top: 8px;">
+              <input type="url" id="creator-input-photo-url" placeholder="Or Paste Direct Photo URL (Imgur / Cloud Link)..." class="creator-url-input">
+            </div>
+          </div>
+
+          <!-- Generate Link Button -->
+          <div class="creator-form-submit-row">
+            <button type="submit" class="btn-generate-surprise-link" id="btn-generate-surprise-link">
+              <span class="btn-shine"></span>
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Surprise Link 🎁✨
+            </button>
+          </div>
+        </form>
+
+        <!-- Generated Link Result Box -->
+        <div class="generated-link-box hidden" id="generated-link-box">
+          <div class="link-result-header">
+            <i class="fa-solid fa-circle-check"></i>
+            <h4>Your Magical Surprise Link is Ready! 🎉</h4>
+          </div>
+          <p>Share this link with your special person. When they open it, their grand 3D birthday celebration will begin!</p>
+          
+          <div class="link-copy-input-row">
+            <input type="text" id="final-surprise-link-input" readonly value="">
+            <button type="button" class="btn-copy-final-link" id="btn-copy-final-link">
+              <i class="fa-solid fa-copy"></i> Copy Link
+            </button>
+          </div>
+          <div class="copy-feedback" id="final-copy-feedback"><i class="fa-solid fa-circle-check"></i> Surprise Link copied to clipboard! Send with love ❤️</div>
+
+          <div class="link-actions-grid">
+            <button type="button" class="btn-launch-preview" id="btn-launch-preview">
+              <i class="fa-solid fa-play"></i> Open & Preview Surprise Now 🚀
+            </button>
+            <button type="button" class="btn-logout-portal" id="btn-logout-portal">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================
+       STEP 1: ROYAL VELVET ROSE CURTAIN WELCOME INTRO SCREEN
        ========================================================= -->
   <div class="curtain-container" id="curtain-container">
     <div class="curtain curtain-left" id="curtain-left">
@@ -45,41 +403,214 @@
 
     <!-- Intro Card on Curtains -->
     <div class="curtain-intro-content" id="curtain-intro-content">
-      <div class="intro-sparkle-badge">✨ SPECIAL CELEBRATION ✨</div>
-      <h1 class="intro-headline">It seems today is your birthday!</h1>
-      <p class="intro-subtext">A magical 3D surprise has been crafted specially for you...</p>
+      <div class="intro-sparkle-badge">💖 FOR THE MOST SPECIAL GIRL 💖</div>
+      <h1 class="intro-headline">Happy Birthday My Love! ✨</h1>
+      <p class="intro-subtext">Every second with you is a dream come true... A magical 3D world crafted specially for you 💕</p>
       
       <button class="btn-celebrate-intro" id="btn-start-celebration">
         <span class="btn-shine"></span>
-        <i class="fa-solid fa-sparkles"></i> Let's Celebrate 🎉
+        <i class="fa-solid fa-heart"></i> Open My Heart 💖
       </button>
     </div>
   </div>
 
+  <!-- =========================================================
+       STEP 2: ROMANTIC INTERMEDIATE SCREEN & LIVE CHAT JOURNEY
+       ========================================================= -->
+  <section class="romantic-chat-screen hidden" id="romantic-chat-screen">
+    <div class="romantic-chat-backdrop"></div>
+    
+    <!-- Floating romantic ambient hearts -->
+    <div class="chat-floating-hearts" id="chat-floating-hearts"></div>
+
+    <div class="romantic-chat-container">
+      
+      <!-- Top Middle Romantic Header -->
+      <div class="chat-header-section">
+        <div class="romantic-badge-pill">
+          <i class="fa-solid fa-sparkles"></i> ESPECIALLY CRAFTED FOR YOU <i class="fa-solid fa-sparkles"></i>
+        </div>
+        <h1 class="romantic-hero-title">Happy Birthday, My Queen! 💖</h1>
+        <p class="romantic-hero-subtitle">
+          "In a world full of ordinary things, you are my most magical miracle."
+        </p>
+      </div>
+
+      <!-- Romantic Love Note Banner Card -->
+      <div class="romantic-note-card">
+        <div class="note-quote-icon"><i class="fa-solid fa-heart"></i></div>
+        <div class="note-text-body">
+          Before we begin our live chat and step into your 3D Wonderland, open our special Love Albums below... 💕
+        </div>
+      </div>
+
+      <!-- =========================================================
+           DUAL BOOK ALBUMS: "MEMORIES" (LEFT) & "SAFARNAMA" (RIGHT)
+           ========================================================= -->
+      <div class="romantic-albums-section">
+        <div class="albums-section-header">
+          <span class="albums-sparkle-tag"><i class="fa-solid fa-book-bookmark"></i> SPECIAL LOVE ALBUMS</span>
+          <p class="albums-hint-text">✨ Tap any book below to open & read our story ✨</p>
+        </div>
+
+        <div class="dual-books-container">
+          <!-- Left Book: MEMORIES -->
+          <div class="book-card-item book-memories" id="book-card-memories">
+            <div class="book-3d-wrapper">
+              <div class="book-cover book-cover-left">
+                <div class="book-spine"></div>
+                <div class="book-ribbon"></div>
+                <div class="book-corner-foil top-left"></div>
+                <div class="book-corner-foil top-right"></div>
+                <div class="book-corner-foil bottom-left"></div>
+                <div class="book-corner-foil bottom-right"></div>
+                <div class="book-border-foil"></div>
+                <div class="book-content-inner">
+                  <div class="book-emboss-tag">PHOTO ALBUM</div>
+                  <div class="book-center-polaroid">
+                    <div class="mini-polaroid-preview">
+                      <span class="polaroid-heart-icon">📸</span>
+                      <span class="polaroid-sparkle">💖</span>
+                    </div>
+                  </div>
+                  <h3 class="book-cover-title">Memories</h3>
+                  <p class="book-cover-subtitle">Moments Frozen in Love 💕</p>
+                  <div class="book-open-badge">
+                    <i class="fa-solid fa-book-open"></i> Tap to Open Album
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Book: SAFARNAMA -->
+          <div class="book-card-item book-safarnama" id="book-card-safarnama">
+            <div class="book-3d-wrapper">
+              <div class="book-cover book-cover-right">
+                <div class="book-spine"></div>
+                <div class="book-ribbon gold-ribbon"></div>
+                <div class="book-corner-foil top-left"></div>
+                <div class="book-corner-foil top-right"></div>
+                <div class="book-corner-foil bottom-left"></div>
+                <div class="book-corner-foil bottom-right"></div>
+                <div class="book-border-foil"></div>
+                <div class="book-content-inner">
+                  <div class="book-emboss-tag">OUR JOURNEY DIARY</div>
+                  <div class="book-center-quill">
+                    <div class="mini-quill-preview">
+                      <span class="quill-icon">📜</span>
+                      <span class="quill-sparkle">✨</span>
+                    </div>
+                  </div>
+                  <h3 class="book-cover-title">Safarnama</h3>
+                  <p class="book-cover-subtitle">A Beautiful Journey of Us ❤️</p>
+                  <div class="book-open-badge">
+                    <i class="fa-solid fa-feather-pointed"></i> Tap to Read Story
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Chat Card Window -->
+      <div class="chat-card-window">
+        <div class="chat-card-header">
+          <div class="chat-user-status">
+            <div class="chat-avatar boyfriend-avatar">
+              <span>👦</span>
+              <span class="status-dot online"></span>
+            </div>
+            <div class="chat-user-info">
+              <div class="chat-user-name">Your Boyfriend 💕</div>
+              <div class="chat-status-text" id="chat-live-status">Typing with love...</div>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <div class="chat-progress-badge">
+              <span id="chat-step-counter">1</span> / 5 Questions
+            </div>
+            <button class="btn-skip-chat" id="btn-skip-chat" title="Skip to 3D Celebration">
+              Skip to 3D <i class="fa-solid fa-forward"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Messages Area -->
+        <div class="chat-messages-scroll" id="chat-messages-scroll">
+          <!-- Messages will be injected dynamically here -->
+          <div class="chat-typing-row hidden" id="chat-typing-indicator">
+            <div class="chat-bubble-avatar">👦</div>
+            <div class="chat-bubble-typing">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Reply Suggestions Chips -->
+        <div class="chat-quick-replies" id="chat-quick-replies"></div>
+
+        <!-- Chat Input Bar -->
+        <div class="chat-input-bar">
+          <div class="chat-input-wrapper">
+            <input type="text" id="chat-user-input" placeholder="Please enter your reply..." autocomplete="off" disabled>
+            <button class="chat-emoji-btn" id="chat-emoji-heart-btn" type="button" title="Add Heart">💖</button>
+          </div>
+          <button class="chat-send-btn" id="chat-send-btn" type="button" disabled>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Action Area (Revealed after all 5 questions) -->
+      <div class="chat-footer-actions hidden" id="chat-footer-actions">
+        <button class="btn-romantic-order" id="btn-go-to-order">
+          <i class="fa-solid fa-bag-shopping"></i> Go to Order
+        </button>
+        <button class="btn-romantic-enter-3d" id="btn-enter-3d-world">
+          <span class="btn-shine"></span>
+          <i class="fa-solid fa-cake-candles"></i> Enter 3D Birthday World ✨
+        </button>
+      </div>
+
+    </div>
+  </section>
+
   <!-- 3D WebGL Canvas Container -->
   <div id="canvas-container"></div>
 
-  <!-- Ambient Light Sparks Background -->
+  <!-- Ambient Light Sparks & Stars Background -->
   <div class="stars-bg"></div>
 
-  <!-- Disco Light Overlay Effects -->
+  <!-- Falling Rose Petals Canvas -->
+  <canvas id="rose-petals-canvas"></canvas>
+
+  <!-- Disco / Romantic Glow Overlay Effects -->
   <div class="disco-overlay" id="disco-overlay"></div>
 
   <!-- Sparkler Cursor Canvas -->
   <canvas id="sparkler-canvas"></canvas>
 
   <!-- =========================================================
-       CLEAN TOP BAR (WITH 3-LINE MENU BUTTON)
+       CLEAN TOP BAR (WITH 3-LINE MENU BUTTON & MUSIC)
        ========================================================= -->
   <header class="top-nav" id="main-top-nav">
     <div class="logo-badge">
-      <span class="sparkle-icon">🎂</span>
-      <span class="logo-title" id="celebrant-title">Happy Birthday Shubham!</span>
+      <span class="sparkle-icon">💖</span>
+      <span class="logo-title" id="celebrant-title">Happy Birthday My Love!</span>
     </div>
 
     <div class="nav-actions">
+      <!-- Quick Rose Petals Toggle Button -->
+      <button class="icon-btn" id="quick-petals-btn" title="Toggle Falling Rose Petals">
+        <i class="fa-solid fa-spa"></i>
+      </button>
+
       <!-- Quick Music Button -->
-      <button class="icon-btn" id="music-toggle-btn" title="Play/Pause Birthday Song">
+      <button class="icon-btn active" id="music-toggle-btn" title="Play/Pause Romantic Song">
         <i class="fa-solid fa-music"></i>
         <div class="sound-wave" id="sound-wave">
           <span></span><span></span><span></span>
@@ -87,21 +618,21 @@
       </button>
 
       <!-- 3-Line Hamburger Menu Button -->
-      <button class="icon-btn menu-toggle-btn highlight" id="main-menu-btn" title="Open Party Menu">
+      <button class="icon-btn menu-toggle-btn highlight" id="main-menu-btn" title="Open Surprise Menu">
         <i class="fa-solid fa-bars"></i>
       </button>
     </div>
   </header>
 
   <!-- =========================================================
-       SLIDING GLASS PARTY MENU DRAWER (ALL OPTIONS INSIDE)
+       SLIDING GLASS SURPRISE MENU DRAWER
        ========================================================= -->
   <div class="menu-drawer-backdrop" id="menu-drawer-backdrop"></div>
   <aside class="menu-drawer" id="menu-drawer">
     <div class="menu-drawer-header">
       <div class="drawer-title">
-        <i class="fa-solid fa-champagne-glasses"></i>
-        <span>Party Menu</span>
+        <i class="fa-solid fa-heart"></i>
+        <span>Romantic Surprises</span>
       </div>
       <button class="drawer-close-btn" id="close-menu-btn">&times;</button>
     </div>
@@ -116,52 +647,76 @@
         <div class="drawer-pill-grid">
           <button class="drawer-action-pill active" id="cam-orbit"><i class="fa-solid fa-arrows-spin"></i> <span>Orbit</span></button>
           <button class="drawer-action-pill" id="cam-cake"><i class="fa-solid fa-cake-candles"></i> <span>Cake Focus</span></button>
-          <button class="drawer-action-pill" id="cam-gift"><i class="fa-solid fa-gift"></i> <span>Gift Focus</span></button>
+          <button class="drawer-action-pill" id="cam-gift"><i class="fa-solid fa-gift"></i> <span>Gift & Note</span></button>
           <button class="drawer-action-pill" id="cam-fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Sky View</span></button>
         </div>
       </div>
 
-      <!-- Section 2: Party Features & Activities -->
+      <!-- Section 2: Romantic Features & Activities -->
       <div class="drawer-section">
-        <span class="section-tag"><i class="fa-solid fa-wand-sparkles"></i> Party Activities</span>
+        <span class="section-tag"><i class="fa-solid fa-wand-sparkles"></i> Sweet Memories & Moments</span>
         <div class="drawer-grid">
-          <button class="drawer-feature-btn" id="btn-disco-mode">
-            <div class="feat-icon"><i class="fa-solid fa-compact-disc"></i></div>
+          <button class="drawer-feature-btn" id="btn-drawer-order-hub">
+            <div class="feat-icon"><i class="fa-solid fa-bag-shopping"></i></div>
             <div class="feat-info">
-              <strong>Disco Party Mode</strong>
-              <small>Lights & Dance Groove</small>
+              <strong>Order Treats & Gifts</strong>
+              <small>Zomato, Swiggy, Blinkit, Amazon 🛍️</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-drawer-chat-history">
+            <div class="feat-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="feat-info">
+              <strong>Her Chat Answers</strong>
+              <small>View Saved Love History 💬</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-love-letter">
+            <div class="feat-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+            <div class="feat-info">
+              <strong>Hidden Love Letter</strong>
+              <small>Read Special Note 💌</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-memory-gallery">
+            <div class="feat-icon"><i class="fa-solid fa-images"></i></div>
+            <div class="feat-info">
+              <strong>Polaroid Memories</strong>
+              <small>Our Favorite Moments 📸</small>
             </div>
           </button>
 
           <button class="drawer-feature-btn" id="btn-sparkler-wand">
             <div class="feat-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
             <div class="feat-info">
-              <strong>3D Sparkler Wand</strong>
-              <small>Draw Glowing Trails</small>
-            </div>
-          </button>
-
-          <button class="drawer-feature-btn" id="btn-arcade-game">
-            <div class="feat-icon"><i class="fa-solid fa-gamepad"></i></div>
-            <div class="feat-info">
-              <strong>Balloon Pop Arcade</strong>
-              <small>30-Sec Mini Game</small>
+              <strong>Heart Sparkler Wand</strong>
+              <small>Draw Glowing Heart Trails</small>
             </div>
           </button>
 
           <button class="drawer-feature-btn" id="btn-sky-lanterns">
             <div class="feat-icon"><i class="fa-solid fa-fire"></i></div>
             <div class="feat-info">
-              <strong>Sky Wish Lanterns</strong>
-              <small>Release into Night Sky</small>
+              <strong>Love Sky Lanterns</strong>
+              <small>Release Wishes in Night Sky</small>
             </div>
           </button>
 
           <button class="drawer-feature-btn" id="btn-photo-booth">
             <div class="feat-icon"><i class="fa-solid fa-camera-retro"></i></div>
             <div class="feat-info">
-              <strong>3D Photo Postcard</strong>
-              <small>Download Snapshot</small>
+              <strong>Love Postcard Snapshot</strong>
+              <small>Download Romantic Memory</small>
+            </div>
+          </button>
+
+          <button class="drawer-feature-btn" id="btn-arcade-game">
+            <div class="feat-icon"><i class="fa-solid fa-gamepad"></i></div>
+            <div class="feat-info">
+              <strong>Heart Pop Mini-Game</strong>
+              <small>30-Sec Romantic Arcade</small>
             </div>
           </button>
         </div>
@@ -169,42 +724,42 @@
 
       <!-- Section 3: Themes -->
       <div class="drawer-section">
-        <span class="section-tag"><i class="fa-solid fa-palette"></i> Color Themes</span>
+        <span class="section-tag"><i class="fa-solid fa-palette"></i> Romantic Palettes</span>
         <div class="drawer-theme-grid">
-          <div class="drawer-theme-pill active" data-theme="midnight-gold">
-            <span class="color-dot" style="background: linear-gradient(135deg, #ffd700, #ff8c00);"></span>
-            <span>Midnight Gold</span>
-          </div>
-          <div class="drawer-theme-pill" data-theme="rose-glamour">
+          <div class="drawer-theme-pill active" data-theme="rose-glamour">
             <span class="color-dot" style="background: linear-gradient(135deg, #ff758c, #ff7eb3);"></span>
-            <span>Rose Glamour</span>
+            <span>Rose Gold & Velvet</span>
           </div>
-          <div class="drawer-theme-pill" data-theme="cyber-neon">
-            <span class="color-dot" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></span>
-            <span>Cyber Neon</span>
+          <div class="drawer-theme-pill" data-theme="midnight-gold">
+            <span class="color-dot" style="background: linear-gradient(135deg, #ffd700, #ff8c00);"></span>
+            <span>Champagne Gold</span>
           </div>
           <div class="drawer-theme-pill" data-theme="cosmic-purple">
             <span class="color-dot" style="background: linear-gradient(135deg, #b721ff, #21d4fd);"></span>
-            <span>Cosmic Dream</span>
+            <span>Starry Lavender</span>
           </div>
           <div class="drawer-theme-pill" data-theme="pastel-rainbow">
             <span class="color-dot" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);"></span>
-            <span>Pastel Fantasy</span>
+            <span>Peach Blossom</span>
+          </div>
+          <div class="drawer-theme-pill" data-theme="cyber-neon">
+            <span class="color-dot" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></span>
+            <span>Fairy Cyan</span>
           </div>
         </div>
       </div>
 
       <!-- Section 4: Actions & Customization -->
       <div class="drawer-section">
-        <span class="section-tag"><i class="fa-solid fa-gear"></i> Celebration Tools</span>
+        <span class="section-tag"><i class="fa-solid fa-gear"></i> Personalize & Share</span>
         <div class="drawer-actions-row">
           <button class="drawer-big-btn" id="customize-btn">
             <i class="fa-solid fa-pen-nib"></i>
-            <span>Personalize</span>
+            <span>Edit Message & Photos</span>
           </button>
           <button class="drawer-big-btn" id="share-btn">
             <i class="fa-solid fa-share-nodes"></i>
-            <span>Share & QR</span>
+            <span>Send to Her (QR / Link)</span>
           </button>
         </div>
       </div>
@@ -266,12 +821,12 @@
     </div>
   </div>
 
-  <!-- Center Celebrant Floating Banner -->
+  <!-- Center Floating Love Title Overlay -->
   <div class="hero-celebrant-overlay" id="hero-overlay">
-    <div class="wish-subtitle" id="wish-subtitle">Wishing You a Wonderful Year Ahead!</div>
+    <div class="wish-subtitle" id="wish-subtitle">To the prettiest girl with the sweetest smile 💕</div>
     <h1 class="celebrant-name-display" id="name-display">
-      <span class="gradient-text" id="display-name-text">Shubham Sharnam</span>
-      <span class="age-badge" id="display-age-badge">22</span>
+      <span class="gradient-text" id="display-name-text">My Love ❤️</span>
+      <span class="age-badge" id="display-age-badge" style="display: none;"></span>
     </h1>
   </div>
 
@@ -281,36 +836,36 @@
   <div class="main-screen-quest-card" id="main-screen-quest-card">
     <div class="quest-glow-ring"></div>
     <div class="quest-icon-wrap">
-      <span class="quest-floating-balloon">🎈</span>
+      <span class="quest-floating-balloon">💖</span>
     </div>
     <div class="quest-content">
       <div class="quest-title-row">
-        <h2 class="quest-title" id="quest-title-text">BURST BALLOONS</h2>
+        <h2 class="quest-title" id="quest-title-text">POP 5 HEARTS ❤️</h2>
         <span class="quest-badge-counter" id="quest-badge-counter"><span id="quest-balloon-count">5</span> Left</span>
       </div>
-      <p class="quest-subtitle" id="quest-desc-text">around the cake to reveal the surprise</p>
+      <p class="quest-subtitle" id="quest-desc-text">tap the floating hearts around the cake</p>
       <div class="quest-progress-dots" id="quest-dots-container">
-        <span class="dot-balloon active" id="dot-0">🎈</span>
-        <span class="dot-balloon active" id="dot-1">🎈</span>
-        <span class="dot-balloon active" id="dot-2">🎈</span>
-        <span class="dot-balloon active" id="dot-3">🎈</span>
-        <span class="dot-balloon active" id="dot-4">🎈</span>
+        <span class="dot-balloon active" id="dot-0">💖</span>
+        <span class="dot-balloon active" id="dot-1">💖</span>
+        <span class="dot-balloon active" id="dot-2">💖</span>
+        <span class="dot-balloon active" id="dot-3">💖</span>
+        <span class="dot-balloon active" id="dot-4">💖</span>
       </div>
     </div>
   </div>
 
   <!-- =========================================================
-       GUIDED STEP STORY DOCK (DYNAMIC WORKFLOW)
+       GUIDED STEP STORY DOCK (ROMANTIC WORKFLOW)
        ========================================================= -->
   <div class="guided-story-bar" id="guided-story-bar">
 
     <!-- Step 3: Burn Candle Button -->
     <button class="guided-action-btn hidden" id="step-burn-candles">
       <div class="btn-glow-pulse"></div>
-      <i class="fa-solid fa-fire-flame-curved"></i>
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
       <div class="btn-content-text">
-        <strong>Burn Candles</strong>
-        <small>Light up the 22 candles</small>
+        <strong>Light the Sparklers ✨</strong>
+        <small>Illuminate our cake with love</small>
       </div>
     </button>
 
@@ -319,8 +874,8 @@
       <div class="btn-glow-pulse"></div>
       <i class="fa-solid fa-cake-candles"></i>
       <div class="btn-content-text">
-        <strong>Cut the Cake 🍰</strong>
-        <small>Start music & 3s fireworks</small>
+        <strong>Make a Wish & Cut Cake 🍰</strong>
+        <small>Start fireworks & celebration melody</small>
       </div>
     </button>
 
@@ -329,8 +884,8 @@
       <div class="btn-glow-pulse"></div>
       <i class="fa-solid fa-gift"></i>
       <div class="btn-content-text">
-        <strong>Open Gift Box 🎁</strong>
-        <small>Bring gift forward</small>
+        <strong>Open Your Gift Box 🎁</strong>
+        <small>A heartfelt surprise awaits inside</small>
       </div>
     </button>
   </div>
@@ -338,10 +893,10 @@
   <!-- Floating Tap Gift Box Notification (Shows when gift floats to front) -->
   <div class="tap-gift-card hidden" id="tap-gift-card">
     <div class="tap-gift-pulse"></div>
-    <div class="tap-gift-icon">👆</div>
+    <div class="tap-gift-icon">🎁</div>
     <div class="tap-gift-content">
-      <strong>Tap Box to Open 🎁</strong>
-      <small>Click the floating gift box to unwrap!</small>
+      <strong>Tap Gift Box to Unwrap 💖</strong>
+      <small>Click to reveal your love letter & fireworks!</small>
     </div>
   </div>
 
@@ -351,35 +906,35 @@
       <div class="btn-glow"></div>
       <div class="action-icon"><i class="fa-solid fa-wind"></i></div>
       <div class="action-text">
-        <strong>Blow Candles</strong>
-        <small id="mic-status-label">Click or puff mic</small>
+        <strong>Make a Wish</strong>
+        <small id="mic-status-label">Blow the candles</small>
       </div>
     </button>
 
     <button class="action-card-btn action-fireworks" id="btn-launch-fireworks">
       <div class="btn-glow"></div>
-      <div class="action-icon"><i class="fa-solid fa-sparkles"></i></div>
+      <div class="action-icon"><i class="fa-solid fa-heart"></i></div>
       <div class="action-text">
-        <strong>Launch Fireworks</strong>
-        <small>3s Multi-color sky blast</small>
+        <strong>Heart Fireworks</strong>
+        <small>Light up the sky with love</small>
       </div>
     </button>
 
     <button class="action-card-btn action-gift" id="btn-open-gift">
       <div class="btn-glow"></div>
-      <div class="action-icon"><i class="fa-solid fa-gift"></i></div>
+      <div class="action-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
       <div class="action-text">
-        <strong>Open Gift Box</strong>
-        <small>Mystery wish</small>
+        <strong>Love Letter</strong>
+        <small>Read message again</small>
       </div>
     </button>
 
     <button class="action-card-btn action-balloon" id="btn-spawn-balloons">
       <div class="btn-glow"></div>
-      <div class="action-icon"><i class="fa-solid fa-soap"></i></div>
+      <div class="action-icon"><i class="fa-solid fa-spa"></i></div>
       <div class="action-text">
-        <strong>More Balloons</strong>
-        <small>Float & pop</small>
+        <strong>More Petals & Hearts</strong>
+        <small>Shower of romance</small>
       </div>
     </button>
   </div>
@@ -392,11 +947,11 @@
         <span class="stat-val" id="arcade-timer">30s</span>
       </div>
       <div class="arcade-stat score-stat">
-        <span class="stat-label">SCORE</span>
+        <span class="stat-label">HEARTS POPPED</span>
         <span class="stat-val" id="arcade-score">0000</span>
       </div>
       <div class="arcade-stat combo-stat">
-        <span class="stat-label">COMBO</span>
+        <span class="stat-label">LOVE COMBO</span>
         <span class="stat-val" id="arcade-combo">x1</span>
       </div>
       <button class="arcade-quit-btn" id="btn-quit-arcade" title="Quit Arcade">&times;</button>
@@ -409,13 +964,13 @@
   <!-- Arcade Game Over Modal -->
   <div class="modal-overlay" id="arcade-over-modal">
     <div class="modal-card arcade-result-card">
-      <div class="arcade-trophy">🏆</div>
-      <h2 class="arcade-title">GAME OVER!</h2>
+      <div class="arcade-trophy">💖</div>
+      <h2 class="arcade-title">LOVE OVERFLOWING!</h2>
       <div class="final-score-box">
-        <span>FINAL SCORE</span>
+        <span>HEARTS COLLECTED</span>
         <strong id="final-score-val">1450</strong>
       </div>
-      <div class="rank-badge" id="final-rank-badge">🎉 PARTY MASTER 🎉</div>
+      <div class="rank-badge" id="final-rank-badge">👑 QUEEN OF MY HEART 👑</div>
       <div class="arcade-actions">
         <button class="btn-primary" id="btn-replay-arcade"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
         <button class="btn-secondary" id="btn-close-arcade-modal">Back to Celebration</button>
@@ -423,38 +978,77 @@
     </div>
   </div>
 
-  <!-- Surprise Gift Modal / Card Popup -->
+  <!-- =========================================================
+       ROMANTIC LOVE LETTER / GIFT CARD POPUP
+       ========================================================= -->
   <div class="modal-overlay" id="gift-modal">
-    <div class="modal-card surprise-card">
+    <div class="modal-card surprise-card love-letter-card">
       <button class="modal-close" id="close-gift-modal">&times;</button>
-      <div class="card-ribbon-decor">🎀</div>
-      <div class="card-header-icon">🎉</div>
-      <h2 class="card-title">Happy 22nd Birthday Shubham!</h2>
+      <div class="card-ribbon-decor">💌</div>
+      <div class="card-header-icon">💖</div>
+      <h2 class="card-title">To the Love of My Life 💕</h2>
       <div class="card-divider"></div>
-      <p class="custom-wish-text" id="gift-custom-wish">
-        "May your 22nd year be filled with infinite success, joy, unforgettable moments, and all your dreams coming true! Happy Birthday Shubham Sharnam!"
+      <p class="custom-wish-text romantic-letter-body" id="gift-custom-wish">
+        "Happy Birthday to the most amazing, gorgeous, and loving girl in the whole world! Thank you for bringing endless joy, warmth, and magic into my life. Every single day with you is my favorite day. May all your sweetest dreams come true today and forever!"
       </p>
       <div class="card-signature">
-        <span>With all our love & best wishes ❤️</span>
+        <span id="letter-signature-text">Forever & Always Yours ❤️</span>
       </div>
       <div class="card-actions">
-        <button class="btn-primary" id="btn-gift-replay-fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate More</button>
+        <button class="btn-primary" id="btn-gift-replay-fireworks"><i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate With Fireworks 🎆</button>
       </div>
     </div>
   </div>
 
-  <!-- Wish Star Note Modal (Guestbook) -->
-  <div class="modal-overlay" id="star-note-modal">
-    <div class="modal-card star-card">
-      <button class="modal-close" id="close-star-modal">&times;</button>
-      <div class="star-decor-icon">⭐</div>
-      <h2 class="card-title" id="star-author">Wish For Shubham</h2>
-      <div class="card-divider"></div>
-      <p class="custom-wish-text" id="star-message">
-        "Wishing you a year ahead filled with happiness, adventures, and endless milestones! Keep shining bright Shubham!"
-      </p>
-      <div class="card-actions">
-        <button class="btn-primary" id="btn-close-star-note"><i class="fa-solid fa-heart"></i> Thank You!</button>
+  <!-- =========================================================
+       MEMORY POLAROIDS GALLERY MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="polaroids-modal">
+    <div class="modal-card polaroids-gallery-card">
+      <button class="modal-close" id="close-polaroids-modal">&times;</button>
+      <div class="polaroid-modal-header">
+        <i class="fa-solid fa-images"></i>
+        <h2>Our Sweet Memories 📸</h2>
+        <p>A few snapshots of moments that mean everything to me 💕</p>
+      </div>
+
+      <div class="polaroids-grid">
+        <div class="polaroid-item">
+          <div class="polaroid-photo-frame" id="polaroid-frame-1">
+            <img id="polaroid-img-1" src="" alt="Memory 1" class="polaroid-preview-img hidden">
+            <div class="polaroid-empty-state" id="polaroid-empty-1">
+              <i class="fa-solid fa-camera"></i>
+              <span>That First Smile ✨</span>
+            </div>
+          </div>
+          <p class="polaroid-caption">"The moment I fell for you ❤️"</p>
+        </div>
+
+        <div class="polaroid-item">
+          <div class="polaroid-photo-frame" id="polaroid-frame-2">
+            <img id="polaroid-img-2" src="" alt="Memory 2" class="polaroid-preview-img hidden">
+            <div class="polaroid-empty-state" id="polaroid-empty-2">
+              <i class="fa-solid fa-heart"></i>
+              <span>Best Day Ever 🌸</span>
+            </div>
+          </div>
+          <p class="polaroid-caption">"Every second with you is pure joy 💖"</p>
+        </div>
+
+        <div class="polaroid-item">
+          <div class="polaroid-photo-frame" id="polaroid-frame-3">
+            <img id="polaroid-img-3" src="" alt="Memory 3" class="polaroid-preview-img hidden">
+            <div class="polaroid-empty-state" id="polaroid-empty-3">
+              <i class="fa-solid fa-sparkles"></i>
+              <span>Forever With You 👑</span>
+            </div>
+          </div>
+          <p class="polaroid-caption">"To many more adventures together 🥂"</p>
+        </div>
+      </div>
+
+      <div class="polaroid-modal-actions">
+        <button class="btn-primary" id="btn-open-customizer-from-polaroids"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Her Photos</button>
       </div>
     </div>
   </div>
@@ -463,42 +1057,42 @@
   <div class="modal-overlay" id="customize-modal">
     <div class="modal-card form-card">
       <button class="modal-close" id="close-customize-modal">&times;</button>
-      <h2>✨ Personalize Celebration</h2>
-      <p class="modal-sub">Create a tailored 3D greeting for your special someone.</p>
+      <h2>💖 Personalize Her Birthday</h2>
+      <p class="modal-sub">Add her name, sweet nickname, heartfelt letter, and favorite photos.</p>
 
       <form id="customize-form">
         <div class="form-group">
-          <label for="input-name"><i class="fa-solid fa-user"></i> Celebrant Name</label>
-          <input type="text" id="input-name" placeholder="e.g. Shubham Sharnam" value="Shubham Sharnam" maxlength="24" required>
+          <label for="input-name"><i class="fa-solid fa-heart"></i> Her Name / Sweet Nickname</label>
+          <input type="text" id="input-name" placeholder="e.g. My Love ❤️, Princess 👑, Sarah" value="My Love" maxlength="28" required>
         </div>
 
         <div class="form-group">
-          <label for="input-age"><i class="fa-solid fa-cake-candles"></i> Age (Shows 3D numeric candles!)</label>
-          <input type="number" id="input-age" placeholder="e.g. 22" value="22" min="1" max="120">
+          <label for="input-age"><i class="fa-solid fa-cake-candles"></i> Age (Optional, shows 3D candles)</label>
+          <input type="number" id="input-age" placeholder="e.g. 21" value="" min="1" max="120">
         </div>
 
         <div class="form-group">
-          <label for="input-wish"><i class="fa-solid fa-heart"></i> Heartfelt Birthday Message</label>
-          <textarea id="input-wish" rows="3" placeholder="Write your personalized wish here...">May your 22nd year be filled with infinite success, joy, unforgettable moments, and all your dreams coming true! Happy Birthday Shubham Sharnam!</textarea>
+          <label for="input-wish"><i class="fa-solid fa-envelope-open-text"></i> Romantic Love Letter / Message</label>
+          <textarea id="input-wish" rows="3" placeholder="Write your sweetest heartfelt letter here...">Happy Birthday to the most amazing, gorgeous, and loving girl in the whole world! Thank you for bringing endless joy, warmth, and magic into my life. Every single day with you is my favorite day. May all your sweetest dreams come true today and forever!</textarea>
         </div>
 
         <div class="form-group">
-          <label><i class="fa-solid fa-image"></i> Celebrant 3D Photo Frame</label>
+          <label><i class="fa-solid fa-image"></i> Her 3D Photo Frame Portrait</label>
           <div class="photo-upload-row">
             <input type="file" id="input-photo" accept="image/*" class="file-input-hidden">
             <label for="input-photo" class="upload-btn-label">
               <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo File
             </label>
-            <span class="upload-filename" id="photo-filename">Default 3D Portrait</span>
+            <span class="upload-filename" id="photo-filename">Default Romantic 3D Badge</span>
           </div>
           <div id="photo-upload-status" class="photo-upload-status"></div>
           <div style="margin-top: 8px;">
-            <input type="url" id="input-photo-url" placeholder="Or Paste Direct Photo URL (Imgur, Google Drive, Web Image...)" style="width: 100%; font-size: 0.85rem; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,215,0,0.3); background: rgba(255,255,255,0.06); color: #fff;">
+            <input type="url" id="input-photo-url" placeholder="Or Paste Direct Photo URL (Imgur, Web Image...)" style="width: 100%; font-size: 0.85rem; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,117,140,0.3); background: rgba(255,255,255,0.06); color: #fff;">
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> Apply & Celebrate</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> Save & Celebrate 💖</button>
         </div>
       </form>
     </div>
@@ -508,9 +1102,9 @@
   <div class="modal-overlay" id="share-modal">
     <div class="modal-card share-card">
       <button class="modal-close" id="close-share-modal">&times;</button>
-      <div class="share-icon"><i class="fa-solid fa-qrcode"></i></div>
-      <h2>Share & Scan Celebration</h2>
-      <p>Scan the QR code with any mobile camera or copy the link below!</p>
+      <div class="share-icon"><i class="fa-solid fa-heart"></i></div>
+      <h2>Send This Surprise To Her 💕</h2>
+      <p>Scan the QR code or copy the magical link to send on WhatsApp / Instagram!</p>
       
       <div class="qrcode-wrapper">
         <div id="qrcode-container"></div>
@@ -518,9 +1112,9 @@
 
       <div class="share-input-group">
         <input type="text" id="share-link-input" readonly value="">
-        <button class="btn-primary" id="btn-copy-link"><i class="fa-regular fa-copy"></i> Copy</button>
+        <button class="btn-primary" id="btn-copy-link"><i class="fa-regular fa-copy"></i> Copy Link</button>
       </div>
-      <div class="copy-feedback" id="copy-feedback"><i class="fa-solid fa-circle-check"></i> Copied to clipboard!</div>
+      <div class="copy-feedback" id="copy-feedback"><i class="fa-solid fa-circle-check"></i> Link copied! Send it with love ❤️</div>
     </div>
   </div>
 
@@ -530,14 +1124,14 @@
       <button class="modal-close" id="close-photo-modal">&times;</button>
       <div class="photo-booth-header">
         <i class="fa-solid fa-camera-retro"></i>
-        <h2>Birthday Postcard Snapshot</h2>
+        <h2>Romantic Postcard Snapshot</h2>
       </div>
       <div class="postcard-preview-container">
-        <img id="postcard-preview-img" alt="Birthday Postcard Preview" src="">
+        <img id="postcard-preview-img" alt="Romantic Birthday Postcard" src="">
       </div>
       <div class="postcard-actions">
-        <a id="btn-download-postcard" class="btn-primary" download="birthday_celebration.png">
-          <i class="fa-solid fa-download"></i> Download Postcard Image
+        <a id="btn-download-postcard" class="btn-primary" download="happy_birthday_my_love.png">
+          <i class="fa-solid fa-download"></i> Download Postcard Image 💖
         </a>
       </div>
     </div>
@@ -546,19 +1140,553 @@
   <!-- Grand Celebration Notification Banner -->
   <div class="celebration-banner" id="celebration-banner">
     <div class="banner-content">
-      <div class="banner-badge">✨ HAPPY 22ND BIRTHDAY! ✨</div>
-      <h2 id="banner-title">SHUBHAM SHARNAM</h2>
-      <p id="banner-desc">May all your wishes and dreams come true!</p>
+      <div class="banner-badge">💖 HAPPY BIRTHDAY MY LOVE! 💖</div>
+      <h2 id="banner-title">FOREVER & ALWAYS</h2>
+      <p id="banner-desc">You make the whole world brighter just by being in it!</p>
     </div>
   </div>
+
+  <!-- Floating Left-Side Corner Chat History Button -->
+  <button class="floating-chat-history-btn" id="floating-chat-history-btn" title="View Saved Chat History & Answers">
+    <div class="history-btn-icon-wrap">
+      <i class="fa-solid fa-comments"></i>
+      <span class="chat-history-badge-count hidden" id="chat-history-badge-count">0</span>
+    </div>
+    <span class="btn-history-label">Her Answers 💕</span>
+  </button>
+
+  <!-- Romantic Chat History Modal -->
+  <div class="modal-overlay" id="chat-history-modal">
+    <div class="modal-card chat-history-modal-card">
+      <button class="modal-close" id="close-chat-history-modal">&times;</button>
+      <div class="history-modal-header">
+        <div class="history-header-icon"><i class="fa-solid fa-heart"></i></div>
+        <h2>Saved Love Chat History 💬</h2>
+      </div>
+      <p class="history-modal-subtitle">Here are the questions asked and answers entered during the chat:</p>
+      
+      <div class="chat-history-content" id="chat-history-content">
+        <!-- Dynamically rendered chat log cards -->
+      </div>
+
+      <div class="chat-history-actions">
+        <button class="btn-primary" id="btn-copy-chat-history">
+          <i class="fa-solid fa-copy"></i> Copy All Answers 📋
+        </button>
+        <button class="btn-secondary-outline" id="btn-clear-chat-history" title="Clear saved history">
+          <i class="fa-solid fa-trash-can"></i> Clear History
+        </button>
+      </div>
+      <div class="copy-feedback" id="history-copy-feedback"><i class="fa-solid fa-circle-check"></i> Answers copied to clipboard! ❤️</div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 1: MEMORIES PHOTO ALBUM MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="modal-book-memories">
+    <div class="modal-card book-album-modal-card">
+      <button class="modal-close" id="close-modal-memories">&times;</button>
+      <div class="album-modal-header">
+        <div class="album-header-badge"><i class="fa-solid fa-camera-retro"></i> MEMORIES ALBUM</div>
+        <h2>Our Beautiful Memories 📸💕</h2>
+        <p>A collection of moments that will remain in our hearts forever.</p>
+      </div>
+
+      <div class="memories-grid-wrapper">
+        <div class="polaroid-memory-card">
+          <div class="polaroid-inner-frame">
+            <div class="polaroid-sample-img polaroid-img-1">
+              <i class="fa-solid fa-heart polaroid-center-icon"></i>
+            </div>
+            <div class="polaroid-caption">Where Our Story Began ✨</div>
+          </div>
+        </div>
+
+        <div class="polaroid-memory-card">
+          <div class="polaroid-inner-frame">
+            <div class="polaroid-sample-img polaroid-img-2">
+              <i class="fa-solid fa-sparkles polaroid-center-icon"></i>
+            </div>
+            <div class="polaroid-caption">That Unforgettable Smile 🥰</div>
+          </div>
+        </div>
+
+        <div class="polaroid-memory-card">
+          <div class="polaroid-inner-frame">
+            <div class="polaroid-sample-img polaroid-img-3">
+              <i class="fa-solid fa-face-laugh-beam polaroid-center-icon"></i>
+            </div>
+            <div class="polaroid-caption">Endless Laughs & Calls 🌙</div>
+          </div>
+        </div>
+
+        <div class="polaroid-memory-card">
+          <div class="polaroid-inner-frame">
+            <div class="polaroid-sample-img polaroid-img-4">
+              <i class="fa-solid fa-cake-candles polaroid-center-icon"></i>
+            </div>
+            <div class="polaroid-caption">Celebrating Your Special Day 👑</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="album-modal-footer">
+        <button class="btn-primary" id="btn-open-customizer-from-album">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Add / Change Photos in 3D
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: SAFARNAMA STORYBOOK DIARY MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="modal-book-safarnama">
+    <div class="modal-card safarnama-modal-card">
+      <button class="modal-close" id="close-modal-safarnama">&times;</button>
+      <div class="safarnama-diary-header">
+        <div class="safarnama-quill-tag"><i class="fa-solid fa-feather-pointed"></i> SAFARNAMA • OUR JOURNEY</div>
+        <h2>Humara Safarnama 📖✨</h2>
+        <p class="safarnama-quote">"Kuch kahaniyan lafzon me bayan nahi hoti, bas mehsus ki jaati hain..."</p>
+      </div>
+
+      <div class="safarnama-chapters-scroll">
+        
+        <!-- Chapter 1 -->
+        <div class="safarnama-chapter-card">
+          <div class="chapter-badge">Chapter 01</div>
+          <h3 class="chapter-title">Jab Tum Zindagi Me Aaye 🌸</h3>
+          <p class="chapter-text">
+            Ek aam sa din tha, lekin jab tum meri zindagi me aayi, toh har lamha khaas ban gaya. Tumhari muskurahat ne dil ko ek aisi sukoon di jo pehle kabhi mehsoos nahi hui thi.
+          </p>
+        </div>
+
+        <!-- Chapter 2 -->
+        <div class="safarnama-chapter-card">
+          <div class="chapter-badge">Chapter 02</div>
+          <h3 class="chapter-title">Der Raat Ki Baatein & Silly Fights 🥰</h3>
+          <p class="chapter-text">
+            Wo ghanton phone par baatein karna, bina kisi wajah ke muskurana, choti-choti baaton par ruthna aur phir ek pyare se sorry par maan jana... Ye saare pal mere dil ke sabse kareeb hain.
+          </p>
+        </div>
+
+        <!-- Chapter 3 -->
+        <div class="safarnama-chapter-card">
+          <div class="chapter-badge">Chapter 03</div>
+          <h3 class="chapter-title">Har Kadam Par Saath 🤝</h3>
+          <p class="chapter-text">
+            Chahe din achha ho ya mushkil, tumne hamesha meri himmat badhayi hai. Tum sirf meri girlfriend nahi, meri sabse achhi dost aur meri sabse badi taakat ho.
+          </p>
+        </div>
+
+        <!-- Chapter 4 -->
+        <div class="safarnama-chapter-card highlight-chapter">
+          <div class="chapter-badge">Chapter 04</div>
+          <h3 class="chapter-title">Aaj, Kal Aur Hamesha ❤️</h3>
+          <p class="chapter-text">
+            Aaj tumhare is khaas janamdin par, main rab se bas yahi dua karta hu ki tumhari har khwahish puri ho. Tumhari aankhon me hamesha khushi ke aansu hon aur tumhare hothon par ye pyari si hasi hamesha bani rahe. Happy Birthday My Love!
+          </p>
+        </div>
+
+      </div>
+
+      <div class="safarnama-modal-footer">
+        <button class="btn-primary" id="btn-safarnama-to-chat">
+          <i class="fa-solid fa-comments"></i> Continue to Birthday Chat 💬
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       STEP 3: FULL SCREEN ORDER TREATS & GIFTS HUB
+       (ZOMATO, SWIGGY, BLINKIT, AMAZON, FLIPKART, MEESHO, SHOPSY)
+       ========================================================= -->
+  <section class="order-hub-fullscreen-page hidden" id="order-hub-fullscreen-page">
+    <div class="order-fullscreen-backdrop"></div>
+
+    <!-- Sticky Top Navigation Bar -->
+    <header class="order-fullscreen-topnav">
+      <button class="btn-order-nav-back" id="btn-order-back-to-story">
+        <i class="fa-solid fa-arrow-left"></i> Back to Story
+      </button>
+      <div class="order-topnav-title">
+        <span class="order-topnav-icon">🛍️</span>
+        <span>Birthday Treats & Gifts Store</span>
+      </div>
+      <button class="btn-order-nav-3d" id="btn-order-nav-enter-3d">
+        <span>Enter 3D World</span> <i class="fa-solid fa-sparkles"></i>
+      </button>
+    </header>
+
+    <div class="order-fullscreen-container">
+      
+      <!-- Order Hub Hero Header -->
+      <div class="order-hub-header">
+        <div class="order-hub-badge"><i class="fa-solid fa-gift"></i> BIRTHDAY SURPRISE TREATS & GIFTS</div>
+        <h2>Order Her Favorites 🛍️🍰</h2>
+        <p class="order-hub-subtitle">Tap any item below to search & order directly from Zomato, Swiggy, Blinkit, Amazon, Flipkart, Meesho & Shopsy!</p>
+      </div>
+
+      <!-- App Filter Pills -->
+      <div class="order-filter-pills" id="order-filter-pills">
+        <button class="order-filter-pill active" data-filter="all"><i class="fa-solid fa-layer-group"></i> All Stores</button>
+        <button class="order-filter-pill" data-filter="zomato"><span class="pill-dot zomato-dot"></span> Zomato</button>
+        <button class="order-filter-pill" data-filter="swiggy"><span class="pill-dot swiggy-dot"></span> Swiggy</button>
+        <button class="order-filter-pill" data-filter="blinkit"><span class="pill-dot blinkit-dot"></span> Blinkit (10m)</button>
+        <button class="order-filter-pill" data-filter="amazon-flipkart"><span class="pill-dot amazon-dot"></span> Amazon & Flipkart</button>
+        <button class="order-filter-pill" data-filter="meesho-shopsy"><span class="pill-dot meesho-dot"></span> Meesho & Shopsy</button>
+      </div>
+
+      <!-- Scrollable Storefront Products Container -->
+      <div class="order-storefront-scroll">
+        
+        <!-- SECTION 1: ZOMATO -->
+        <div class="store-app-section" data-store="zomato">
+          <div class="store-app-banner zomato-banner">
+            <div class="store-brand-left">
+              <span class="store-app-logo zomato-logo">🍅 ZOMATO</span>
+              <span class="store-tagline">Birthday Cakes, Chocolates & Royal Meals</span>
+            </div>
+            <a href="https://www.zomato.com" target="_blank" rel="noopener noreferrer" class="store-visit-link">Open Zomato <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          </div>
+
+          <div class="store-products-grid">
+            <!-- Zomato Cake -->
+            <div class="store-product-card">
+              <div class="product-badge special">Birthday Special 🎂</div>
+              <div class="product-visual cake-bg">
+                <span class="product-emoji">🎂</span>
+                <span class="product-sparkle">✨</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Birthday Cake</h4>
+                <p class="product-desc">Delicious chocolate truffle, red velvet & fresh cream cakes</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (5k+)</span>
+                  <span class="product-delivery">⚡ 30-45 mins</span>
+                </div>
+                <a href="https://www.zomato.com/search?q=birthday+cake" target="_blank" rel="noopener noreferrer" class="btn-go-to-store zomato-btn">
+                  <i class="fa-solid fa-store"></i> Go to Zomato (Cakes)
+                </a>
+              </div>
+            </div>
+
+            <!-- Zomato Chocolates -->
+            <div class="store-product-card">
+              <div class="product-badge romantic">Sweet Cravings 🍫</div>
+              <div class="product-visual choco-bg">
+                <span class="product-emoji">🍫</span>
+                <span class="product-sparkle">💖</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Chocolates & Desserts</h4>
+                <p class="product-desc">Luxury handcrafted chocolates, brownies, pastry boxes & sundaes</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.8 (3.2k)</span>
+                  <span class="product-delivery">⚡ Quick Delivery</span>
+                </div>
+                <a href="https://www.zomato.com/search?q=chocolates" target="_blank" rel="noopener noreferrer" class="btn-go-to-store zomato-btn">
+                  <i class="fa-solid fa-store"></i> Go to Zomato (Chocolates)
+                </a>
+              </div>
+            </div>
+
+            <!-- Zomato Biryani -->
+            <div class="store-product-card">
+              <div class="product-badge royal">Feast Special 🍲</div>
+              <div class="product-visual biryani-bg">
+                <span class="product-emoji">🍲</span>
+                <span class="product-sparkle">🔥</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Royal Biryani</h4>
+                <p class="product-desc">Aromatic dum biryani, kebabs, royal rice & authentic flavors</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (8k+)</span>
+                  <span class="product-delivery">⚡ Hot & Fresh</span>
+                </div>
+                <a href="https://www.zomato.com/search?q=biryani" target="_blank" rel="noopener noreferrer" class="btn-go-to-store zomato-btn">
+                  <i class="fa-solid fa-store"></i> Go to Zomato (Biryani)
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: SWIGGY -->
+        <div class="store-app-section" data-store="swiggy">
+          <div class="store-app-banner swiggy-banner">
+            <div class="store-brand-left">
+              <span class="store-app-logo swiggy-logo">🧡 SWIGGY</span>
+              <span class="store-tagline">Gourmet Treats, Cakes & Biryani</span>
+            </div>
+            <a href="https://www.swiggy.com" target="_blank" rel="noopener noreferrer" class="store-visit-link">Open Swiggy <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          </div>
+
+          <div class="store-products-grid">
+            <!-- Swiggy Cake -->
+            <div class="store-product-card">
+              <div class="product-badge special">Bakery Fresh 🎂</div>
+              <div class="product-visual cake-bg-2">
+                <span class="product-emoji">🍰</span>
+                <span class="product-sparkle">🌸</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Gourmet Cakes</h4>
+                <p class="product-desc">Premium designer cakes, cupcakes & cheesecakes from top bakeries</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (6k+)</span>
+                  <span class="product-delivery">⚡ Fast Delivery</span>
+                </div>
+                <a href="https://www.swiggy.com/search?query=cake" target="_blank" rel="noopener noreferrer" class="btn-go-to-store swiggy-btn">
+                  <i class="fa-solid fa-store"></i> Go to Swiggy (Cakes)
+                </a>
+              </div>
+            </div>
+
+            <!-- Swiggy Chocolates -->
+            <div class="store-product-card">
+              <div class="product-badge romantic">Artisan Sweet 🍫</div>
+              <div class="product-visual choco-bg-2">
+                <span class="product-emoji">🍬</span>
+                <span class="product-sparkle">✨</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Chocolates & Sweets</h4>
+                <p class="product-desc">Gourmet Belgian chocolates, assorted gift packs & treats</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.8 (2.5k)</span>
+                  <span class="product-delivery">⚡ In 30 Mins</span>
+                </div>
+                <a href="https://www.swiggy.com/search?query=chocolates" target="_blank" rel="noopener noreferrer" class="btn-go-to-store swiggy-btn">
+                  <i class="fa-solid fa-store"></i> Go to Swiggy (Chocolates)
+                </a>
+              </div>
+            </div>
+
+            <!-- Swiggy Biryani -->
+            <div class="store-product-card">
+              <div class="product-badge royal">Chef Special 🍲</div>
+              <div class="product-visual biryani-bg-2">
+                <span class="product-emoji">🍛</span>
+                <span class="product-sparkle">✨</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Special Biryani & Meals</h4>
+                <p class="product-desc">Hyderabadi, Lucknowi & Kolkata dum biryani with raita & salan</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (9k+)</span>
+                  <span class="product-delivery">⚡ Live Tracking</span>
+                </div>
+                <a href="https://www.swiggy.com/search?query=biryani" target="_blank" rel="noopener noreferrer" class="btn-go-to-store swiggy-btn">
+                  <i class="fa-solid fa-store"></i> Go to Swiggy (Biryani)
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: BLINKIT -->
+        <div class="store-app-section" data-store="blinkit">
+          <div class="store-app-banner blinkit-banner">
+            <div class="store-brand-left">
+              <span class="store-app-logo blinkit-logo">💛 BLINKIT</span>
+              <span class="store-tagline">10-Minute Lightning Instant Delivery ⚡</span>
+            </div>
+            <a href="https://blinkit.com" target="_blank" rel="noopener noreferrer" class="store-visit-link">Open Blinkit <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          </div>
+
+          <div class="store-products-grid">
+            <!-- Blinkit Chocolates -->
+            <div class="store-product-card">
+              <div class="product-badge special">10 Mins Delivery ⚡</div>
+              <div class="product-visual choco-silk-bg">
+                <span class="product-emoji">🍫</span>
+                <span class="product-sparkle">💝</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Chocolates & Silk</h4>
+                <p class="product-desc">Cadbury Dairy Milk Silk, Ferrero Rocher, Hershey's & gift boxes</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (12k+)</span>
+                  <span class="product-delivery">🚀 In 10 Mins</span>
+                </div>
+                <a href="https://blinkit.com/s/?q=chocolates" target="_blank" rel="noopener noreferrer" class="btn-go-to-store blinkit-btn">
+                  <i class="fa-solid fa-store"></i> Go to Blinkit (Chocolates)
+                </a>
+              </div>
+            </div>
+
+            <!-- Blinkit Kurkure & Chips -->
+            <div class="store-product-card">
+              <div class="product-badge spicy">Crunch Time 🍟</div>
+              <div class="product-visual kurkure-bg">
+                <span class="product-emoji">🥨</span>
+                <span class="product-sparkle">😋</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Kurkure & Crispy Chips</h4>
+                <p class="product-desc">Kurkure Masala Munch, Lays, Doritos, nachos & cheese dips</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.8 (15k+)</span>
+                  <span class="product-delivery">🚀 In 10 Mins</span>
+                </div>
+                <a href="https://blinkit.com/s/?q=kurkure" target="_blank" rel="noopener noreferrer" class="btn-go-to-store blinkit-btn">
+                  <i class="fa-solid fa-store"></i> Go to Blinkit (Kurkure)
+                </a>
+              </div>
+            </div>
+
+            <!-- Blinkit Snacks & Cold Drinks -->
+            <div class="store-product-card">
+              <div class="product-badge party">Party Munchies 🍿</div>
+              <div class="product-visual snacks-bg">
+                <span class="product-emoji">🍿</span>
+                <span class="product-sparkle">🎉</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Party Snacks & Cold Drinks</h4>
+                <p class="product-desc">Cookies, wafers, popcorn, juices, cold drinks & tub ice creams</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (10k+)</span>
+                  <span class="product-delivery">🚀 In 10 Mins</span>
+                </div>
+                <a href="https://blinkit.com/s/?q=snacks" target="_blank" rel="noopener noreferrer" class="btn-go-to-store blinkit-btn">
+                  <i class="fa-solid fa-store"></i> Go to Blinkit (Snacks)
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: AMAZON & FLIPKART -->
+        <div class="store-app-section" data-store="amazon-flipkart">
+          <div class="store-app-banner amazon-banner">
+            <div class="store-brand-left">
+              <span class="store-app-logo amazon-logo">📦 AMAZON & FLIPKART</span>
+              <span class="store-tagline">Birthday Dresses, Fashion & Gifts</span>
+            </div>
+          </div>
+
+          <div class="store-products-grid">
+            <!-- Amazon Dresses -->
+            <div class="store-product-card">
+              <div class="product-badge fashion">Gorgeous Look 👗</div>
+              <div class="product-visual dress-bg">
+                <span class="product-emoji">👗</span>
+                <span class="product-sparkle">👑</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Birthday Dresses & Outfits</h4>
+                <p class="product-desc">Stunning party gowns, one-piece dresses, tops & elegant fashion</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.8 (20k+)</span>
+                  <span class="product-delivery">🚚 Amazon Prime</span>
+                </div>
+                <a href="https://www.amazon.in/s?k=women+birthday+dress" target="_blank" rel="noopener noreferrer" class="btn-go-to-store amazon-btn">
+                  <i class="fa-brands fa-amazon"></i> Go to Amazon (Dresses)
+                </a>
+              </div>
+            </div>
+
+            <!-- Flipkart Gifts -->
+            <div class="store-product-card">
+              <div class="product-badge romantic">Romantic Gifts 🎁</div>
+              <div class="product-visual gift-bg">
+                <span class="product-emoji">🧸</span>
+                <span class="product-sparkle">💖</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Gifts & Teddy Bears</h4>
+                <p class="product-desc">Giant plush teddies, jewelry sets, photo lamps & romantic hampers</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.9 (18k+)</span>
+                  <span class="product-delivery">🚚 Flipkart Plus</span>
+                </div>
+                <a href="https://www.flipkart.com/search?q=romantic+birthday+gifts+for+girls" target="_blank" rel="noopener noreferrer" class="btn-go-to-store flipkart-btn">
+                  <i class="fa-solid fa-box-open"></i> Go to Flipkart (Gifts)
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: MEESHO & SHOPSY -->
+        <div class="store-app-section" data-store="meesho-shopsy">
+          <div class="store-app-banner meesho-banner">
+            <div class="store-brand-left">
+              <span class="store-app-logo meesho-logo">🛍️ MEESHO & SHOPSY</span>
+              <span class="store-tagline">Trending Fashion, Cute Gifts & Best Deals</span>
+            </div>
+          </div>
+
+          <div class="store-products-grid">
+            <!-- Meesho Clothes -->
+            <div class="store-product-card">
+              <div class="product-badge fashion">Trending Fits 💃</div>
+              <div class="product-visual ethnic-bg">
+                <span class="product-emoji">💃</span>
+                <span class="product-sparkle">✨</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Trendy Clothes & Kurti Sets</h4>
+                <p class="product-desc">Beautiful western dresses, kurtis, tops, skirts & cute accessories</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.7 (40k+)</span>
+                  <span class="product-delivery">🏷️ Best Value</span>
+                </div>
+                <a href="https://www.meesho.com/search?q=women+dress" target="_blank" rel="noopener noreferrer" class="btn-go-to-store meesho-btn">
+                  <i class="fa-solid fa-bag-shopping"></i> Go to Meesho (Clothes)
+                </a>
+              </div>
+            </div>
+
+            <!-- Shopsy Gifts -->
+            <div class="store-product-card">
+              <div class="product-badge special">Cute Surprises 🎀</div>
+              <div class="product-visual shopsy-bg">
+                <span class="product-emoji">🎀</span>
+                <span class="product-sparkle">🌟</span>
+              </div>
+              <div class="product-details">
+                <h4 class="product-title">Accessories & Birthday Gifts</h4>
+                <p class="product-desc">Handbags, jewelry, customized gift sets & hair accessories</p>
+                <div class="product-meta">
+                  <span class="product-rating">⭐ 4.8 (15k+)</span>
+                  <span class="product-delivery">🏷️ Super Saver</span>
+                </div>
+                <a href="https://www.shopsy.in/search?q=birthday+gift" target="_blank" rel="noopener noreferrer" class="btn-go-to-store shopsy-btn">
+                  <i class="fa-solid fa-gift"></i> Go to Shopsy (Gifts)
+                </a>
+              </div>
+            </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Floating Action Bar -->
+      <div class="order-fullscreen-footer">
+        <button class="btn-order-footer-back" id="btn-order-footer-back">
+          <i class="fa-solid fa-arrow-left"></i> Back to Story / Chat
+        </button>
+        <button class="btn-order-footer-3d" id="btn-order-footer-3d">
+          <span class="btn-shine"></span>
+          <i class="fa-solid fa-cake-candles"></i> Enter 3D Celebration World ✨
+        </button>
+      </div>
+
+    </div>
+  </section>
 
   <!-- Real Firecrackers Video & Real-time Chroma-Key Canvas Overlay -->
   <video id="firecrackers-video" src="firecrackers.mp4" playsinline preload="auto" crossorigin="anonymous" style="display: none;"></video>
   <canvas id="firecrackers-canvas" class="firecrackers-canvas-overlay"></canvas>
 
   <!-- Scripts -->
-  <script src="js/audio.js"></script>
-  <script src="js/scene3d.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/audio.js?v=18"></script>
+  <script src="js/scene3d.js?v=18"></script>
+  <script src="js/app.js?v=18"></script>
 </body>
 </html>

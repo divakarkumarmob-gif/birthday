@@ -1,6 +1,6 @@
 /**
  * 3D Birthday Celebration - Three.js Scene Engine (Story Guided Mode)
- * Shubham Sharnam (Age 22) - Curtains, Garlands, 3-Pair Golden/Green/Blue Balloons, Covered Cake, & Slicing
+ * Curtains, Garlands, Interactive Balloons, Covered Cake, & Slicing
  */
 
 class BirthdayScene {
@@ -53,8 +53,8 @@ class BirthdayScene {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
 
-    // Color theme
-    this.currentTheme = 'midnight-gold';
+    // Color theme - Default to romantic Rose Gold & Velvet Pink
+    this.currentTheme = 'rose-glamour';
     this.themeColors = {
       'midnight-gold': {
         cakeBase: 0xfbf6e2,
@@ -157,6 +157,7 @@ class BirthdayScene {
     this.createSurpriseGift();
     this.createDiscoBall();
     this.createConfettiStorm();
+    this.createRosePetalsSystem();
 
     window.addEventListener('resize', this.onWindowResize.bind(this));
     window.addEventListener('orientationchange', () => {
@@ -1042,22 +1043,14 @@ class BirthdayScene {
     legBack.rotation.x = -0.32;
     this.photoFrameGroup.add(legBack);
 
-    // Canvas Texture with Shubham Sharnam celebrant portrait
+    // Canvas Texture with celebrant portrait
     this.photoCanvas = document.createElement('canvas');
     this.photoCanvas.width = 512;
     this.photoCanvas.height = 680;
-    this.drawDefaultPhotoTexture();
+    this.drawDefaultPhotoTexture(null, 'Birthday Star', '');
 
     this.photoTexture = new THREE.CanvasTexture(this.photoCanvas);
     this.photoTexture.needsUpdate = true;
-
-    // Hardcoded permanent default photo
-    const defaultImg = new Image();
-    defaultImg.onload = () => {
-      this.drawDefaultPhotoTexture(defaultImg, 'Shubham Sharnam', '22');
-      if (this.photoTexture) this.photoTexture.needsUpdate = true;
-    };
-    defaultImg.src = 'photo.jpg';
 
     const photoMat = new THREE.MeshStandardMaterial({
       map: this.photoTexture,
@@ -1144,7 +1137,7 @@ class BirthdayScene {
     this.boardCanvas = document.createElement('canvas');
     this.boardCanvas.width = 512;
     this.boardCanvas.height = 680;
-    this.drawStandBoardTexture('Shubham Sharnam', '22');
+    this.drawStandBoardTexture('Birthday Star', '');
 
     this.boardTex = new THREE.CanvasTexture(this.boardCanvas);
     const boardFaceMat = new THREE.MeshStandardMaterial({
@@ -1212,48 +1205,49 @@ class BirthdayScene {
     this.scene.add(this.standBoardGroup);
   }
 
-  drawStandBoardTexture(name = 'Shubham Sharnam', age = '22') {
+  drawStandBoardTexture(name = 'My Love', age = '') {
     if (!this.boardCanvas) return;
     const ctx = this.boardCanvas.getContext('2d');
 
-    // Royal midnight background
+    // Romantic velvet wine & rose gradient
     const grad = ctx.createLinearGradient(0, 0, 512, 680);
-    grad.addColorStop(0, '#1f0d3d');
-    grad.addColorStop(0.5, '#0f0520');
-    grad.addColorStop(1, '#06020c');
+    grad.addColorStop(0, '#380c25');
+    grad.addColorStop(0.5, '#1e0514');
+    grad.addColorStop(1, '#0c0208');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 512, 680);
 
-    // Gold filigree double border
-    ctx.strokeStyle = '#ffd700';
+    // Rose gold filigree double border
+    ctx.strokeStyle = '#ff758c';
     ctx.lineWidth = 14;
     ctx.strokeRect(10, 10, 492, 660);
     ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ffd700';
     ctx.strokeRect(22, 22, 468, 636);
 
     // Celebratory Texts
-    ctx.fillStyle = '#ffd700';
-    ctx.font = '900 34px Outfit, sans-serif';
+    ctx.fillStyle = '#ff758c';
+    ctx.font = '900 32px Outfit, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ SPECIAL DAY ✨', 256, 95);
+    ctx.fillText('💖 FOR THE QUEEN OF MY HEART 💖', 256, 95);
 
-    ctx.font = '900 62px Outfit, sans-serif';
+    ctx.font = '900 60px Outfit, sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = '#ffd700';
+    ctx.shadowColor = '#ff758c';
     ctx.shadowBlur = 18;
     ctx.fillText('HAPPY', 256, 210);
     ctx.fillText('BIRTHDAY', 256, 285);
     ctx.shadowBlur = 0;
 
-    // Gold divider ribbon
-    ctx.strokeStyle = '#ffd700';
+    // Gold divider ribbon with heart
+    ctx.strokeStyle = '#ff758c';
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(80, 335);
     ctx.lineTo(432, 335);
     ctx.stroke();
 
-    const nameUpper = (name || 'SHUBHAM').toUpperCase();
+    const nameUpper = (name || 'MY LOVE').toUpperCase();
     const parts = nameUpper.split(' ');
     ctx.fillStyle = '#ffd700';
     if (parts.length > 1) {
@@ -1265,14 +1259,18 @@ class BirthdayScene {
       ctx.fillText(nameUpper, 256, 440);
     }
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 32px Outfit, sans-serif';
-    ctx.fillText(`👑 ${age || 22} YEARS OF JOY 👑`, 256, 570);
+    ctx.fillStyle = '#ffb3c1';
+    ctx.font = '700 30px Outfit, sans-serif';
+    if (age && parseInt(age) > 0) {
+      ctx.fillText(`👑 ${age} YEARS OF CUTENESS 👑`, 256, 570);
+    } else {
+      ctx.fillText(`👑 FOREVER & ALWAYS YOURS 👑`, 256, 570);
+    }
 
     if (this.boardTex) this.boardTex.needsUpdate = true;
   }
 
-  drawDefaultPhotoTexture(customImg = null, name = 'Shubham Sharnam', age = '22') {
+  drawDefaultPhotoTexture(customImg = null, name = 'My Love', age = '') {
     if (!this.photoCanvas) return;
     const ctx = this.photoCanvas.getContext('2d');
     if (customImg && customImg.width > 0) {
@@ -1289,57 +1287,67 @@ class BirthdayScene {
       }
       ctx.drawImage(customImg, sx, sy, sw, sh, 0, 0, 512, 680);
 
-      // Gold elegant border overlay
-      ctx.strokeStyle = '#ffd700';
+      // Rose gold elegant border overlay
+      ctx.strokeStyle = '#ff758c';
       ctx.lineWidth = 14;
       ctx.strokeRect(7, 7, 498, 666);
       return;
     }
 
-    // Default Handsome Celebratory Portrait Card
+    // Default Romantic Celebratory Portrait Card (No photo uploaded)
     const grad = ctx.createLinearGradient(0, 0, 512, 680);
-    grad.addColorStop(0, '#2d114d');
-    grad.addColorStop(0.5, '#190a30');
-    grad.addColorStop(1, '#0b0417');
+    grad.addColorStop(0, '#3d0f28');
+    grad.addColorStop(0.5, '#200715');
+    grad.addColorStop(1, '#0e020a');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 512, 680);
 
-    // Gold decorative border
-    ctx.strokeStyle = '#ffd700';
+    // Rose Gold decorative border
+    ctx.strokeStyle = '#ff758c';
     ctx.lineWidth = 14;
     ctx.strokeRect(10, 10, 492, 660);
 
     // Celebratory Badge
-    ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 36px Outfit, sans-serif';
+    ctx.fillStyle = '#ff758c';
+    ctx.font = 'bold 34px Outfit, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ BIRTHDAY STAR ✨', 256, 90);
+    ctx.fillText('💖 MY SWEETHEART 💖', 256, 90);
 
-    // Silhouette / Avatar circle
+    // Glowing Heart circle
     ctx.beginPath();
     ctx.arc(256, 280, 140, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+    ctx.fillStyle = 'rgba(255, 117, 140, 0.18)';
     ctx.fill();
-    ctx.strokeStyle = '#ffd700';
+    ctx.strokeStyle = '#ff758c';
     ctx.lineWidth = 6;
     ctx.stroke();
 
-    // Crown / Star Icon
+    // Heart Icon
     ctx.font = '90px sans-serif';
-    ctx.fillText('👑', 256, 310);
+    ctx.fillText('💖', 256, 310);
 
     // Name & Age text
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 36px Outfit, sans-serif';
-    ctx.fillText((name || 'SHUBHAM').toUpperCase(), 256, 510);
+    ctx.fillText((name || 'MY LOVE').toUpperCase(), 256, 510);
 
     ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 32px Outfit, sans-serif';
-    ctx.fillText(`Age ${age || 22}`, 256, 565);
+    ctx.font = 'bold 30px Outfit, sans-serif';
+    if (age && parseInt(age) > 0) {
+      ctx.fillText(`Sweet ${age} • Queen of My Heart`, 256, 565);
+    } else {
+      ctx.fillText('Queen of My Heart 💕', 256, 565);
+    }
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     ctx.font = '22px Outfit, sans-serif';
-    ctx.fillText('Tap + to Add Photo', 256, 625);
+    ctx.fillText('Tap + to Add Her Photo 📸', 256, 625);
+  }
+
+  clearUserPhoto() {
+    this.currentCustomPhotoImg = null;
+    this.drawDefaultPhotoTexture(null, 'Birthday Star', '');
+    if (this.photoTexture) this.photoTexture.needsUpdate = true;
   }
 
   updateCelebrantInfo3D(name, age) {
@@ -1613,38 +1621,64 @@ class BirthdayScene {
   }
 
   /* =========================================================
-     TABLE BALLOONS (5 Interactive Balloons on Table)
+     TABLE BALLOONS (5 Interactive Glowing Heart Balloons)
      ========================================================= */
+  createHeartGeometry(scale = 1.0) {
+    const shape = new THREE.Shape();
+    const x = 0, y = 0;
+    shape.moveTo(x, y + 0.35);
+    shape.bezierCurveTo(x, y + 0.35, x - 0.35, y + 0.9, x - 0.75, y + 0.9);
+    shape.bezierCurveTo(x - 1.2, y + 0.9, x - 1.2, y + 0.35, x - 1.2, y + 0.35);
+    shape.bezierCurveTo(x - 1.2, y - 0.1, x - 0.6, y - 0.65, x, y - 1.15);
+    shape.bezierCurveTo(x + 0.6, y - 0.65, x + 1.2, y - 0.1, x + 1.2, y + 0.35);
+    shape.bezierCurveTo(x + 1.2, y + 0.35, x + 1.2, y + 0.9, x + 0.75, y + 0.9);
+    shape.bezierCurveTo(x + 0.35, y + 0.9, x, y + 0.35, x, y + 0.35);
+
+    const extrudeSettings = {
+      depth: 0.35,
+      bevelEnabled: true,
+      bevelSegments: 6,
+      steps: 2,
+      bevelSize: 0.15,
+      bevelThickness: 0.15
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    geometry.center();
+    geometry.scale(scale * 0.8, scale * 0.8, scale * 0.8);
+    return geometry;
+  }
+
   createTableBalloons(count = 5) {
     this.tableBalloons = [];
     this.tableBalloonsRemaining = count;
 
-    const balloonColors = [0xffd700, 0x00e676, 0x0088ff, 0xff0055, 0xb721ff];
-    const balloonGeo = new THREE.SphereGeometry(0.85, 32, 32);
-    balloonGeo.scale(1, 1.25, 1);
+    const heartColors = [0xff4d6d, 0xff758c, 0xffb3c1, 0xffd700, 0xc471ed];
+    const heartGeo = this.createHeartGeometry(1.1);
 
     for (let i = 0; i < count; i++) {
-      const col = balloonColors[i % balloonColors.length];
+      const col = heartColors[i % heartColors.length];
       const mat = new THREE.MeshPhysicalMaterial({
         color: col,
-        metalness: 0.35,
-        roughness: 0.12,
-        clearcoat: 0.95
+        metalness: 0.45,
+        roughness: 0.15,
+        clearcoat: 0.95,
+        clearcoatRoughness: 0.1
       });
 
-      const balloonMesh = new THREE.Mesh(balloonGeo, mat);
+      const balloonMesh = new THREE.Mesh(heartGeo, mat);
       balloonMesh.castShadow = true;
 
       // Knot & String
       const knot = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.18, 12), mat);
-      knot.position.y = -1.1;
+      knot.position.y = -1.0;
       knot.rotation.x = Math.PI;
       balloonMesh.add(knot);
 
-      const stringPoints = [new THREE.Vector3(0, -1.1, 0), new THREE.Vector3(0.04, -2.8, 0)];
+      const stringPoints = [new THREE.Vector3(0, -1.0, 0), new THREE.Vector3(0.04, -2.6, 0)];
       const stringLine = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(stringPoints),
-        new THREE.LineBasicMaterial({ color: 0xdddddd, opacity: 0.6, transparent: true })
+        new THREE.LineBasicMaterial({ color: 0xffcad4, opacity: 0.7, transparent: true })
       );
       balloonMesh.add(stringLine);
 
@@ -1670,6 +1704,45 @@ class BirthdayScene {
       this.scene.add(balloonMesh);
       this.tableBalloons.push(balloonMesh);
     }
+  }
+
+  createRosePetalsSystem() {
+    this.petalsGroup = new THREE.Group();
+    this.petalsData = [];
+
+    const petalGeo = new THREE.PlaneGeometry(0.35, 0.45);
+    const colors = [0xff0a54, 0xff4d6d, 0xff758c, 0xffb3c1];
+
+    for (let i = 0; i < 90; i++) {
+      const col = colors[i % colors.length];
+      const mat = new THREE.MeshStandardMaterial({
+        color: col,
+        roughness: 0.4,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88
+      });
+      const petal = new THREE.Mesh(petalGeo, mat);
+      const x = (Math.random() - 0.5) * 32;
+      const y = Math.random() * 25 + 1;
+      const z = (Math.random() - 0.5) * 32;
+      petal.position.set(x, y, z);
+      petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      this.petalsGroup.add(petal);
+
+      this.petalsData.push({
+        mesh: petal,
+        fallSpeed: 0.025 + Math.random() * 0.035,
+        rotSpeedX: (Math.random() - 0.5) * 0.03,
+        rotSpeedY: (Math.random() - 0.5) * 0.04,
+        rotSpeedZ: (Math.random() - 0.5) * 0.03,
+        swaySpeed: 1.2 + Math.random() * 1.5,
+        swayAmp: 0.02 + Math.random() * 0.03,
+        seed: Math.random() * 10
+      });
+    }
+
+    this.scene.add(this.petalsGroup);
   }
 
   popTableBalloon(balloonMesh) {
@@ -2660,6 +2733,24 @@ class BirthdayScene {
           c.position.y = 25;
           c.position.x = (Math.random() - 0.5) * 35;
           c.position.z = (Math.random() - 0.5) * 35;
+        }
+      });
+    }
+
+    // 6B. 3D Falling Rose Petals
+    if (this.petalsData) {
+      this.petalsData.forEach(p => {
+        const m = p.mesh;
+        m.position.y -= p.fallSpeed;
+        m.position.x += Math.sin(time * p.swaySpeed + p.seed) * p.swayAmp;
+        m.position.z += Math.cos(time * p.swaySpeed + p.seed) * (p.swayAmp * 0.8);
+        m.rotation.x += p.rotSpeedX;
+        m.rotation.y += p.rotSpeedY;
+        m.rotation.z += p.rotSpeedZ;
+        if (m.position.y < 0.2) {
+          m.position.y = 25;
+          m.position.x = (Math.random() - 0.5) * 32;
+          m.position.z = (Math.random() - 0.5) * 32;
         }
       });
     }
