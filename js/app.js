@@ -242,6 +242,65 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnGoToOrder = document.getElementById('btn-go-to-order');
   const btnEnter3DWorld = document.getElementById('btn-enter-3d-world');
 
+  // WhatsApp-Style Quote Bar Elements
+  const chatQuoteBarContainer = document.getElementById('chat-quote-bar-container');
+  const quoteChapterTitle = document.getElementById('quote-chapter-title');
+  const quoteChapterDesc = document.getElementById('quote-chapter-desc');
+  const btnCancelQuote = document.getElementById('btn-cancel-quote');
+
+  // 2-Way Live Follow-up Chat & Quote State
+  let activeFollowUpQuote = null; // { chapterNum, heading, snippet }
+  let isAutomatedChatPaused = false; // Set to true when she follows up on a chapter
+  let liveChatBus = null;
+  try {
+    liveChatBus = new BroadcastChannel('birthday_live_bus');
+  } catch(e) {}
+
+  // Robust User Key Resolver for live progress & 2-way chat
+  function getRecipientUserKey() {
+    const params = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, '?'));
+    if (params.has('u') && params.get('u').trim()) {
+      return params.get('u').trim().toLowerCase();
+    }
+    if (currentPortalUser) {
+      return currentPortalUser.trim().toLowerCase();
+    }
+    try {
+      const session = localStorage.getItem('birthday_portal_session');
+      if (session) return session.trim().toLowerCase();
+    } catch(e) {}
+    return 'user';
+  }
+
+  // Recipient Activity Tracking Helper
+  function trackRecipientActivity(action, details, icon = '✨') {
+    const username = getRecipientUserKey();
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const actData = { action, details, icon, time: timeStr, username };
+
+    if (liveChatBus) {
+      try { liveChatBus.postMessage({ type: 'activity', data: actData }); } catch(e) {}
+    }
+
+    fetch('http://localhost:5000/api/track_activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(actData)
+    }).catch(() => {});
+  }
+
+  // Cancel Quote Button Handler
+  if (btnCancelQuote) {
+    btnCancelQuote.addEventListener('click', () => {
+      activeFollowUpQuote = null;
+      if (chatQuoteBarContainer) chatQuoteBarContainer.classList.add('hidden');
+      if (chatUserInput) {
+        chatUserInput.placeholder = isAutomatedChatPaused ? "Type your message to him..." : "Please enter your reply...";
+      }
+    });
+  }
+
   // 5 Romantic Questions from Boyfriend to Girlfriend
   const romanticQuestions = [
     {
@@ -295,6 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Open royal curtains
     curtainContainer.classList.add('opened');
     
+    // Track activity
+    trackRecipientActivity('curtains_opened', `Opened Royal Velvet Curtains & Started Celebration 💖`, '👑');
+
     // Play sound & initial confetti
     if (window.birthdayAudio) {
       window.birthdayAudio.init();
@@ -335,6 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function typeNextQuestion() {
+    // If automated questioning is paused because she's having a 2-way follow-up conversation, halt!
+    if (isAutomatedChatPaused) return;
+
     if (currentQuestionIndex >= romanticQuestions.length) {
       finishChatJourney();
       return;
@@ -627,22 +692,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!text || isTypingQuestion) return;
 
     const currentQData = romanticQuestions[currentQuestionIndex];
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const quotedData = activeFollowUpQuote ? { ...activeFollowUpQuote } : null;
 
-    // Reset input state immediately
-    if (chatUserInput) {
-      chatUserInput.value = '';
-      chatUserInput.disabled = true;
-      chatUserInput.placeholder = "Sending love... 💕";
+    // Reset quote bar if active
+    if (activeFollowUpQuote) {
+      activeFollowUpQuote = null;
+      if (chatQuoteBarContainer) chatQuoteBarContainer.classList.add('hidden');
     }
-    if (chatSendBtn) chatSendBtn.disabled = true;
-    if (chatQuickReplies) chatQuickReplies.innerHTML = '';
 
-    // Create girlfriend message bubble
+    // Create girlfriend message bubble (with optional WhatsApp-style quote banner inside)
     const msgRow = document.createElement('div');
     msgRow.className = 'chat-msg-row girlfriend-row';
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-msg-bubble girlfriend-bubble';
+
+    if (quotedData) {
+      const quoteBox = document.createElement('div');
+      quoteBox.className = 'msg-quote-preview-bubble';
+      quoteBox.innerHTML = `
+        <div class="quote-mini-title"><i class="fa-solid fa-feather-pointed"></i> Chapter ${quotedData.chapterNum || ''}: ${quotedData.heading || ''}</div>
+        <div class="quote-mini-desc">"${(quotedData.snippet || '').substring(0, 75)}..."</div>
+      `;
+      bubble.appendChild(quoteBox);
+    }
 
     const textSpan = document.createElement('span');
     textSpan.className = 'chat-bubble-text';
@@ -650,8 +725,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const timeSpan = document.createElement('div');
     timeSpan.className = 'chat-bubble-time';
-    const now = new Date();
-    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
     timeSpan.textContent = timeStr;
 
     bubble.appendChild(textSpan);
@@ -666,6 +739,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatMessagesScroll.appendChild(msgRow);
     scrollChatToBottom();
+
+    // If she is in follow-up / 2-way live chat mode:
+    if (isAutomatedChatPaused || quotedData) {
+      isAutomatedChatPaused = true;
+
+      // Reset input for next custom live message
+      if (chatUserInput) {
+        chatUserInput.value = '';
+        chatUserInput.disabled = false;
+        chatUserInput.placeholder = "Type your message to him...";
+        chatUserInput.focus();
+      }
+      if (chatSendBtn) chatSendBtn.disabled = true;
+      if (chatQuickReplies) chatQuickReplies.innerHTML = '';
+      if (chatLiveStatus) chatLiveStatus.textContent = "Live Chat Connected 💕";
+
+      // Dispatch 2-way live chat message to backend server
+      const username = getRecipientUserKey();
+      const livePayload = {
+        username: username,
+        sender: 'celebrant',
+        text: text,
+        quote: quotedData,
+        time: timeStr
+      };
+
+      fetch('http://localhost:5000/api/live_chat_send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(livePayload)
+      }).catch(() => {});
+
+      if (liveChatBus) {
+        try {
+          liveChatBus.postMessage({ type: 'live_chat_msg', data: livePayload });
+        } catch(e) {}
+      }
+
+      // Track activity
+      trackRecipientActivity('live_chat_msg', `Girlfriend sent: "${text.substring(0, 35)}..."`, '💬');
+
+      // Play sweet chime
+      try {
+        if (window.birthdayAudio) {
+          window.birthdayAudio.init();
+          if (typeof window.birthdayAudio.playChimeTone === 'function' && window.birthdayAudio.ctx) {
+            window.birthdayAudio.playChimeTone(659.25, window.birthdayAudio.ctx.currentTime, 0.35, 0.3);
+          }
+        }
+      } catch(e) {}
+
+      if (window.confetti) {
+        window.confetti({ particleCount: 25, spread: 55, origin: { y: 0.7 } });
+      }
+
+      // Do NOT auto-advance romanticQuestions while in 2-way follow-up conversation!
+      return;
+    }
+
+    // Default automated questionnaire flow
+    if (chatUserInput) {
+      chatUserInput.value = '';
+      chatUserInput.disabled = true;
+      chatUserInput.placeholder = "Sending love... 💕";
+    }
+    if (chatSendBtn) chatSendBtn.disabled = true;
+    if (chatQuickReplies) chatQuickReplies.innerHTML = '';
 
     // Save answer into persistent local storage for boyfriend to view anytime
     const answerData = {
@@ -710,6 +850,63 @@ document.addEventListener('DOMContentLoaded', () => {
         finishChatJourney();
       }, 900);
     }
+  }
+
+  // Receive Creator's Live Replies in Girlfriend's Chat Screen via BroadcastChannel & Polling
+  function receiveCreatorLiveMessage(msgData) {
+    if (!msgData || msgData.sender !== 'creator') return;
+
+    const msgRow = document.createElement('div');
+    msgRow.className = 'chat-msg-row boyfriend-row live-incoming';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'chat-bubble-avatar';
+    avatar.textContent = '👦';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-msg-bubble boyfriend-bubble';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'chat-bubble-text';
+    textSpan.textContent = msgData.text;
+
+    const timeSpan = document.createElement('div');
+    timeSpan.className = 'chat-bubble-time';
+    timeSpan.textContent = msgData.time || `${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+
+    bubble.appendChild(textSpan);
+    bubble.appendChild(timeSpan);
+
+    msgRow.appendChild(avatar);
+    msgRow.appendChild(bubble);
+
+    if (chatMessagesScroll) {
+      chatMessagesScroll.appendChild(msgRow);
+      scrollChatToBottom();
+    }
+
+    if (chatLiveStatus) {
+      chatLiveStatus.textContent = "Boyfriend replied 💕";
+    }
+
+    // Play chime tone
+    try {
+      if (window.birthdayAudio) {
+        window.birthdayAudio.init();
+        if (typeof window.birthdayAudio.playChimeTone === 'function' && window.birthdayAudio.ctx) {
+          window.birthdayAudio.playChimeTone(523.25, window.birthdayAudio.ctx.currentTime, 0.4, 0.35);
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (liveChatBus) {
+    liveChatBus.onmessage = (event) => {
+      const { type, data } = event.data || {};
+      if (type === 'live_chat_msg' && data && data.sender === 'creator') {
+        receiveCreatorLiveMessage(data);
+      }
+    };
   }
 
   function finishChatJourney() {
@@ -933,6 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
      STEP 3: TO REVEAL CAKE - BURST BALLOONS AROUND CAKE
      ========================================================= */
   window.onTableBalloonPopped = (remaining) => {
+    trackRecipientActivity('balloon_popped', `Popped table balloon (${5 - remaining}/5) 🎈`, '🎈');
     if (questBalloonCount) questBalloonCount.textContent = remaining;
     if (questDescText && remaining > 0) {
       questDescText.textContent = `around the cake to reveal the surprise`;
@@ -951,6 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (remaining === 0) {
+      trackRecipientActivity('all_balloons_popped', 'Popped all 5 balloons — 3D Birthday Cake revealed! 🎂', '🎂');
       if (questTitleText) questTitleText.textContent = `✨ ALL BALLOONS BURST! ✨`;
       if (questDescText) questDescText.textContent = `Revealing the Birthday Cake... 🎂`;
 
@@ -970,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
      STEP 3: BURN CANDLES ("BURN CANDLE")
      ========================================================= */
   stepBurnCandles.addEventListener('click', () => {
+    trackRecipientActivity('candles_lit', 'Lit romantic candles on 3D Birthday Cake 🕯️', '🕯️');
     scene.lightCandles();
 
     // Transition to Step 4 (Cut the Cake)
@@ -982,6 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
      STEP 4: CUT THE CAKE -> 3S FIREWORKS + SONG
      ========================================================= */
   stepCutCake.addEventListener('click', () => {
+    trackRecipientActivity('cake_cut', 'Cut the 3D Birthday Cake & celebrated with fireworks! 🍰✨', '🍰');
     stepCutCake.classList.add('hidden');
 
     scene.cutCakeAndCelebrate(() => {
@@ -995,6 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
      STEP 5: BRING GIFT FORWARD & TAP TO OPEN
      ========================================================= */
   stepOpenGift.addEventListener('click', () => {
+    trackRecipientActivity('gift_opened', 'Opened surprise 3D gift box with love message 🎁', '🎁');
     stepOpenGift.classList.add('hidden');
 
     // Fly gift box smoothly to front center
@@ -1012,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clicking the floating "Tap Box to Open" badge
   if (tapGiftCard) {
     tapGiftCard.addEventListener('click', () => {
+      trackRecipientActivity('gift_opened', 'Opened surprise 3D gift box with love message 🎁', '🎁');
       scene.openGift();
       tapGiftCard.classList.add('hidden');
     });
@@ -1021,6 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
      URL PARAMETERS & SHARING (PHOTO + NAME + AGE + THEME)
      ========================================================= */
   let currentPhotoDataUrl = null;
+  let userMemoriesPhotos = [];
   // Clear any stale local cache from previous sessions
   try {
     localStorage.removeItem('birthday_custom_photo');
@@ -1050,8 +1254,67 @@ document.addEventListener('DOMContentLoaded', () => {
     return canvas.toDataURL('image/jpeg', quality);
   }
 
-  function parseUrlParams() {
+  async function parseUrlParams() {
     const params = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, '?'));
+
+    // === SHORT LINK: ?s=TOKEN — fetch all data from server ===
+    if (params.has('s') && params.get('s').trim()) {
+      const token = params.get('s').trim();
+      try {
+        const res = await fetch(`http://localhost:5000/api/get_surprise?s=${encodeURIComponent(token)}`);
+        if (res.status === 410) {
+          // Link expired
+          document.body.innerHTML = `
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+              background:#12030f;color:#fff;font-family:sans-serif;text-align:center;padding:40px;">
+              <div>
+                <div style="font-size:3rem;margin-bottom:16px;">⌛💔</div>
+                <h2 style="color:#ff758c;">This surprise link has expired!</h2>
+                <p style="color:rgba(255,255,255,0.75);">The 48-hour window has passed and this birthday surprise is no longer available. Ask the creator to send a fresh link! 🎁</p>
+              </div>
+            </div>`;
+          return;
+        }
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status === 'success' && json.data) {
+            const d = json.data;
+            if (d.name) { celebrantName = d.name; if (inputName) inputName.value = d.name; }
+            if (d.age) { celebrantAge = d.age; if (inputAge) inputAge.value = d.age; }
+            if (d.wish) { customWish = d.wish; if (inputWish) inputWish.value = d.wish; }
+            if (d.theme) activeTheme = d.theme;
+            if (d.memories && Array.isArray(d.memories) && d.memories.length > 0) {
+              userMemoriesPhotos = d.memories;
+            }
+            if (d.safarnama) {
+              try {
+                const parsed = typeof d.safarnama === 'string'
+                  ? JSON.parse(decodeURIComponent(d.safarnama)) : d.safarnama;
+                if (Array.isArray(parsed)) userSafarnamaChapters = parsed;
+              } catch(e) {}
+            }
+            let sharedPhoto = d.photo || null;
+            currentPhotoDataUrl = sharedPhoto;
+            if (sharedPhoto) {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => {
+                if (scene) scene.updateUserPhoto(img);
+                updateMemoriesPhoto(sharedPhoto, userMemoriesPhotos);
+              };
+              img.src = sharedPhoto;
+            } else {
+              updateMemoriesPhoto(null, userMemoriesPhotos);
+            }
+            updateCelebrantInfo();
+            applyTheme(activeTheme);
+            return;
+          }
+        }
+      } catch(e) { /* fall through to normal param parsing */ }
+    }
+
+    // === LEGACY LONG URL params (backward compat) ===
     if (params.has('name')) {
       celebrantName = params.get('name');
       inputName.value = celebrantName;
@@ -1068,11 +1331,21 @@ document.addEventListener('DOMContentLoaded', () => {
       activeTheme = params.get('theme');
     }
 
-    // Check shared photo in URL hash/param only
+    // Check shared photo in URL hash/param
     let sharedPhoto = params.get('photo') || null;
     currentPhotoDataUrl = sharedPhoto;
     if (inputPhotoUrl && sharedPhoto && sharedPhoto.startsWith('http')) {
       inputPhotoUrl.value = sharedPhoto;
+    }
+
+    // Check memories photos list in URL
+    if (params.has('memories')) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(params.get('memories')));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          userMemoriesPhotos = parsed;
+        }
+      } catch(e) {}
     }
 
     if (sharedPhoto) {
@@ -1080,13 +1353,14 @@ document.addEventListener('DOMContentLoaded', () => {
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         if (scene) scene.updateUserPhoto(img);
-        updateMemoriesPhoto(sharedPhoto);
+        updateMemoriesPhoto(sharedPhoto, userMemoriesPhotos);
       };
       img.src = sharedPhoto;
     } else {
       if (scene && scene.clearUserPhoto) {
         scene.clearUserPhoto();
       }
+      updateMemoriesPhoto(null, userMemoriesPhotos);
     }
 
     updateCelebrantInfo();
@@ -1142,44 +1416,173 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- Inject uploaded photo into all memory/polaroid frames ---
-  function updateMemoriesPhoto(photoUrl) {
-    if (!photoUrl) return;
-
-    // Polaroids modal (from menu drawer)
-    const polaroidImg1 = document.getElementById('polaroid-img-1');
-    const polaroidEmpty1 = document.getElementById('polaroid-empty-1');
-    if (polaroidImg1) {
-      polaroidImg1.src = photoUrl;
-      polaroidImg1.classList.remove('hidden');
-      if (polaroidEmpty1) polaroidEmpty1.style.display = 'none';
+  // --- Lightbox overlay for full image preview (original resolution) ---
+  function openMemoryLightbox(src) {
+    if (!src) return;
+    let lb = document.getElementById('memory-lightbox-overlay');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'memory-lightbox-overlay';
+      lb.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999999;
+        display:flex;align-items:center;justify-content:center;cursor:zoom-out;
+        animation:fadeIn 0.2s ease;padding:20px;`;
+      const lbImg = document.createElement('img');
+      lbImg.id = 'memory-lightbox-img';
+      lbImg.style.cssText = `max-width:92vw;max-height:88vh;border-radius:16px;
+        box-shadow:0 20px 80px rgba(255,117,140,0.6);object-fit:contain;
+        border:3px solid rgba(255,117,140,0.7);background:#12030f;`;
+      const lbClose = document.createElement('button');
+      lbClose.textContent = '✕';
+      lbClose.title = 'Close Photo Preview';
+      lbClose.style.cssText = `position:fixed;top:20px;right:24px;background:#ff0a54;
+        color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:1.2rem;
+        cursor:pointer;font-weight:700;z-index:1000000;box-shadow:0 4px 15px rgba(255,10,84,0.6);
+        display:flex;align-items:center;justify-content:center;`;
+      lb.appendChild(lbImg);
+      lb.appendChild(lbClose);
+      document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => { if (e.target === lb || e.target === lbClose) lb.remove(); });
     }
-    const polaroidImg2 = document.getElementById('polaroid-img-2');
-    const polaroidEmpty2 = document.getElementById('polaroid-empty-2');
-    if (polaroidImg2) {
-      polaroidImg2.src = photoUrl;
-      polaroidImg2.classList.remove('hidden');
-      if (polaroidEmpty2) polaroidEmpty2.style.display = 'none';
-    }
+    const imgEl = document.getElementById('memory-lightbox-img');
+    if (imgEl) imgEl.src = src;
+  }
 
-    // Book memories modal polaroid cards (CSS background)
-    const polaroidImg1Card = document.querySelector('.polaroid-img-1');
-    const polaroidImg2Card = document.querySelector('.polaroid-img-2');
-    const polaroidImg3Card = document.querySelector('.polaroid-img-3');
-    const polaroidImg4Card = document.querySelector('.polaroid-img-4');
-    const applyBg = (el) => {
-      if (el) {
-        el.style.backgroundImage = `url('${photoUrl}')`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center top';
-        const icon = el.querySelector('.polaroid-center-icon');
-        if (icon) icon.style.display = 'none';
+  // --- Inject uploaded photos into all memory/polaroid frames ---
+  function updateMemoriesPhoto(photoUrl, photosArray) {
+    // Normalize: accept both plain strings and {cdnUrl, localUrl} objects
+    function toSrcUrl(item) {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        const s = item.trim();
+        return s && s !== 'null' && s !== 'undefined' ? s : null;
       }
-    };
-    applyBg(polaroidImg1Card);
-    applyBg(polaroidImg2Card);
-    applyBg(polaroidImg3Card);
-    applyBg(polaroidImg4Card);
+      if (typeof item === 'object') {
+        const u = (item.cdnUrl || item.localUrl || item.url || '').trim();
+        return u && u !== 'null' && u !== 'undefined' ? u : null;
+      }
+      return null;
+    }
+
+    const collected = [];
+
+    // 1. Add main portrait photo first if available
+    const mainSrc = toSrcUrl(photoUrl || currentPhotoDataUrl);
+    if (mainSrc && !collected.includes(mainSrc)) {
+      collected.push(mainSrc);
+    }
+
+    // 2. Add photos from argument array
+    if (Array.isArray(photosArray)) {
+      photosArray.forEach(p => {
+        const u = toSrcUrl(p);
+        if (u && !collected.includes(u)) collected.push(u);
+      });
+    }
+
+    // 3. Add photos from global userMemoriesPhotos
+    if (Array.isArray(userMemoriesPhotos)) {
+      userMemoriesPhotos.forEach(p => {
+        const u = toSrcUrl(p);
+        if (u && !collected.includes(u)) collected.push(u);
+      });
+    }
+
+    const photosList = collected;
+
+    // 1. Book memories modal polaroid cards (#modal-book-memories)
+    const memoriesGridWrapper = document.querySelector('#modal-book-memories .memories-grid-wrapper');
+    if (memoriesGridWrapper && photosList.length > 0) {
+      const captions = [
+        "Where Our Story Began ✨",
+        "That Unforgettable Smile 🥰",
+        "Endless Laughs & Calls 🌙",
+        "Celebrating Your Special Day 👑",
+        "Precious Moments Together 💕",
+        "Pure Love & Happiness ❤️",
+        "Forever My Favorite View ✨",
+        "Sweet Birthday Memories 💖",
+        "You Make My World Beautiful 🌸",
+        "A Thousand Beautiful Smiles 💫"
+      ];
+
+      let html = '';
+      photosList.forEach((src, idx) => {
+        const captionText = captions[idx % captions.length] || `Memory #${idx + 1} ✨`;
+        html += `
+          <div class="polaroid-memory-card" data-src="${src}" style="cursor: pointer;" title="Click to view full photo">
+            <div class="polaroid-inner-frame">
+              <div class="polaroid-sample-img" style="position: relative; overflow: hidden; background: #200418; border-radius: 6px;">
+                <img src="${src}" alt="${captionText}" class="polaroid-real-img" style="width: 100%; height: 170px; object-fit: cover; display: block; transition: transform 0.3s ease;">
+                <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem;">
+                  <i class="fa-solid fa-expand"></i>
+                </div>
+              </div>
+              <div class="polaroid-caption">${captionText}</div>
+            </div>
+          </div>
+        `;
+      });
+      memoriesGridWrapper.innerHTML = html;
+
+      // Click any polaroid to zoom in lightbox
+      memoriesGridWrapper.querySelectorAll('.polaroid-memory-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const src = card.getAttribute('data-src');
+          if (src) openMemoryLightbox(src);
+        });
+      });
+    }
+
+    // 2. Polaroids modal in drawer (#polaroids-modal)
+    const polaroidsGrid = document.querySelector('#polaroids-modal .polaroids-grid');
+    if (polaroidsGrid && photosList.length > 0) {
+      let drawerHtml = '';
+      const drawerCaptions = [
+        "The moment I fell for you ❤️",
+        "Every second with you is pure joy 💖",
+        "To many more adventures together 🥂",
+        "You are my whole universe 👑",
+        "Forever and always in love 💕",
+        "Our sweetest birthday memory ✨"
+      ];
+      photosList.forEach((src, idx) => {
+        const cap = drawerCaptions[idx % drawerCaptions.length] || `Memory #${idx + 1} 💕`;
+        drawerHtml += `
+          <div class="polaroid-item" data-src="${src}" style="cursor: pointer;" title="Click to view full photo">
+            <div class="polaroid-photo-frame" style="position: relative; overflow: hidden;">
+              <img src="${src}" alt="Memory ${idx + 1}" class="polaroid-preview-img" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            </div>
+            <p class="polaroid-caption">"${cap}"</p>
+          </div>
+        `;
+      });
+      polaroidsGrid.innerHTML = drawerHtml;
+      polaroidsGrid.querySelectorAll('.polaroid-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const src = item.getAttribute('data-src');
+          if (src) openMemoryLightbox(src);
+        });
+      });
+    }
+
+    // 3. Update 3D Book Cover on Landing / Chat Screen (#book-card-memories)
+    const miniPreview = document.querySelector('#book-card-memories .mini-polaroid-preview');
+    if (miniPreview && photosList.length > 0) {
+      miniPreview.innerHTML = `
+        <img src="${photosList[0]}" alt="Cover Photo" class="book-cover-mini-photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: block;">
+        <span class="polaroid-sparkle" style="position: absolute; top: -6px; right: -6px;">💖</span>
+      `;
+    }
+
+    // 4. Update 3D Scene easel frame if available
+    if (scene && scene.updateUserPhoto && photosList.length > 0) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try { scene.updateUserPhoto(img); } catch(e) {}
+      };
+      img.src = photosList[0];
+    }
   }
 
   function generateShareUrl(includePhoto = true) {
@@ -1572,7 +1975,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnMemoryGallery) {
     btnMemoryGallery.addEventListener('click', () => {
       closeMenuDrawer();
-      polaroidsModal.classList.add('show');
+      updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+      if (polaroidsModal) polaroidsModal.classList.add('show');
     });
   }
 
@@ -1724,10 +2128,121 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenCustomizerFromAlbum = document.getElementById('btn-open-customizer-from-album');
   const btnSafarnamaToChat = document.getElementById('btn-safarnama-to-chat');
 
+  // --- Dynamic Safarnama Chapters State ---
+  const DEFAULT_SAFARNAMA_PRESETS = [
+    {
+      heading: "Jab Tum Zindagi Me Aaye 🌸",
+      description: "Ek aam sa din tha, lekin jab tum meri zindagi me aayi, toh har lamha khaas ban gaya. Tumhari muskurahat ne dil ko ek aisi sukoon di jo pehle kabhi mehsoos nahi hui thi."
+    },
+    {
+      heading: "Der Raat Ki Baatein & Silly Fights 🥰",
+      description: "Wo ghanton phone par baatein karna, bina kisi wajah ke muskurana, choti-choti baaton par ruthna aur phir ek pyare se sorry par maan jana... Ye saare pal mere dil ke sabse kareeb hain."
+    },
+    {
+      heading: "Har Kadam Par Saath 🤝",
+      description: "Chahe din achha ho ya mushkil, tumne hamesha meri himmat badhayi hai. Tum sirf meri girlfriend nahi, meri sabse achhi dost aur meri sabse badi taakat ho."
+    },
+    {
+      heading: "Aaj, Kal Aur Hamesha ❤️",
+      description: "Aaj tumhare is khaas janamdin par, main rab se bas yahi dua karta hu ki tumhari har khwahish puri ho. Tumhari aankhon me hamesha khushi ke aansu hon aur hothon par pyari hasi. Happy Birthday My Love! 💖"
+    }
+  ];
+
+  let userSafarnamaChapters = JSON.parse(JSON.stringify(DEFAULT_SAFARNAMA_PRESETS));
+
+  // Render Safarnama Builder in Creator Dashboard
+  function renderSafarnamaBuilder() {
+    const listEl = document.getElementById('safarnama-builder-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+    userSafarnamaChapters.forEach((ch, idx) => {
+      const card = document.createElement('div');
+      card.className = 'safarnama-entry-card';
+      const numStr = String(idx + 1).padStart(2, '0');
+      card.innerHTML = `
+        <div class="safarnama-entry-top">
+          <span class="safarnama-chapter-tag"><i class="fa-solid fa-feather-pointed"></i> Chapter ${numStr}</span>
+          ${userSafarnamaChapters.length > 1 ? `<button type="button" class="btn-remove-chapter" data-idx="${idx}"><i class="fa-solid fa-trash-can"></i> Remove</button>` : ''}
+        </div>
+        <div class="safarnama-inputs-grid">
+          <div class="safarnama-input-group">
+            <label><i class="fa-solid fa-heading"></i> Chapter Heading / Title</label>
+            <input type="text" class="chapter-heading-input" data-idx="${idx}" placeholder="e.g. Jab Tum Zindagi Me Aaye 🌸" value="${ch.heading ? ch.heading.replace(/"/g, '&quot;') : ''}">
+          </div>
+          <div class="safarnama-input-group">
+            <label><i class="fa-solid fa-align-left"></i> Story / Description</label>
+            <textarea class="chapter-desc-input" data-idx="${idx}" rows="2" placeholder="Write the memory or story for this chapter...">${ch.description || ''}</textarea>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    // Heading change listener
+    listEl.querySelectorAll('.chapter-heading-input').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        if (userSafarnamaChapters[idx]) {
+          userSafarnamaChapters[idx].heading = e.target.value;
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
+        }
+      });
+    });
+
+    // Description change listener
+    listEl.querySelectorAll('.chapter-desc-input').forEach(txt => {
+      txt.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        if (userSafarnamaChapters[idx]) {
+          userSafarnamaChapters[idx].description = e.target.value;
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
+        }
+      });
+    });
+
+    // Remove button listener
+    listEl.querySelectorAll('.btn-remove-chapter').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.dataset.idx, 10);
+        userSafarnamaChapters.splice(idx, 1);
+        renderSafarnamaBuilder();
+        if (currentPortalUser) saveUserFormData(currentPortalUser);
+      });
+    });
+  }
+
+  const btnAddSafarnamaChapter = document.getElementById('btn-add-safarnama-chapter');
+  if (btnAddSafarnamaChapter) {
+    btnAddSafarnamaChapter.addEventListener('click', () => {
+      const nextNum = userSafarnamaChapters.length + 1;
+      userSafarnamaChapters.push({
+        heading: `Khaas Lamha ${nextNum} 💕`,
+        description: "Ek aur khoobsurat yaadein jo humare dil ke kareeb hain..."
+      });
+      renderSafarnamaBuilder();
+      if (currentPortalUser) saveUserFormData(currentPortalUser);
+      if (window.birthdayAudio) {
+        try { window.birthdayAudio.playPop(); } catch(e) {}
+      }
+    });
+  }
+
+  const btnResetSafarnama = document.getElementById('btn-reset-safarnama');
+  if (btnResetSafarnama) {
+    btnResetSafarnama.addEventListener('click', () => {
+      if (confirm('Reset Safarnama chapters to romantic presets?')) {
+        userSafarnamaChapters = JSON.parse(JSON.stringify(DEFAULT_SAFARNAMA_PRESETS));
+        renderSafarnamaBuilder();
+        if (currentPortalUser) saveUserFormData(currentPortalUser);
+      }
+    });
+  }
+
   if (bookCardMemories) {
     bookCardMemories.addEventListener('click', () => {
-      // Inject current photo into memories modal when it opens
-      if (currentPhotoDataUrl) updateMemoriesPhoto(currentPhotoDataUrl);
+      // Inject all memory photos into memories modal when it opens
+      updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
       if (modalBookMemories) modalBookMemories.classList.add('show');
       if (window.birthdayAudio) {
         try { window.birthdayAudio.playGiftOpen(); } catch(e) {}
@@ -1748,7 +2263,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Safarnama: Dynamically populate from chat answers ---
+  // Helper: Transition to Live Chat when user clicks "Follow in Chat"
+  function transitionToRealChat() {
+    if (modalBookSafarnama) modalBookSafarnama.classList.remove('show');
+    if (modalBookMemories) modalBookMemories.classList.remove('show');
+
+    // Ensure story containers are visible
+    if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
+    if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
+    if (curtainContainer) curtainContainer.style.display = 'none';
+
+    const romanticChatScreen = document.getElementById('romantic-chat-screen');
+    if (romanticChatScreen) {
+      romanticChatScreen.classList.remove('hidden');
+      romanticChatScreen.style.opacity = '1';
+      romanticChatScreen.style.transform = 'none';
+    }
+
+    const chatCard = document.querySelector('.chat-card-window');
+    if (chatCard) {
+      chatCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const chatInput = document.getElementById('chat-user-input');
+      if (chatInput && !chatInput.disabled) {
+        setTimeout(() => chatInput.focus(), 600);
+      }
+    }
+    if (window.birthdayAudio) {
+      try { window.birthdayAudio.playPop(); } catch(e) {}
+    }
+  }
+
+  // --- Safarnama: Dynamically populate custom chapters with Follow In Chat Buttons ---
   function renderSafarnamaChapters() {
     const chaptersScroll = document.querySelector('.safarnama-chapters-scroll');
     if (!chaptersScroll) return;
@@ -1756,40 +2301,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const history = getSavedChatHistory();
     const name = celebrantName && celebrantName !== 'Birthday Star' ? celebrantName : 'Tum';
 
-    // Default romantic chapters (always shown)
-    const defaultChapters = [
-      {
-        num: '01', title: `Jab ${name} Zindagi Me Aaye 🌸`,
-        text: `Ek aam sa din tha, lekin jab ${name} meri zindagi me aayi, toh har lamha khaas ban gaya. Tumhari muskurahat ne dil ko ek aisi sukoon di jo pehle kabhi mehsoos nahi hui thi.`
-      },
-      {
-        num: '02', title: `Der Raat Ki Baatein & Silly Fights 🥰`,
-        text: `Wo ghanton phone par baatein karna, bina kisi wajah ke muskurana, choti-choti baaton par ruthna aur phir ek pyare se sorry par maan jana... Ye saare pal mere dil ke sabse kareeb hain.`
-      },
-      {
-        num: '03', title: `Har Kadam Par Saath 🤝`,
-        text: `Chahe din achha ho ya mushkil, tumne hamesha meri himmat badhayi hai. Tum sirf meri girlfriend nahi, meri sabse achhi dost aur meri sabse badi taakat ho.`
-      },
-      {
-        num: '04', title: `Aaj, Kal Aur Hamesha ❤️`,
-        text: `Aaj ${name} ke is khaas janamdin par, main rab se bas yahi dua karta hu ki tumhari har khwahish puri ho. Happy Birthday My Love! 💖`,
-        highlight: true
-      }
-    ];
+    const chaptersToRender = (userSafarnamaChapters && userSafarnamaChapters.length > 0) ? userSafarnamaChapters : DEFAULT_SAFARNAMA_PRESETS;
 
     let html = '';
 
-    // Default chapters
-    defaultChapters.forEach(ch => {
+    // Render each custom chapter filled by user
+    chaptersToRender.forEach((ch, idx) => {
+      const isHighlight = idx === chaptersToRender.length - 1;
+      const numStr = String(idx + 1).padStart(2, '0');
+      const heading = ch.heading || `Chapter ${numStr}`;
+      const desc = ch.description || '';
+
       html += `
-        <div class="safarnama-chapter-card${ch.highlight ? ' highlight-chapter' : ''}">
-          <div class="chapter-badge">Chapter ${ch.num}</div>
-          <h3 class="chapter-title">${ch.title}</h3>
-          <p class="chapter-text">${ch.text}</p>
+        <div class="safarnama-chapter-card${isHighlight ? ' highlight-chapter' : ''}">
+          <div class="chapter-badge">Chapter ${numStr}</div>
+          <h3 class="chapter-title">${heading}</h3>
+          <p class="chapter-text">${desc}</p>
+          <div class="chapter-follow-chat-row">
+            <button type="button" class="btn-chapter-follow-chat" data-chapter="${numStr}" data-heading="${heading.replace(/"/g, '&quot;')}" data-desc="${desc.substring(0, 100).replace(/"/g, '&quot;')}" title="Continue in Live Chat">
+              <i class="fa-solid fa-comments"></i> Follow in Chat 💬
+            </button>
+          </div>
         </div>`;
     });
 
-    // Add chapters from chat answers if any
+    // Add chapters from girlfriend's live chat answers if any
     if (history.length > 0) {
       html += `
         <div class="safarnama-chapter-card" style="background: linear-gradient(135deg, rgba(255,117,140,0.12), rgba(255,200,124,0.08)); border-left: 3px solid #ff758c;">
@@ -1805,19 +2341,80 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       html += `
           </div>
+          <div class="chapter-follow-chat-row">
+            <button type="button" class="btn-chapter-follow-chat" data-chapter="Her Words" data-heading="${name} Ki Apni Zuban Se" data-desc="Saved memories from live chat" title="Chat with Her">
+              <i class="fa-solid fa-comments"></i> Follow in Chat 💬
+            </button>
+          </div>
         </div>`;
     }
 
     chaptersScroll.innerHTML = html;
+
+    // Attach click listeners to all "Follow in Chat" buttons on each chapter
+    chaptersScroll.querySelectorAll('.btn-chapter-follow-chat').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const chNum = btn.dataset.chapter || '01';
+        const chHeading = btn.dataset.heading || 'Our Journey';
+        const chDesc = btn.dataset.desc || '';
+
+        // 1. Pause automated question flow so boyfriend & girlfriend can converse
+        isAutomatedChatPaused = true;
+
+        // 2. Set active WhatsApp-style follow-up quote
+        activeFollowUpQuote = {
+          chapterNum: chNum,
+          heading: chHeading,
+          snippet: chDesc
+        };
+
+        // 3. Populate and display quote banner
+        if (quoteChapterTitle) {
+          quoteChapterTitle.textContent = `📖 Chapter ${chNum}: ${chHeading}`;
+        }
+        if (quoteChapterDesc) {
+          quoteChapterDesc.textContent = `"${chDesc.substring(0, 80)}..."`;
+        }
+        if (chatQuoteBarContainer) {
+          chatQuoteBarContainer.classList.remove('hidden');
+        }
+
+        // 4. Transition to live chat view
+        transitionToRealChat();
+
+        // 5. Unlock user input immediately
+        if (chatLiveStatus) chatLiveStatus.textContent = "Live 2-Way Chat Mode 💕";
+        if (chatUserInput) {
+          chatUserInput.disabled = false;
+          chatUserInput.placeholder = `Type your reply or question about "${chHeading}"...`;
+          setTimeout(() => chatUserInput.focus(), 300);
+        }
+        if (chatSendBtn) chatSendBtn.disabled = true;
+        if (chatQuickReplies) chatQuickReplies.innerHTML = '';
+
+        // 6. Track recipient activity & send live notification
+        trackRecipientActivity('follow_chat_clicked', `Celebrant followed up on "${chHeading}"`, '💬');
+      });
+    });
   }
 
   if (bookCardSafarnama) {
     bookCardSafarnama.addEventListener('click', () => {
+      trackRecipientActivity('safarnama_opened', 'Opened & Reading Safarnama Journey Book 📖', '📖');
       renderSafarnamaChapters();
       if (modalBookSafarnama) modalBookSafarnama.classList.add('show');
       if (window.birthdayAudio) {
         try { window.birthdayAudio.playGiftOpen(); } catch(e) {}
       }
+    });
+  }
+
+  if (bookCardMemories) {
+    bookCardMemories.addEventListener('click', () => {
+      trackRecipientActivity('memories_opened', 'Opened Memories Photo Album 📸', '📸');
     });
   }
 
@@ -1829,11 +2426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnSafarnamaToChat) {
     btnSafarnamaToChat.addEventListener('click', () => {
-      if (modalBookSafarnama) modalBookSafarnama.classList.remove('show');
-      const chatCard = document.querySelector('.chat-card-window');
-      if (chatCard) {
-        chatCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      transitionToRealChat();
     });
   }
 
@@ -1933,10 +2526,14 @@ document.addEventListener('DOMContentLoaded', () => {
       wish: creatorInputWish ? creatorInputWish.value : '',
       photoUrl: creatorInputPhotoUrl ? creatorInputPhotoUrl.value : '',
       mode: selectedCreatorMode,
+      safarnama: userSafarnamaChapters,
+      memoriesPhotos: userMemoriesPhotos,
       savedAt: new Date().toISOString()
     };
     try {
       localStorage.setItem(`birthday_userdata_${userKey}`, JSON.stringify(data));
+      localStorage.setItem(`birthday_safarnama_${userKey}`, JSON.stringify(userSafarnamaChapters));
+      localStorage.setItem(`birthday_memories_photos_${userKey}`, JSON.stringify(userMemoriesPhotos));
     } catch(e) {}
     // Also try server
     try {
@@ -1958,38 +2555,59 @@ document.addEventListener('DOMContentLoaded', () => {
       if (local) data = JSON.parse(local);
     } catch(e) {}
 
-    if (!data) return;
+    if (data) {
+      if (creatorInputName && data.name) creatorInputName.value = data.name;
+      if (creatorInputNickname && data.nickname) creatorInputNickname.value = data.nickname;
+      if (creatorInputAge && data.age) creatorInputAge.value = data.age;
+      if (creatorInputTheme && data.theme) creatorInputTheme.value = data.theme;
+      if (creatorInputWish && data.wish) creatorInputWish.value = data.wish;
+      if (creatorInputPhotoUrl && data.photoUrl) {
+        creatorInputPhotoUrl.value = data.photoUrl;
+      }
+      if (data.photoUrl) {
+        currentPhotoDataUrl = data.photoUrl;
+        const singlePreview = document.getElementById('creator-single-photo-preview');
+        const previewImg = document.getElementById('main-photo-preview-img');
+        if (singlePreview && previewImg) {
+          previewImg.src = data.photoUrl;
+          singlePreview.classList.remove('hidden');
+        }
+        if (creatorPhotoStatus) {
+          creatorPhotoStatus.textContent = '✅ Photo loaded!';
+          creatorPhotoStatus.style.color = '#00ff88';
+        }
+      }
+      if (data.mode) setDeckMode(data.mode);
 
-    if (creatorInputName && data.name) creatorInputName.value = data.name;
-    if (creatorInputNickname && data.nickname) creatorInputNickname.value = data.nickname;
-    if (creatorInputAge && data.age) creatorInputAge.value = data.age;
-    if (creatorInputTheme && data.theme) creatorInputTheme.value = data.theme;
-    if (creatorInputWish && data.wish) creatorInputWish.value = data.wish;
-    if (creatorInputPhotoUrl && data.photoUrl) {
-      creatorInputPhotoUrl.value = data.photoUrl;
-      currentPhotoDataUrl = data.photoUrl;
-    }
-    if (data.mode) setDeckMode(data.mode);
+      if (data.safarnama && Array.isArray(data.safarnama) && data.safarnama.length > 0) {
+        userSafarnamaChapters = data.safarnama;
+      }
 
-    // Apply restored theme & name
-    if (data.theme) applyTheme(data.theme);
-    if (data.name) {
-      celebrantName = data.name;
-      celebrantAge = data.age || '';
-      customWish = data.wish || customWish;
-      updateCelebrantInfo();
-    }
-    if (data.photoUrl) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => { if (scene) scene.updateUserPhoto(img); updateMemoriesPhoto(data.photoUrl); };
-      img.src = data.photoUrl;
+      if (data.memoriesPhotos && Array.isArray(data.memoriesPhotos) && data.memoriesPhotos.length > 0) {
+        userMemoriesPhotos = data.memoriesPhotos;
+        renderMemoriesPreviewsGrid();
+      }
+
+      // Merge and render all photos across modals & scene
+      updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+
+      // Apply restored theme & name
+      if (data.theme) applyTheme(data.theme);
+      if (data.name) {
+        celebrantName = data.name;
+        celebrantAge = data.age || '';
+        customWish = data.wish || customWish;
+        updateCelebrantInfo();
+      }
+      if (data.photoUrl) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => { if (scene) scene.updateUserPhoto(img); };
+        img.src = data.photoUrl;
+      }
     }
 
-    if (creatorPhotoStatus && data.photoUrl) {
-      creatorPhotoStatus.textContent = '✅ Previous photo restored!';
-      creatorPhotoStatus.style.color = '#00ff88';
-    }
+    renderSafarnamaBuilder();
   }
 
   // --- Helper: Open dashboard after successful login/register ---
@@ -2000,7 +2618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
     if (portalCreatorDashboard) portalCreatorDashboard.classList.remove('hidden');
 
-    // Restore previous form data
+    // Restore previous form data & render Safarnama builder
     restoreUserFormData(currentPortalUser);
 
     if (window.confetti) window.confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
@@ -2225,72 +2843,298 @@ document.addEventListener('DOMContentLoaded', () => {
     deckCardBf.addEventListener('click', () => setDeckMode('bf'));
   }
 
-  // 6. Photo Upload in Creator Dashboard
+  // Helper: Set and preview main portrait photo
+  function setMainPortraitPhoto(url, statusMsg = '✅ Photo Ready!') {
+    if (!url) return;
+    currentPhotoDataUrl = url;
+    if (creatorInputPhotoUrl && url.startsWith('http')) {
+      creatorInputPhotoUrl.value = url;
+    }
+    const singlePreview = document.getElementById('creator-single-photo-preview');
+    const previewImg = document.getElementById('main-photo-preview-img');
+    if (singlePreview && previewImg) {
+      previewImg.src = url;
+      singlePreview.classList.remove('hidden');
+    }
+    if (creatorPhotoStatus) {
+      creatorPhotoStatus.textContent = statusMsg;
+      creatorPhotoStatus.style.color = '#00ff88';
+    }
+    updateMemoriesPhoto(url, userMemoriesPhotos);
+    if (currentPortalUser) saveUserFormData(currentPortalUser);
+  }
+
+  // 6. Main Portrait Photo Upload (Lossless upload to local server API + Instant Preview)
   if (creatorInputPhoto) {
     creatorInputPhoto.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        if (creatorPhotoStatus) {
-          creatorPhotoStatus.textContent = '⏳ Uploading & Hosting Photo...';
-          creatorPhotoStatus.style.color = '#ffd700';
-        }
+      if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const compressed = compressImage(img);
-            currentPhotoDataUrl = compressed;
-            try { localStorage.setItem('birthday_custom_photo', compressed); } catch(err) {}
-            if (scene) scene.updateUserPhoto(img);
-            updateMemoriesPhoto(compressed);
-
-            // Upload to cloud CDN
-            const formData = new FormData();
-            formData.append('image', file);
-            fetch('https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a5', {
-              method: 'POST',
-              body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data && data.image && data.image.url) {
-                currentPhotoDataUrl = data.image.url;
-                if (creatorInputPhotoUrl) creatorInputPhotoUrl.value = data.image.url;
-                if (creatorPhotoStatus) {
-                  creatorPhotoStatus.textContent = '✅ Photo Cloud Hosted & Ready to Share!';
-                  creatorPhotoStatus.style.color = '#00ff88';
-                }
-              } else {
-                if (creatorPhotoStatus) {
-                  creatorPhotoStatus.textContent = '✅ Photo Ready!';
-                  creatorPhotoStatus.style.color = '#00ff88';
-                }
-              }
-            })
-            .catch(() => {
-              if (creatorPhotoStatus) {
-                creatorPhotoStatus.textContent = '✅ Photo Ready!';
-                creatorPhotoStatus.style.color = '#00ff88';
-              }
-            });
-          };
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (creatorPhotoStatus) {
+        creatorPhotoStatus.textContent = '⏳ Uploading Photo...';
+        creatorPhotoStatus.style.color = '#ffd700';
       }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        // Show local preview immediately
+        setMainPortraitPhoto(dataUrl, '⏳ Uploading to Server...');
+
+        // Upload original lossless file to server & Telegram Cloud
+        fetch('http://localhost:5000/api/upload_image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: dataUrl,
+            filename: file.name,
+            username: currentPortalUser || 'user',
+            type: 'Main Portrait'
+          })
+        })
+        .then(res => res.json())
+        .then(serverData => {
+          if (serverData && serverData.status === 'success' && serverData.url) {
+            const finalPhotoUrl = serverData.tg_url || serverData.url;
+            setMainPortraitPhoto(finalPhotoUrl, '✅ Photo Uploaded to Telegram & Saved!');
+            return;
+          }
+          throw new Error('Fallback');
+        })
+        .catch(() => {
+          // Fallback to freeimage.host or keep dataURL
+          const formData = new FormData();
+          formData.append('image', file);
+          fetch('https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a5', {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.image && data.image.url) {
+              setMainPortraitPhoto(data.image.url, '✅ Photo Ready & Cloud Hosted!');
+            } else {
+              setMainPortraitPhoto(dataUrl, '✅ Photo Ready (Local)!');
+            }
+          })
+          .catch(() => {
+            setMainPortraitPhoto(dataUrl, '✅ Photo Ready!');
+          });
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Main photo thumbnail lightbox click
+  const mainPhotoPreviewImg = document.getElementById('main-photo-preview-img');
+  if (mainPhotoPreviewImg) {
+    mainPhotoPreviewImg.addEventListener('click', () => {
+      const src = currentPhotoDataUrl || mainPhotoPreviewImg.src;
+      if (src) openMemoryLightbox(src);
+    });
+  }
+
+  // Main photo thumbnail remove button
+  const btnRemoveMainPhoto = document.getElementById('btn-remove-main-photo');
+  if (btnRemoveMainPhoto) {
+    btnRemoveMainPhoto.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (creatorInputPhoto) creatorInputPhoto.value = '';
+      if (creatorInputPhotoUrl) creatorInputPhotoUrl.value = '';
+      currentPhotoDataUrl = null;
+      const singlePreview = document.getElementById('creator-single-photo-preview');
+      if (singlePreview) singlePreview.classList.add('hidden');
+      if (creatorPhotoStatus) {
+        creatorPhotoStatus.textContent = 'Default Romantic 3D Badge Selected';
+        creatorPhotoStatus.style.color = 'rgba(255,255,255,0.7)';
+      }
+      updateMemoriesPhoto(null, userMemoriesPhotos);
+      if (currentPortalUser) saveUserFormData(currentPortalUser);
     });
   }
 
   if (creatorInputPhotoUrl) {
     creatorInputPhotoUrl.addEventListener('input', () => {
       const url = creatorInputPhotoUrl.value.trim();
-      if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image'))) {
-        currentPhotoDataUrl = url;
-        if (creatorPhotoStatus) {
-          creatorPhotoStatus.textContent = '✅ Image URL Loaded!';
-          creatorPhotoStatus.style.color = '#00ff88';
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        setMainPortraitPhoto(url, '✅ Photo URL Loaded!');
+      }
+    });
+  }
+
+  // --- Memories Album Multiple Photo Uploader Handlers ---
+  const creatorInputMemoriesPhotos = document.getElementById('creator-input-memories-photos');
+  const memoriesPhotosStatus = document.getElementById('memories-photos-status');
+  const creatorInputMemoryUrlSingle = document.getElementById('creator-input-memory-url-single');
+  const btnAddMemoryUrl = document.getElementById('btn-add-memory-url');
+  const memoriesPreviewsGrid = document.getElementById('memories-previews-grid');
+
+  function renderMemoriesPreviewsGrid() {
+    const grid = document.getElementById('memories-previews-grid');
+    const statusEl = document.getElementById('memories-photos-status');
+    if (!grid) return;
+
+    if (!userMemoriesPhotos || userMemoriesPhotos.length === 0) {
+      grid.innerHTML = `
+        <div style="font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; width: 100%;">
+          No custom photos added yet. Default sample polaroids will be shown.
+        </div>
+      `;
+      if (statusEl) {
+        statusEl.textContent = '0 Custom Photos Added';
+        statusEl.style.color = '#ffcbd5';
+      }
+      return;
+    }
+
+    if (statusEl) {
+      statusEl.textContent = `✅ ${userMemoriesPhotos.length} Custom Photo${userMemoriesPhotos.length > 1 ? 's' : ''} Added!`;
+      statusEl.style.color = '#00ff88';
+    }
+
+    let html = '';
+    userMemoriesPhotos.forEach((photo, idx) => {
+      const src = typeof photo === 'object' ? (photo.cdnUrl || photo.localUrl || '') : photo;
+      const isUploading = typeof photo === 'object' && photo.uploading;
+      html += `
+        <div class="memory-thumb-chip" data-idx="${idx}" style="cursor:pointer;" title="Click to view full image">
+          <img src="${src}" alt="Memory ${idx + 1}" class="memory-thumb-img">
+          <button type="button" class="btn-remove-thumb" data-idx="${idx}" title="Remove">&times;</button>
+          ${isUploading ? '<div class="thumb-upload-indicator">⏳ Uploading...</div>' : ''}
+        </div>
+      `;
+    });
+    grid.innerHTML = html;
+
+    // Lightbox click on thumbnail
+    grid.querySelectorAll('.memory-thumb-img').forEach((imgEl, idx) => {
+      imgEl.addEventListener('click', () => {
+        const photo = userMemoriesPhotos[idx];
+        const src = typeof photo === 'object' ? (photo.cdnUrl || photo.localUrl || '') : photo;
+        if (src) openMemoryLightbox(src);
+      });
+    });
+
+    // Remove click on thumbnail
+    grid.querySelectorAll('.btn-remove-thumb').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idxToRemove = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        if (!isNaN(idxToRemove)) {
+          userMemoriesPhotos.splice(idxToRemove, 1);
+          renderMemoriesPreviewsGrid();
+          updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
         }
+      });
+    });
+  }
+
+  // Upload a single memory file — show FileReader dataURL preview INSTANTLY & upload to server
+  function uploadMemoryFile(file, onDone) {
+    const photoEntry = { localUrl: null, cdnUrl: null, uploading: true };
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      photoEntry.localUrl = dataUrl; // instant local preview
+      userMemoriesPhotos.push(photoEntry);
+      renderMemoriesPreviewsGrid();
+      updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+      if (currentPortalUser) saveUserFormData(currentPortalUser);
+
+      // Attempt 1: Upload to local server API & Telegram Cloud (lossless, original resolution)
+      fetch('http://localhost:5000/api/upload_image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: dataUrl,
+          filename: file.name,
+          username: currentPortalUser || 'user',
+          type: 'Memories Album'
+        })
+      })
+      .then(res => res.json())
+      .then(serverData => {
+        if (serverData && serverData.status === 'success' && serverData.url) {
+          const finalUrl = serverData.tg_url || serverData.url;
+          photoEntry.cdnUrl = finalUrl;
+          photoEntry.uploading = false;
+          renderMemoriesPreviewsGrid();
+          updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
+          if (onDone) onDone();
+          return;
+        }
+        throw new Error('Fallback to CDN');
+      })
+      .catch(() => {
+        // Attempt 2: Fallback to freeimage.host
+        const formData = new FormData();
+        formData.append('image', file);
+        fetch('https://freeimage.host/api/1/upload?key=6d207e02198a847aa98d0a2a901485a5', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.image && data.image.url) {
+            photoEntry.cdnUrl = data.image.url;
+          }
+          photoEntry.uploading = false;
+          renderMemoriesPreviewsGrid();
+          updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
+          if (onDone) onDone();
+        })
+        .catch(() => {
+          photoEntry.uploading = false;
+          renderMemoriesPreviewsGrid();
+          updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+          if (currentPortalUser) saveUserFormData(currentPortalUser);
+          if (onDone) onDone();
+        });
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  if (creatorInputMemoriesPhotos) {
+    creatorInputMemoriesPhotos.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      const statusEl = document.getElementById('memories-photos-status');
+      if (statusEl) {
+        statusEl.textContent = `⏳ Loading ${files.length} photo${files.length > 1 ? 's' : ''}...`;
+        statusEl.style.color = '#ffd700';
+      }
+
+      let doneCount = 0;
+      files.forEach(file => {
+        uploadMemoryFile(file, () => {
+          doneCount++;
+          if (doneCount === files.length) {
+            renderMemoriesPreviewsGrid();
+          }
+        });
+      });
+
+      // Reset so same files can be re-selected
+      e.target.value = '';
+    });
+  }
+
+  if (btnAddMemoryUrl && creatorInputMemoryUrlSingle) {
+    btnAddMemoryUrl.addEventListener('click', () => {
+      const url = creatorInputMemoryUrlSingle.value.trim();
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        userMemoriesPhotos.push({ cdnUrl: url, localUrl: url, uploading: false });
+        creatorInputMemoryUrlSingle.value = '';
+        renderMemoriesPreviewsGrid();
+        updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
+        if (currentPortalUser) saveUserFormData(currentPortalUser);
       }
     });
   }
@@ -2381,7 +3225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (creatorSurpriseForm) {
-    creatorSurpriseForm.addEventListener('submit', (e) => {
+    creatorSurpriseForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const nameVal = (creatorInputName ? creatorInputName.value.trim() : '') || 'My Love';
@@ -2400,57 +3244,110 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const genAt = Date.now();
       const expAt = genAt + (48 * 60 * 60 * 1000); // 48 Hours
-
-      // Construct Shareable URL with &exp= timestamp
-      const currentUrl = new URL(window.location.href);
-      currentUrl.search = '';
-      currentUrl.hash = '';
-
-      const params = new URLSearchParams();
-      params.set('surprise', '1');
-      params.set('mode', selectedCreatorMode);
-      params.set('name', nameVal);
-      if (nickVal) params.set('nickname', nickVal);
-      if (ageVal) params.set('age', ageVal);
-      params.set('theme', themeVal);
-      params.set('wish', wishVal);
-      if (currentPhotoDataUrl) params.set('photo', currentPhotoDataUrl);
-      params.set('exp', expAt.toString());
-
-      const generatedLink = `${currentUrl.origin}${currentUrl.pathname}?${params.toString()}`;
-
-      // Save form data and expiry info
       const uKey = currentPortalUser || 'user';
-      try {
-        localStorage.setItem(`birthday_link_expires_${uKey}`, expAt.toString());
-        localStorage.setItem(`birthday_link_generated_${uKey}`, genAt.toString());
-        localStorage.setItem(`birthday_last_generated_link_${uKey}`, generatedLink);
-      } catch(e) {}
+
+      // Gather all memories photos (accepts both server URLs and local data URLs)
+      const allMemoriesUrls = (userMemoriesPhotos || [])
+        .map(p => {
+          if (!p) return null;
+          if (typeof p === 'string') return p;
+          if (typeof p === 'object') return p.cdnUrl || p.localUrl || null;
+          return null;
+        })
+        .filter(Boolean);
+
+      // Button loading state
+      const btnGenerate = document.getElementById('btn-generate-surprise-link');
+      if (btnGenerate) {
+        btnGenerate.disabled = true;
+        btnGenerate.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating Short Link...';
+      }
+
+      // Build surprise payload — ALL data stored server-side
+      const surprisePayload = {
+        username: uKey,
+        surprise: '1',
+        u: uKey,
+        mode: selectedCreatorMode,
+        name: nameVal,
+        nickname: nickVal,
+        age: ageVal,
+        theme: themeVal,
+        wish: wishVal,
+        photo: currentPhotoDataUrl || '',
+        memories: allMemoriesUrls,
+        safarnama: userSafarnamaChapters || [],
+        exp: expAt,
+        gen_at: genAt
+      };
+
+      // Existing token reuse on regeneration
+      const existingToken = localStorage.getItem(`birthday_short_token_${uKey}`);
+      if (existingToken) surprisePayload.token = existingToken;
 
       saveUserFormData(uKey);
 
-      // Notify Telegram Bot Sync Server of 48-Hour link expiry
       try {
+        const res = await fetch('http://localhost:5000/api/save_surprise', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(surprisePayload)
+        });
+        const json = await res.json();
+        const token = json.token;
+        const currentUrl = new URL(window.location.href);
+        currentUrl.search = '';
+        currentUrl.hash = '';
+        const shortLink = `${currentUrl.origin}${currentUrl.pathname}?s=${token}`;
+
+        // Save token for reuse
+        localStorage.setItem(`birthday_short_token_${uKey}`, token);
+        localStorage.setItem(`birthday_link_expires_${uKey}`, expAt.toString());
+        localStorage.setItem(`birthday_link_generated_${uKey}`, genAt.toString());
+        localStorage.setItem(`birthday_last_generated_link_${uKey}`, shortLink);
+
+        if (finalSurpriseLinkInput) finalSurpriseLinkInput.value = shortLink;
+        if (generatedLinkBox) {
+          generatedLinkBox.classList.remove('hidden');
+          generatedLinkBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        startLinkExpiryCountdown(expAt, uKey);
+
+        // Also notify bot server about expiry (legacy compat)
         fetch('http://localhost:5000/api/save_link_expiry', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: uKey,
-            link_generated_at: genAt,
-            link_expires_at: expAt,
-            link: generatedLink
-          })
+          body: JSON.stringify({ username: uKey, link_generated_at: genAt, link_expires_at: expAt, link: shortLink })
         }).catch(() => {});
-      } catch(e) {}
 
-      if (finalSurpriseLinkInput) finalSurpriseLinkInput.value = generatedLink;
-      if (generatedLinkBox) {
-        generatedLinkBox.classList.remove('hidden');
-        generatedLinkBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch(err) {
+        // Fallback: build a regular URL if server is unreachable
+        const currentUrl = new URL(window.location.href);
+        currentUrl.search = '';
+        const fallbackParams = new URLSearchParams();
+        fallbackParams.set('surprise', '1');
+        fallbackParams.set('u', uKey);
+        fallbackParams.set('name', nameVal);
+        if (nickVal) fallbackParams.set('nickname', nickVal);
+        if (ageVal) fallbackParams.set('age', ageVal);
+        fallbackParams.set('theme', themeVal);
+        fallbackParams.set('wish', wishVal);
+        if (currentPhotoDataUrl && currentPhotoDataUrl.startsWith('http')) fallbackParams.set('photo', currentPhotoDataUrl);
+        fallbackParams.set('exp', expAt.toString());
+        const fallbackLink = `${currentUrl.origin}${currentUrl.pathname}?${fallbackParams.toString()}`;
+        if (finalSurpriseLinkInput) finalSurpriseLinkInput.value = fallbackLink;
+        if (generatedLinkBox) {
+          generatedLinkBox.classList.remove('hidden');
+          generatedLinkBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        startLinkExpiryCountdown(expAt, uKey);
+      } finally {
+        if (btnGenerate) {
+          btnGenerate.disabled = false;
+          btnGenerate.innerHTML = '<span class="btn-shine"></span><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Surprise Link 🎁✨';
+        }
       }
-
-      // Start the 48-Hour Countdown Timer
-      startLinkExpiryCountdown(expAt, uKey);
 
       if (window.confetti) {
         window.confetti({ particleCount: 70, spread: 80, origin: { y: 0.7 } });
@@ -2495,7 +3392,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Re-apply all personalization before launching preview
       updateCelebrantInfo();
       applyTheme(activeTheme);
-      if (currentPhotoDataUrl) updateMemoriesPhoto(currentPhotoDataUrl);
+      updateMemoriesPhoto(currentPhotoDataUrl, userMemoriesPhotos);
 
       if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
       if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
@@ -2527,6 +3424,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminEnvForm = document.getElementById('admin-env-form');
   const envBotTokenInput = document.getElementById('env-bot-token');
   const btnToggleEnvToken = document.getElementById('btn-toggle-env-token');
+  const envPublicBotTokenInput = document.getElementById('env-public-bot-token');
+  const btnTogglePublicEnvToken = document.getElementById('btn-toggle-public-env-token');
   const envChatIdInput = document.getElementById('env-chat-id');
   const envWebUrlInput = document.getElementById('env-web-url');
   const btnEnvSave = document.getElementById('btn-env-save');
@@ -2536,7 +3435,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const envBotStatusBadge = document.getElementById('env-bot-status-badge');
   const envStatusText = document.getElementById('env-status-text');
 
-  // Toggle Mask / Unmask Password for Token
+  // Toggle Mask / Unmask Password for Tokens
   if (btnToggleEnvToken && envBotTokenInput) {
     btnToggleEnvToken.addEventListener('click', (e) => {
       e.preventDefault();
@@ -2549,6 +3448,22 @@ document.addEventListener('DOMContentLoaded', () => {
         envBotTokenInput.type = 'password';
         btnToggleEnvToken.innerHTML = '<i class="fa-solid fa-eye"></i>';
         btnToggleEnvToken.title = 'Show Token';
+      }
+    });
+  }
+
+  if (btnTogglePublicEnvToken && envPublicBotTokenInput) {
+    btnTogglePublicEnvToken.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (envPublicBotTokenInput.type === 'password') {
+        envPublicBotTokenInput.type = 'text';
+        btnTogglePublicEnvToken.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+        btnTogglePublicEnvToken.title = 'Mask Token (••••••)';
+      } else {
+        envPublicBotTokenInput.type = 'password';
+        btnTogglePublicEnvToken.innerHTML = '<i class="fa-solid fa-eye"></i>';
+        btnTogglePublicEnvToken.title = 'Show Token';
       }
     });
   }
@@ -2640,11 +3555,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadEnvConfig() {
     // 1. Load from localStorage
     let savedToken = '';
+    let savedPublicToken = '';
     let savedChatId = '';
     let savedWebUrl = window.location.origin + window.location.pathname;
 
     try {
       savedToken = localStorage.getItem('birthday_tg_bot_token') || '';
+      savedPublicToken = localStorage.getItem('birthday_tg_public_bot_token') || '';
       savedChatId = localStorage.getItem('birthday_tg_chat_id') || '';
       savedWebUrl = localStorage.getItem('birthday_web_url') || savedWebUrl;
     } catch(e) {}
@@ -2653,6 +3570,11 @@ document.addEventListener('DOMContentLoaded', () => {
       envBotTokenInput.value = savedToken;
       envBotTokenInput.type = 'password';
       if (btnToggleEnvToken) btnToggleEnvToken.innerHTML = '<i class="fa-solid fa-eye"></i>';
+    }
+    if (envPublicBotTokenInput && savedPublicToken) {
+      envPublicBotTokenInput.value = savedPublicToken;
+      envPublicBotTokenInput.type = 'password';
+      if (btnTogglePublicEnvToken) btnTogglePublicEnvToken.innerHTML = '<i class="fa-solid fa-eye"></i>';
     }
     if (envChatIdInput && savedChatId) envChatIdInput.value = savedChatId;
     if (envWebUrlInput) envWebUrlInput.value = savedWebUrl;
@@ -2676,6 +3598,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.bot_token && envBotTokenInput && !envBotTokenInput.value) {
             envBotTokenInput.value = data.bot_token;
             envBotTokenInput.type = 'password';
+          }
+          if (data.public_bot_token && envPublicBotTokenInput && !envPublicBotTokenInput.value) {
+            envPublicBotTokenInput.value = data.public_bot_token;
+            envPublicBotTokenInput.type = 'password';
           }
           if (data.owner_chat_id && envChatIdInput && !envChatIdInput.value) {
             envChatIdInput.value = data.owner_chat_id;
@@ -2726,11 +3652,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const token = envBotTokenInput ? envBotTokenInput.value.trim() : '';
+    const publicToken = envPublicBotTokenInput ? envPublicBotTokenInput.value.trim() : '';
     const chatId = envChatIdInput ? envChatIdInput.value.trim() : '';
     const webUrl = envWebUrlInput ? envWebUrlInput.value.trim() : '';
 
     if (!token) {
-      showEnvFeedback('⚠️ Please enter a Telegram Bot Token from @BotFather!', true);
+      showEnvFeedback('⚠️ Please enter an Owner Telegram Bot Token from @BotFather!', true);
       if (envBotTokenInput) envBotTokenInput.focus();
       return;
     }
@@ -2743,7 +3670,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateEnvStatusBadge(true, 'Verifying with Telegram API...');
 
-    // 1. REAL Live Telegram API verification
+    // 1. REAL Live Telegram API verification for Owner Bot
     const verifyRes = await verifyTelegramBotLive(token);
 
     if (btnEnvSave) {
@@ -2766,6 +3693,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Save settings to localStorage
     try {
       localStorage.setItem('birthday_tg_bot_token', token);
+      if (publicToken) localStorage.setItem('birthday_tg_public_bot_token', publicToken);
       if (chatId) localStorage.setItem('birthday_tg_chat_id', chatId);
       if (webUrl) localStorage.setItem('birthday_web_url', webUrl);
     } catch(err) {}
@@ -2776,6 +3704,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         bot_token: token,
+        public_bot_token: publicToken,
         owner_chat_id: chatId,
         web_app_url: webUrl
       })
@@ -2907,10 +3836,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // 2. Decode custom Safarnama chapters from URL if present
+    if (params.has('safarnama')) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(params.get('safarnama')));
+        if (Array.isArray(decoded) && decoded.length > 0) {
+          userSafarnamaChapters = decoded;
+        }
+      } catch(e) {}
+    }
+
     if (isDirectSurpriseLink) {
       if (portalLandingScreen) portalLandingScreen.classList.add('hidden');
       if (portalCreatorDashboard) portalCreatorDashboard.classList.add('hidden');
+      trackRecipientActivity('link_opened', 'Opened magical birthday surprise link 🚀', '🚀');
     } else {
+      renderSafarnamaBuilder();
       let savedSession = null;
       try { savedSession = localStorage.getItem('birthday_portal_session'); } catch(e) {}
 
@@ -2934,7 +3875,8 @@ document.addEventListener('DOMContentLoaded', () => {
               const lastLink = localStorage.getItem(`birthday_last_generated_link_${currentPortalUser}`);
               if (lastLink && finalSurpriseLinkInput) {
                 finalSurpriseLinkInput.value = lastLink;
-                if (generatedLinkBox) generatedLinkBox.classList.remove('hidden');
+                // Keep generatedLinkBox HIDDEN by default until user explicitly clicks "Generate Surprise Link" button!
+                if (generatedLinkBox) generatedLinkBox.classList.add('hidden');
                 startLinkExpiryCountdown(expNum, currentPortalUser);
               }
             }
@@ -3210,8 +4152,306 @@ document.addEventListener('DOMContentLoaded', () => {
     }, true); // capture phase to fire before default
   }
 
+  /* =========================================================
+     CREATOR LIVE TRACKER & 2-WAY LIVE CHAT DOCK CONTROLLER
+     ========================================================= */
+  const trackerOnlineStatus = document.getElementById('tracker-online-status');
+  const trackerStatusLabel = document.getElementById('tracker-status-label');
+  const activityTimelineList = document.getElementById('activity-timeline-list');
+  const btnRefreshTracker = document.getElementById('btn-refresh-tracker');
+  const creatorChatBadgeState = document.getElementById('creator-chat-badge-state');
+  const btnCreatorOpenLiveChat = document.getElementById('btn-creator-open-live-chat');
+  const chatBtnRedDot = document.getElementById('chat-btn-red-dot');
+  const creatorChatBtnLabel = document.getElementById('creator-chat-btn-label');
+  const creatorLiveChatModal = document.getElementById('creator-live-chat-modal');
+  const closeCreatorLiveChat = document.getElementById('close-creator-live-chat');
+  const creatorChatMessagesScroll = document.getElementById('creator-chat-messages-scroll');
+  const creatorLiveInput = document.getElementById('creator-live-input');
+  const btnCreatorSendMsg = document.getElementById('btn-creator-send-msg');
+  const creatorChatPartnerName = document.getElementById('creator-chat-partner-name');
+
+  let cachedLiveChatMessages = [];
+  let liveTrackerPollInterval = null;
+
+  function renderActivityTimeline(activities) {
+    if (!activityTimelineList) return;
+
+    if (!activities || activities.length === 0) {
+      activityTimelineList.innerHTML = `
+        <div class="activity-empty-state">
+          <i class="fa-solid fa-satellite-dish"></i>
+          <p>No activity yet. When she opens the link and explores the surprise, live activities will appear here!</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    // Show most recent activity at the top
+    const reversed = [...activities].reverse();
+    reversed.forEach((act) => {
+      html += `
+        <div class="activity-timeline-item">
+          <div class="timeline-icon-wrap">${act.icon || '✨'}</div>
+          <div class="timeline-content">
+            <div class="timeline-text">${act.details || act.action || 'Activity'}</div>
+            <div class="timeline-time"><i class="fa-regular fa-clock"></i> ${act.time || ''}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    activityTimelineList.innerHTML = html;
+  }
+
+  function renderCreatorChatMessages(messages) {
+    if (!creatorChatMessagesScroll) return;
+    cachedLiveChatMessages = messages || [];
+
+    if (!messages || messages.length === 0) {
+      creatorChatMessagesScroll.innerHTML = `
+        <div class="creator-chat-empty">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">👸💖</div>
+          <div><strong>Waiting for her live message...</strong></div>
+          <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">When she sends a follow-up question or message about any Safarnama chapter, it will appear here for you to chat in real time!</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    messages.forEach((msg) => {
+      const isCelebrant = msg.sender === 'celebrant';
+      const quoteHtml = msg.quote ? `
+        <div class="creator-msg-quote-bubble">
+          <div class="quote-mini-heading"><i class="fa-solid fa-feather-pointed"></i> Chapter ${msg.quote.chapterNum || ''}: ${msg.quote.heading || ''}</div>
+          <div class="quote-mini-snippet">"${(msg.quote.snippet || '').substring(0, 70)}..."</div>
+        </div>
+      ` : '';
+
+      html += `
+        <div class="creator-msg-row ${isCelebrant ? 'from-celebrant' : 'from-creator'}">
+          <div class="creator-bubble-avatar">${isCelebrant ? '👸' : '👦'}</div>
+          <div class="creator-msg-bubble ${isCelebrant ? 'celebrant-bubble' : 'creator-bubble'}">
+            ${quoteHtml}
+            <div class="creator-bubble-text">${msg.text}</div>
+            <div class="creator-bubble-time">${msg.time || ''}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    creatorChatMessagesScroll.innerHTML = html;
+    creatorChatMessagesScroll.scrollTop = creatorChatMessagesScroll.scrollHeight;
+  }
+
+  async function fetchLiveProgressData() {
+    const userKey = currentPortalUser || (localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+    if (!userKey) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/live_progress?username=${encodeURIComponent(userKey)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data && data.status === 'success') {
+        const activities = data.activities || [];
+        const chat = data.chat || { messages: [], has_unread: false };
+
+        // 1. Update activity feed
+        renderActivityTimeline(activities);
+
+        // 2. Update online status
+        if (activities.length > 0) {
+          const lastAct = activities[activities.length - 1];
+          const now = Date.now() / 1000;
+          const isRecent = (now - (lastAct.timestamp || now)) < 300; // within 5 mins
+
+          if (trackerOnlineStatus) {
+            trackerOnlineStatus.className = isRecent ? 'tracker-status-pill online' : 'tracker-status-pill';
+          }
+          if (trackerStatusLabel) {
+            trackerStatusLabel.textContent = isRecent ? '🟢 Recipient Active Now' : `Last active: ${lastAct.time || 'Recently'}`;
+          }
+        }
+
+        // 3. Update Live Chat Button state & Red Dot Notification
+        const hasMessages = chat.messages && chat.messages.length > 0;
+        const hasUnread = chat.has_unread || false;
+
+        if (hasMessages || hasUnread) {
+          if (btnCreatorOpenLiveChat) {
+            btnCreatorOpenLiveChat.classList.remove('disabled');
+          }
+          if (creatorChatBtnLabel) {
+            creatorChatBtnLabel.textContent = '💬 Open Live Chat with Her 💕';
+          }
+          if (creatorChatBadgeState) {
+            creatorChatBadgeState.innerHTML = '<span style="color:#00ff88;font-weight:700;">🔴 Active!</span>';
+          }
+          if (chatBtnRedDot) {
+            chatBtnRedDot.classList.remove('hidden');
+          }
+        }
+
+        // 4. Update open modal if visible
+        if (creatorLiveChatModal && creatorLiveChatModal.classList.contains('show')) {
+          renderCreatorChatMessages(chat.messages || []);
+        }
+      }
+    } catch(e) {}
+  }
+
+  function initCreatorLiveTracker() {
+    fetchLiveProgressData();
+    if (liveTrackerPollInterval) clearInterval(liveTrackerPollInterval);
+    liveTrackerPollInterval = setInterval(fetchLiveProgressData, 2500);
+  }
+
+  // Refresh Tracker Button Click
+  if (btnRefreshTracker) {
+    btnRefreshTracker.addEventListener('click', () => {
+      fetchLiveProgressData();
+      if (window.birthdayAudio) {
+        try { window.birthdayAudio.playPop(); } catch(e) {}
+      }
+    });
+  }
+
+  // Open Creator Live Chat Modal
+  if (btnCreatorOpenLiveChat) {
+    btnCreatorOpenLiveChat.addEventListener('click', () => {
+      if (btnCreatorOpenLiveChat.classList.contains('disabled')) {
+        alert("Live chat is waiting for her to initiate! Once she clicks 'Follow in Chat' on any Safarnama chapter, this chat button will activate with a red alert dot! 💕");
+        return;
+      }
+
+      if (creatorChatPartnerName) {
+        const cName = (creatorInputName && creatorInputName.value.trim()) || celebrantName || 'Her';
+        creatorChatPartnerName.textContent = `Live 2-Way Chat with ${cName} 💕`;
+      }
+
+      if (creatorLiveChatModal) {
+        creatorLiveChatModal.classList.add('show');
+      }
+      if (chatBtnRedDot) {
+        chatBtnRedDot.classList.add('hidden');
+      }
+
+      // Mark unread as read on server
+      const userKey = currentPortalUser || (localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+      if (userKey) {
+        fetch('http://localhost:5000/api/live_chat_mark_read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: userKey })
+        }).catch(() => {});
+      }
+
+      fetchLiveProgressData();
+      if (creatorLiveInput) {
+        setTimeout(() => creatorLiveInput.focus(), 300);
+      }
+    });
+  }
+
+  if (closeCreatorLiveChat) {
+    closeCreatorLiveChat.addEventListener('click', () => {
+      if (creatorLiveChatModal) creatorLiveChatModal.classList.remove('show');
+    });
+  }
+
+  // Send Message from Creator Live Chat
+  function sendCreatorLiveReply() {
+    if (!creatorLiveInput) return;
+    const text = creatorLiveInput.value.trim();
+    if (!text) return;
+
+    const userKey = currentPortalUser || (localStorage.getItem('birthday_portal_session') || '').toLowerCase();
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const msgPayload = {
+      username: userKey || 'user',
+      sender: 'creator',
+      text: text,
+      quote: null,
+      time: timeStr
+    };
+
+    creatorLiveInput.value = '';
+
+    // 1. Post to backend server
+    fetch('http://localhost:5000/api/live_chat_send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msgPayload)
+    }).catch(() => {});
+
+    // 2. Broadcast to recipient tab in real time
+    if (liveChatBus) {
+      try {
+        liveChatBus.postMessage({ type: 'live_chat_msg', data: msgPayload });
+      } catch(e) {}
+    }
+
+    // 3. Render immediately in Creator Chat Window
+    cachedLiveChatMessages.push(msgPayload);
+    renderCreatorChatMessages(cachedLiveChatMessages);
+
+    // Play chime
+    try {
+      if (window.birthdayAudio) {
+        window.birthdayAudio.init();
+        if (typeof window.birthdayAudio.playChimeTone === 'function' && window.birthdayAudio.ctx) {
+          window.birthdayAudio.playChimeTone(523.25, window.birthdayAudio.ctx.currentTime, 0.35, 0.25);
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (btnCreatorSendMsg) {
+    btnCreatorSendMsg.addEventListener('click', sendCreatorLiveReply);
+  }
+
+  if (creatorLiveInput) {
+    creatorLiveInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendCreatorLiveReply();
+      }
+    });
+  }
+
+  // BroadcastChannel listener in Creator Dashboard
+  if (liveChatBus) {
+    liveChatBus.addEventListener('message', (event) => {
+      const { type, data } = event.data || {};
+      if (type === 'activity') {
+        fetchLiveProgressData();
+      } else if (type === 'live_chat_msg') {
+        if (data && data.sender === 'celebrant') {
+          // Celebrant sent message! Enable live chat button & red dot alert
+          if (btnCreatorOpenLiveChat) btnCreatorOpenLiveChat.classList.remove('disabled');
+          if (chatBtnRedDot) chatBtnRedDot.classList.remove('hidden');
+          if (creatorChatBtnLabel) creatorChatBtnLabel.textContent = '💬 Open Live Chat with Her 💕';
+          if (creatorChatBadgeState) creatorChatBadgeState.innerHTML = '<span style="color:#00ff88;font-weight:700;">🔴 Active!</span>';
+
+          cachedLiveChatMessages.push(data);
+          if (creatorLiveChatModal && creatorLiveChatModal.classList.contains('show')) {
+            renderCreatorChatMessages(cachedLiveChatMessages);
+          }
+          if (window.birthdayAudio) {
+            try { window.birthdayAudio.playPop(); } catch(e) {}
+          }
+        }
+      }
+    });
+  }
+
   parseUrlParams();
   checkInitialPortalState();
+  initCreatorLiveTracker();
 });
 
 

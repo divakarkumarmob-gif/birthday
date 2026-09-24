@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- App Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=22">
 
   <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -142,20 +142,31 @@
       <form id="admin-env-form" class="admin-env-form" autocomplete="off" onsubmit="return false;">
         
         <div class="env-form-group">
-          <label><i class="fa-solid fa-key"></i> Telegram Bot Token (BOT_TOKEN)</label>
+          <label><i class="fa-solid fa-crown"></i> 1. Owner Bot Token (Private - Control Panel)</label>
           <div class="password-input-wrap">
-            <input type="password" id="env-bot-token" placeholder="Paste Bot Token (e.g. 7123456789:AAFx...)" required autocomplete="new-password">
+            <input type="password" id="env-bot-token" placeholder="Paste Owner Bot Token (e.g. 8845203919:AAEO...)" required autocomplete="new-password">
             <button type="button" class="btn-toggle-pwd" id="btn-toggle-env-token" title="Show / Mask Token">
               <i class="fa-solid fa-eye"></i>
             </button>
           </div>
-          <span class="env-field-hint">💡 Bot Token apne Telegram me <b>@BotFather</b> se lein. Saved token masked <b>(••••••)</b> rahega.</span>
+          <span class="env-field-hint">💡 Owner Bot sirf aapke liye (`/user`, `/active_user`, `/webapp`). Token masked <b>(••••••)</b> rahega.</span>
+        </div>
+
+        <div class="env-form-group">
+          <label><i class="fa-solid fa-users"></i> 2. Public User Bot Token (For Random Users)</label>
+          <div class="password-input-wrap">
+            <input type="password" id="env-public-bot-token" placeholder="Paste Public User Bot Token (or leave blank to use same token)" autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-public-env-token" title="Show / Mask Token">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+          <span class="env-field-hint">💡 Random Users ke liye (`public_user_bot.py`). New/Existing login, Q&A, create surprise, help.</span>
         </div>
 
         <div class="env-form-group">
           <label><i class="fa-solid fa-id-badge"></i> Your Telegram Chat ID (OWNER_CHAT_ID)</label>
           <div class="env-input-wrapper">
-            <input type="text" id="env-chat-id" placeholder="e.g. 1234567890 (optional, auto-detected on /start)">
+            <input type="text" id="env-chat-id" placeholder="e.g. 7034154766 (auto-detected on /start)">
           </div>
           <span class="env-field-hint">💡 Jahan par aapko girlfriend ke live answers aur notifications chahiye.</span>
         </div>
@@ -443,16 +454,81 @@
 
           <!-- Photo Upload (Telegram Bot Cloud Sync Ready) -->
           <div class="form-field full-width">
-            <label><i class="fa-solid fa-image"></i> Portrait Photo (Auto Cloud Hosted & TG Bot Sync)</label>
+            <label><i class="fa-solid fa-image"></i> Main Portrait Photo (Used for 3D Birthday Frame & Album)</label>
             <div class="creator-photo-upload-box">
               <input type="file" id="creator-input-photo" accept="image/*" class="file-input-hidden">
               <label for="creator-input-photo" class="btn-creator-upload">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Choose Photo from Device
+                <i class="fa-solid fa-cloud-arrow-up"></i> Choose Portrait Photo from Device
               </label>
               <span id="creator-photo-status" class="creator-photo-status">Default Romantic 3D Badge Selected</span>
             </div>
+            <!-- Main Photo Thumbnail Preview with Zoom and Remove 'X' -->
+            <div id="creator-single-photo-preview" class="creator-single-photo-preview hidden" style="margin-top: 10px;">
+              <div class="memory-thumb-chip" id="main-photo-thumb-chip" style="cursor: pointer; display: inline-flex; position: relative;">
+                <img id="main-photo-preview-img" src="" alt="Main Portrait" class="memory-thumb-img" style="cursor: zoom-in; width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #ff758c;">
+                <button type="button" id="btn-remove-main-photo" class="btn-remove-thumb" title="Remove Photo">&times;</button>
+              </div>
+            </div>
             <div style="margin-top: 8px;">
               <input type="url" id="creator-input-photo-url" placeholder="Or Paste Direct Photo URL (Imgur / Cloud Link)..." class="creator-url-input">
+            </div>
+          </div>
+
+          <!-- Multiple Photo Memories Uploader for 3D Book Album -->
+          <div class="form-field full-width memories-upload-container">
+            <label style="font-size: 1.05rem; font-weight: 700; color: #ffccd5; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-images" style="color: #ff758c;"></i> 📸 Memories Album (Upload Multiple Photos)
+            </label>
+            <p style="font-size: 0.82rem; color: rgba(255,255,255,0.75); margin: 4px 0 12px;">
+              Add multiple photos to create a gorgeous polaroid photo gallery inside the 3D Memories Book!
+            </p>
+            <div class="creator-photo-upload-box" style="background: rgba(255,117,140,0.08); border-color: rgba(255,117,140,0.4);">
+              <input type="file" id="creator-input-memories-photos" accept="image/*" multiple class="file-input-hidden">
+              <label for="creator-input-memories-photos" class="btn-creator-upload" style="background: linear-gradient(135deg, #ff4d6d, #c9184a);">
+                <i class="fa-solid fa-images"></i> Choose Multiple Photos from Device
+              </label>
+              <span id="memories-photos-status" class="creator-photo-status" style="color: #ffcbd5;">0 Custom Photos Added</span>
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <input type="url" id="creator-input-memory-url-single" placeholder="Or Paste Image URL and click '+ Add URL'..." class="creator-url-input" style="flex:1;">
+              <button type="button" id="btn-add-memory-url" class="btn-secondary" style="padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,117,140,0.4); background: rgba(255,117,140,0.2); color: #fff; cursor: pointer; white-space: nowrap; font-weight: 600;">
+                <i class="fa-solid fa-plus"></i> Add URL
+              </button>
+            </div>
+            
+            <!-- Dynamic Memories Thumbnail Gallery -->
+            <div class="memories-previews-grid" id="memories-previews-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Dynamic Safarnama / Journey Chapter Builder -->
+          <div class="safarnama-builder-section">
+            <div class="safarnama-builder-header">
+              <div class="safarnama-builder-title">
+                <i class="fa-solid fa-feather-pointed"></i>
+                <div>
+                  <h4>📖 Safarnama / Our Journey Chapters</h4>
+                  <p>Add unlimited chapters with custom headings & descriptions! Each chapter appears in the 3D Safarnama Book with a <strong>"Follow in Chat"</strong> button.</p>
+                </div>
+              </div>
+              <div class="safarnama-builder-actions">
+                <button type="button" class="btn-reset-chapters" id="btn-reset-safarnama" title="Reset to Romantic Templates">
+                  <i class="fa-solid fa-arrows-rotate"></i> Reset Templates
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Chapters Container -->
+            <div class="safarnama-builder-list" id="safarnama-builder-list">
+              <!-- Dynamically populated by JS -->
+            </div>
+
+            <!-- Add Chapter CTA Button -->
+            <div class="safarnama-add-row">
+              <button type="button" class="btn-add-safarnama-chapter" id="btn-add-safarnama-chapter">
+                <i class="fa-solid fa-circle-plus"></i> + Add Another Safarnama Chapter
+              </button>
             </div>
           </div>
 
@@ -531,6 +607,57 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- =========================================================
+           LIVE RECIPIENT TRACKER & 2-WAY LIVE CHAT HUB
+           ========================================================= -->
+      <div class="creator-live-tracker-card" id="creator-live-tracker-card">
+        <div class="tracker-header">
+          <div class="tracker-title-group">
+            <div class="tracker-icon-pulse"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <div>
+              <h3>Live Recipient Tracker & 2-Way Chat 📡</h3>
+              <p>See what your birthday partner is doing in real time when they open their surprise link.</p>
+            </div>
+          </div>
+          <div class="tracker-status-pill" id="tracker-online-status">
+            <span class="status-dot"></span>
+            <span id="tracker-status-label">Waiting for Activity...</span>
+          </div>
+        </div>
+
+        <div class="tracker-body-grid">
+          <!-- Real-Time Activity Log Stream -->
+          <div class="tracker-activity-stream">
+            <div class="stream-header">
+              <span><i class="fa-solid fa-list-check"></i> Recipient Live Activity Feed</span>
+              <button type="button" class="btn-refresh-tracker" id="btn-refresh-tracker"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+            <div class="activity-timeline-list" id="activity-timeline-list">
+              <div class="activity-empty-state">
+                <i class="fa-solid fa-satellite-dish"></i>
+                <p>No activity yet. When she opens the link and explores the surprise, live activities will appear here!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Way Live Chat Trigger Card -->
+          <div class="tracker-chat-dock">
+            <div class="chat-dock-header">
+              <span><i class="fa-solid fa-comments"></i> 2-Way Live Chat Dock</span>
+              <span class="chat-dock-badge" id="creator-chat-badge-state">⚪ Idle</span>
+            </div>
+            <p class="chat-dock-hint">
+              When she clicks <strong>"Follow in Chat"</strong> on any Safarnama chapter, the automated questions pause and this button activates with an instant red alert so you two can chat live!
+            </p>
+            <button type="button" class="btn-creator-open-live-chat disabled" id="btn-creator-open-live-chat">
+              <span class="chat-btn-pulse-dot hidden" id="chat-btn-red-dot"></span>
+              <i class="fa-solid fa-message"></i>
+              <span id="creator-chat-btn-label">Live Chat Disabled (Waiting for her...)</span>
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -704,6 +831,16 @@
 
         <!-- Quick Reply Suggestions Chips -->
         <div class="chat-quick-replies" id="chat-quick-replies"></div>
+
+        <!-- WhatsApp-Style Follow-Up Chapter Quote Preview -->
+        <div class="chat-quote-bar-container hidden" id="chat-quote-bar-container">
+          <div class="quote-left-line"></div>
+          <div class="quote-details">
+            <div class="quote-chapter-title" id="quote-chapter-title">📖 Chapter 01: Jab Tum Zindagi Me Aaye 🌸</div>
+            <div class="quote-chapter-desc" id="quote-chapter-desc">"Ek aam sa din tha..."</div>
+          </div>
+          <button type="button" class="btn-cancel-quote" id="btn-cancel-quote" title="Cancel Follow-Up Quote">&times;</button>
+        </div>
 
         <!-- Chat Input Bar -->
         <div class="chat-input-bar">
@@ -1833,6 +1970,36 @@
   </section>
 
   <!-- =========================================================
+       CREATOR 2-WAY LIVE CHAT MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="creator-live-chat-modal">
+    <div class="modal-card creator-live-chat-card">
+      <button class="modal-close" id="close-creator-live-chat">&times;</button>
+      
+      <div class="creator-chat-modal-header">
+        <div class="chat-modal-avatar">👸💖</div>
+        <div class="chat-modal-info">
+          <h3 id="creator-chat-partner-name">Live 2-Way Chat with Her 💕</h3>
+          <span class="chat-modal-status"><span class="status-dot online"></span> Real-time Connected</span>
+        </div>
+      </div>
+
+      <!-- Messages Scroll Area -->
+      <div class="creator-chat-messages-scroll" id="creator-chat-messages-scroll">
+        <!-- Live messages injected here -->
+      </div>
+
+      <!-- Creator Chat Input Bar -->
+      <div class="creator-chat-input-bar">
+        <input type="text" id="creator-live-input" placeholder="Type your sweet reply to her..." autocomplete="off">
+        <button type="button" class="btn-creator-send-msg" id="btn-creator-send-msg">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        EXPIRED LINK OVERLAY (48-Hour Expiry Lock)
        ========================================================= -->
   <div class="expired-link-overlay hidden" id="expired-link-overlay">
@@ -1857,8 +2024,8 @@
   <canvas id="firecrackers-canvas" class="firecrackers-canvas-overlay"></canvas>
 
   <!-- Scripts -->
-  <script src="js/audio.js?v=21"></script>
-  <script src="js/scene3d.js?v=21"></script>
-  <script src="js/app.js?v=21"></script>
+  <script src="js/audio.js?v=22"></script>
+  <script src="js/scene3d.js?v=22"></script>
+  <script src="js/app.js?v=22"></script>
 </body>
 </html>

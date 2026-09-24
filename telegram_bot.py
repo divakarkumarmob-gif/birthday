@@ -15,7 +15,7 @@ import json
 import time
 import urllib.parse
 import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import requests
 
 # Fix Windows console UTF-8 encoding
@@ -59,6 +59,101 @@ BASE_TG_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 # User conversation session states for /create wizard
 user_sessions = {}
 
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+import base64
+import re
+import uuid
+
+def upload_photo_to_telegram(img_bytes, filename="photo.jpg", caption=""):
+    """Uploads an image directly to Telegram Bot and returns Telegram's direct CDN URL and file_id"""
+    if not BOT_TOKEN or "YOUR_TELEGRAM" in BOT_TOKEN:
+        return None, None
+    owner_id = str(config.get("owner_chat_id", "")).strip()
+    if not owner_id:
+        return None, None
+    
+    try:
+        ext = filename.split(".")[-1].lower() if "." in filename else "jpg"
+        mime_map = {
+            "png": "image/png",
+            "webp": "image/webp",
+            "gif": "image/gif",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg"
+        }
+        mime = mime_map.get(ext, "image/jpeg")
+
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        files = {
+            "photo": (filename, img_bytes, mime)
+        }
+        data = {
+            "chat_id": owner_id,
+            "caption": caption,
+            "parse_mode": "HTML"
+        }
+        res = requests.post(url, data=data, files=files, timeout=12)
+        res_json = res.json()
+        if res_json.get("ok"):
+            photos = res_json.get("result", {}).get("photo", [])
+            if photos:
+                # Largest resolution photo is the last item in the list
+                best_photo = photos[-1]
+                file_id = best_photo.get("file_id")
+                # Fetch Telegram Cloud direct file path
+                get_res = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}", timeout=8).json()
+                if get_res.get("ok"):
+                    file_path = get_res.get("result", {}).get("file_path", "")
+                    tg_cdn_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+                    return tg_cdn_url, file_id
+        return None, None
+    except Exception as e:
+        print(f"[TG Photo Upload Error]: {e}")
+        return None, None
+
+def save_base64_image(b64_str, prefix="img", username="user", photo_type="Photo"):
+    """Saves a base64 encoded image string locally and to Telegram Bot Cloud, returning URL"""
+    try:
+        if not b64_str or not isinstance(b64_str, str):
+            return None
+        # Match data:image/xxx;base64,...
+        match = re.match(r"^data:image/(\w+);base64,(.+)$", b64_str, re.DOTALL)
+        if match:
+            ext = match.group(1).lower()
+            if ext == 'jpeg': ext = 'jpg'
+            raw_b64 = match.group(2)
+        else:
+            ext = 'jpg'
+            raw_b64 = b64_str
+        
+        img_bytes = base64.b64decode(raw_b64)
+        filename = f"{prefix}_{int(time.time())}_{uuid.uuid4().hex[:6]}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        with open(filepath, "wb") as f:
+            f.write(img_bytes)
+        
+        web_url = config.get("web_app_url", "http://localhost:8000").rstrip("/")
+        local_url = f"{web_url}/uploads/{filename}"
+
+        # Upload full resolution to Telegram Bot
+        caption = (
+            f"📸 <b>NEW HIGH-QUALITY {photo_type.upper()} UPLOADED!</b> ✨\n\n"
+            f"• <b>User:</b> <code>{username}</code>\n"
+            f"• <b>Type:</b> {photo_type}\n"
+            f"• <b>File:</b> <code>{filename}</code>\n"
+            f"• <b>Time:</b> {time.strftime('%d %b %Y, %I:%M %p')}\n\n"
+            f"<i>Saved to Telegram Cloud and synced with 3D Memories Album!</i> 💕"
+        )
+        tg_url, file_id = upload_photo_to_telegram(img_bytes, filename=filename, caption=caption)
+
+        # Return the Telegram CDN URL if available, otherwise local URL
+        return tg_url if tg_url else local_url
+    except Exception as e:
+        print(f"[Error saving base64 image]: {e}")
+        return None
+
 def send_tg_message(chat_id, text, reply_markup=None, parse_mode="HTML"):
     """Sends a message to a Telegram chat"""
     if not BOT_TOKEN or "YOUR_TELEGRAM_BOT_TOKEN" in BOT_TOKEN:
@@ -73,11 +168,15 @@ def send_tg_message(chat_id, text, reply_markup=None, parse_mode="HTML"):
     if reply_markup:
         payload["reply_markup"] = reply_markup
     try:
-        res = requests.post(url, json=payload, timeout=10)
+        res = requests.post(url, json=payload, timeout=4)
         return res.json()
     except Exception as e:
         print(f"[Telegram API Error]: {e}")
         return None
+
+def send_tg_async(chat_id, text, reply_markup=None, parse_mode="HTML"):
+    """Dispatches Telegram message in background thread so HTTP responses are instant"""
+    threading.Thread(target=send_tg_message, args=(chat_id, text, reply_markup, parse_mode), daemon=True).start()
 
 def send_tg_photo(chat_id, photo_url, caption=""):
     """Sends a photo to a Telegram chat"""
@@ -91,7 +190,7 @@ def send_tg_photo(chat_id, photo_url, caption=""):
         "parse_mode": "HTML"
     }
     try:
-        res = requests.post(url, json=payload, timeout=10)
+        res = requests.post(url, json=payload, timeout=5)
         return res.json()
     except Exception as e:
         print(f"[Telegram Photo Error]: {e}")
@@ -527,14 +626,39 @@ def show_saved_answers(chat_id):
 # INTEGRATED HTTP API SERVER (PORT 5000)
 # =========================================================
 class WebhookHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        print(f"[API {self.command}] {self.path} - {format % args}", flush=True)
+
     def _set_cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
+    def _send_json(self, status_code, data_dict):
+        body = json.dumps(data_dict).encode("utf-8")
+        self.send_response(status_code)
+        self._set_cors()
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Connection", "close")
+        self.end_headers()
+        self.wfile.write(body)
+        self.wfile.flush()
+
+    def _send_bytes(self, status_code, content_type, b):
+        self.send_response(status_code)
+        self._set_cors()
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(b)))
+        self.send_header("Connection", "close")
+        self.end_headers()
+        self.wfile.write(b)
+        self.wfile.flush()
+
     def do_OPTIONS(self):
         self.send_response(200)
         self._set_cors()
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
     def do_POST(self):
@@ -588,6 +712,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/save_env":
             global BOT_TOKEN, BASE_TG_URL
             new_token = data.get("bot_token", "").strip()
+            new_public_token = data.get("public_bot_token", "").strip()
             new_chat_id = str(data.get("owner_chat_id", "")).strip()
             new_url = data.get("web_app_url", "").strip()
 
@@ -595,6 +720,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 config["bot_token"] = new_token
                 BOT_TOKEN = new_token
                 BASE_TG_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+            if "public_bot_token" in data:
+                config["public_bot_token"] = new_public_token
             if new_chat_id:
                 config["owner_chat_id"] = new_chat_id
             if new_url:
@@ -606,7 +733,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self._set_cors()
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "message": "Environment Variables & Bot Token saved successfully!"}).encode("utf-8"))
+            self.wfile.write(json.dumps({"status": "success", "message": "Environment Variables & Bot Tokens saved successfully!"}).encode("utf-8"))
             return
 
         elif self.path == "/api/test_bot":
@@ -926,37 +1053,244 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self._set_cors()
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "message": "User permanently expired and data wiped."}).encode("utf-8"))
+            self.wfile.write(json.dumps({"status": "success", "message": "User expired & purged"}).encode("utf-8"))
             return
 
-        self.send_response(404)
-        self.end_headers()
+        elif self.path == "/api/track_activity":
+            # Track real-time recipient activity
+            username_key = data.get("username", "user").lower().strip()
+            action = data.get("action", "activity")
+            details = data.get("details", "")
+            icon = data.get("icon", "✨")
+            time_str = data.get("time", time.strftime("%I:%M %p"))
+
+            if "live_activities" not in config:
+                config["live_activities"] = {}
+            if username_key not in config["live_activities"]:
+                config["live_activities"][username_key] = []
+
+            activity_item = {
+                "action": action,
+                "details": details,
+                "icon": icon,
+                "time": time_str,
+                "timestamp": time.time()
+            }
+            # Keep latest 40 activities
+            config["live_activities"][username_key].append(activity_item)
+            if len(config["live_activities"][username_key]) > 40:
+                config["live_activities"][username_key] = config["live_activities"][username_key][-40:]
+
+            save_config(config)
+
+            # Send Telegram alert for critical milestones
+            owner_id = config.get("owner_chat_id", "")
+            if BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and owner_id:
+                if action in ["link_opened", "safarnama_opened", "follow_chat_clicked", "gift_opened"]:
+                    notif = (
+                        f"📡 <b>LIVE RECIPIENT ACTIVITY DETECTED!</b> {icon}\n\n"
+                        f"• <b>User:</b> <code>{username_key}</code>\n"
+                        f"• <b>Action:</b> {details}\n"
+                        f"• <b>Time:</b> {time_str}\n\n"
+                        f"<i>Check your Creator Dashboard live tracking panel!</i> 💖"
+                    )
+                    send_tg_async(owner_id, notif)
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "Activity tracked!"}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/live_chat_send":
+            # 2-Way Live Chat message between Creator & Celebrant
+            username_key = data.get("username", "user").lower().strip()
+            sender = data.get("sender", "celebrant") # 'celebrant' or 'creator'
+            text = data.get("text", "").strip()
+            quote = data.get("quote", None) # { chapter_num, heading, snippet }
+            time_str = data.get("time", time.strftime("%I:%M %p"))
+
+            if not text:
+                self.send_response(400)
+                self._set_cors()
+                self.end_headers()
+                return
+
+            if "live_chats" not in config:
+                config["live_chats"] = {}
+            if username_key not in config["live_chats"]:
+                config["live_chats"][username_key] = { "messages": [], "has_unread": False }
+
+            msg_item = {
+                "id": str(int(time.time() * 1000)),
+                "sender": sender,
+                "text": text,
+                "quote": quote,
+                "time": time_str,
+                "timestamp": time.time()
+            }
+            config["live_chats"][username_key]["messages"].append(msg_item)
+            if sender == "celebrant":
+                config["live_chats"][username_key]["has_unread"] = True
+
+            # Also log as an activity
+            if "live_activities" not in config:
+                config["live_activities"] = {}
+            if username_key not in config["live_activities"]:
+                config["live_activities"][username_key] = []
+            config["live_activities"][username_key].append({
+                "action": "live_chat_msg",
+                "details": f"{'Girlfriend' if sender == 'celebrant' else 'Creator'} sent message: \"{text[:35]}...\"",
+                "icon": "💬",
+                "time": time_str,
+                "timestamp": time.time()
+            })
+
+            save_config(config)
+
+            # Send Telegram alert if Celebrant sent message
+            owner_id = config.get("owner_chat_id", "")
+            if sender == "celebrant" and BOT_TOKEN and "YOUR_TELEGRAM" not in BOT_TOKEN and owner_id:
+                quote_info = f"\n📌 <b>Quoted:</b> <i>{quote.get('heading', '')}</i>" if quote else ""
+                tg_msg = (
+                    f"💬 <b>NEW LIVE FOLLOW-UP MESSAGE!</b> 👸💖\n\n"
+                    f"• <b>From:</b> Celebrant ({username_key})\n"
+                    f"{quote_info}\n"
+                    f"• <b>Message:</b> <code>\"{text}\"</code>\n"
+                    f"• <b>Time:</b> {time_str}\n\n"
+                    f"👉 <i>Open Creator Dashboard Live Chat to reply in real time!</i>"
+                )
+                send_tg_async(owner_id, tg_msg)
+
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "Message dispatched!", "data": msg_item}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/live_chat_mark_read":
+            username_key = data.get("username", "user").lower().strip()
+            if "live_chats" in config and username_key in config["live_chats"]:
+                config["live_chats"][username_key]["has_unread"] = False
+                save_config(config)
+            self.send_response(200)
+            self._set_cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success"}).encode("utf-8"))
+            return
+
+        elif self.path == "/api/upload_image":
+            # Direct base64 image upload to server uploads/ directory and Telegram cloud
+            b64_img = data.get("image", "")
+            fname = data.get("filename", "photo.jpg")
+            uname = data.get("username", "user").lower().strip()
+            ptype = data.get("type", "Memory")
+            prefix = "portrait" if "portrait" in ptype.lower() else "memory"
+            if b64_img:
+                saved_url = save_base64_image(b64_img, prefix=prefix, username=uname, photo_type=ptype)
+                if saved_url:
+                    self._send_json(200, {
+                        "status": "success",
+                        "url": saved_url,
+                        "message": "Photo uploaded to Telegram and saved!"
+                    })
+                    return
+            self._send_json(400, {"status": "error", "message": "No valid image data provided"})
+            return
+
+        elif self.path == "/api/save_surprise":
+            # Save full surprise data, return a 6-char short token
+            import random
+            import string
+
+            # Convert base64 profile photo to static file
+            if data.get("photo", "").startswith("data:image/"):
+                saved_photo = save_base64_image(data["photo"], prefix="profile")
+                if saved_photo:
+                    data["photo"] = saved_photo
+
+            # Convert any base64 memories photos to static files
+            if "memories" in data and isinstance(data["memories"], list):
+                saved_memories = []
+                for item in data["memories"]:
+                    if isinstance(item, str):
+                        if item.startswith("data:image/"):
+                            s = save_base64_image(item, prefix="memory")
+                            if s:
+                                saved_memories.append(s)
+                        elif item.startswith("http"):
+                            saved_memories.append(item)
+                    elif isinstance(item, dict):
+                        u = item.get("cdnUrl") or item.get("localUrl") or item.get("url") or ""
+                        if u.startswith("data:image/"):
+                            s = save_base64_image(u, prefix="memory")
+                            if s:
+                                saved_memories.append(s)
+                        elif u.startswith("http"):
+                            saved_memories.append(u)
+                data["memories"] = saved_memories
+
+            username_key = data.get("username", "user").lower().strip()
+            token = data.get("token", "")  # reuse existing token for regeneration
+            if not token:
+                chars = string.ascii_lowercase + string.digits
+                token = "".join(random.choices(chars, k=6))
+
+            if "short_surprise_links" not in config:
+                config["short_surprise_links"] = {}
+
+            # Store entire surprise payload under the token
+            config["short_surprise_links"][token] = data
+            config["short_surprise_links"][token]["token"] = token
+
+            # Also update link_expiries for countdown
+            exp_at = data.get("exp", 0)
+            gen_at = data.get("gen_at", int(time.time() * 1000))
+            if "link_expiries" not in config:
+                config["link_expiries"] = {}
+            config["link_expiries"][username_key] = {
+                "generated_at": gen_at,
+                "expires_at": exp_at,
+                "expires_at_sec": exp_at / 1000.0,
+                "token": token,
+                "created_str": time.strftime("%d %b %Y, %I:%M %p")
+            }
+
+            save_config(config)
+
+            web_url = config.get("web_app_url", "http://localhost:8000")
+            short_link = f"{web_url}?s={token}"
+
+            self._send_json(200, {
+                "status": "success",
+                "token": token,
+                "short_link": short_link
+            })
+            return
+
+        self._send_json(404, {"status": "not_found"})
 
     def do_GET(self):
         if self.path == "/api/get_env":
-            self.send_response(200)
-            self._set_cors()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            self._send_json(200, {
                 "bot_token": BOT_TOKEN if "YOUR_TELEGRAM" not in BOT_TOKEN else "",
+                "public_bot_token": config.get("public_bot_token", ""),
                 "owner_chat_id": config.get("owner_chat_id", ""),
                 "web_app_url": config.get("web_app_url", "http://localhost:8000"),
                 "bot_configured": bool(BOT_TOKEN and "YOUR" not in BOT_TOKEN)
-            }).encode("utf-8"))
+            })
             return
 
         elif self.path == "/api/status":
-            self.send_response(200)
-            self._set_cors()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            self._send_json(200, {
                 "status": "running",
                 "bot_configured": bool(BOT_TOKEN and "YOUR" not in BOT_TOKEN),
                 "total_answers_saved": len(config.get("saved_answers", [])),
                 "web_app_url": config.get("web_app_url")
-            }).encode("utf-8"))
+            })
             return
 
         elif self.path.startswith("/api/check_link_status"):
@@ -984,16 +1318,12 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
             time_left_sec = max(0, int((exp_ts - now_ms) / 1000)) if exp_ts else 0
 
-            self.send_response(200)
-            self._set_cors()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            self._send_json(200, {
                 "status": "success",
                 "is_expired": is_expired,
                 "expires_at": exp_ts,
                 "time_left_seconds": time_left_sec
-            }).encode("utf-8"))
+            })
             return
 
         elif self.path.startswith("/api/get_user_data"):
@@ -1016,33 +1346,79 @@ class WebhookHandler(BaseHTTPRequestHandler):
             if link_exp and (time.time() * 1000.0 >= link_exp.get("expires_at", 0)):
                 link_expired = True
 
-            self.send_response(200)
-            self._set_cors()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            self._send_json(200, {
                 "status": "success",
                 "is_existing_user": is_existing,
                 "is_banned": is_banned,
                 "link_expired": link_expired,
                 "user_data": user_data
-            }).encode("utf-8"))
+            })
             return
 
-        self.send_response(200)
-        self._set_cors()
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.end_headers()
-        html = f"""
-        <html>
-        <body style="font-family:sans-serif; background:#12030f; color:#fff; padding:40px; text-align:center;">
-          <h1 style="color:#ff758c;">🤖 Birthday Telegram Sync Server is Running!</h1>
-          <p>Status: Active on port {config.get('api_port', 5000)}</p>
-          <p>Bot Token Configured: {'✅ YES' if BOT_TOKEN and 'YOUR' not in BOT_TOKEN else '⚠️ Placeholder Token'}</p>
-        </body>
-        </html>
-        """
-        self.wfile.write(html.encode("utf-8"))
+        elif self.path.startswith("/api/live_progress"):
+            import urllib.parse as up
+            qs = up.parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            username_key = qs.get("username", ["user"])[0].lower().strip()
+
+            acts = config.get("live_activities", {}).get(username_key, [])
+            chat_data = config.get("live_chats", {}).get(username_key, { "messages": [], "has_unread": False })
+
+            self._send_json(200, {
+                "status": "success",
+                "username": username_key,
+                "activities": acts,
+                "chat": chat_data
+            })
+            return
+
+        elif self.path.startswith("/api/get_surprise"):
+            # Returns full surprise data for a short token
+            import urllib.parse as up
+            qs = up.parse_qs(self.path.split("?", 1)[1] if "?" in self.path else "")
+            token = qs.get("s", [""])[0].strip()
+            surprises_db = config.get("short_surprise_links", {})
+            entry = surprises_db.get(token)
+            if entry:
+                # Check if link expired
+                exp_at = entry.get("exp", 0)
+                now_ms = time.time() * 1000.0
+                if exp_at and now_ms >= exp_at:
+                    self._send_json(410, {"status": "expired", "message": "Link expired"})
+                    return
+                self._send_json(200, {"status": "success", "data": entry})
+            else:
+                self._send_json(404, {"status": "not_found"})
+            return
+
+        elif self.path.startswith("/uploads/"):
+            # Serve uploaded images directly from uploads directory
+            filename = os.path.basename(urllib.parse.unquote(self.path.split("?")[0]))
+            filepath = os.path.join(UPLOAD_DIR, filename)
+            if os.path.exists(filepath) and os.path.isfile(filepath):
+                ext = filename.split(".")[-1].lower()
+                mime_types = {
+                    "jpg": "image/jpeg",
+                    "jpeg": "image/jpeg",
+                    "png": "image/png",
+                    "webp": "image/webp",
+                    "gif": "image/gif"
+                }
+                content_type = mime_types.get(ext, "application/octet-stream")
+                with open(filepath, "rb") as f:
+                    file_bytes = f.read()
+                self._send_bytes(200, content_type, file_bytes)
+                return
+            else:
+                self._send_json(404, {"status": "not_found", "message": "Image not found"})
+                return
+
+        self._send_json(200, {
+            "status": "ok",
+            "message": "Birthday Telegram Sync Server is running",
+            "port": config.get("api_port", 5000),
+            "bot_configured": bool(BOT_TOKEN and "YOUR" not in BOT_TOKEN)
+        })
+        return
 
 def cleanup_scheduled_deletions():
     """Runs every 60 seconds, permanently removes users whose 48hr link or 24hr deletion has expired"""
@@ -1177,8 +1553,23 @@ def cleanup_scheduled_deletions():
             print(f"[Cleanup Error]: {e}")
 
 
+def setup_telegram_menu():
+    """Configures the Telegram 3-line burger menu commands"""
+    if not BOT_TOKEN or "YOUR_TELEGRAM_BOT_TOKEN" in BOT_TOKEN:
+        return
+    commands = [
+        {"command": "start", "description": "Start Birthday Bot & Main Menu"},
+        {"command": "create", "description": "Create a New 3D Birthday Surprise Link"},
+        {"command": "answers", "description": "View Girlfriend's Chat Answers"},
+        {"command": "help", "description": "Show Help & Instructions"}
+    ]
+    try:
+        requests.post(f"{BASE_TG_URL}/setMyCommands", json={"commands": commands}, timeout=6)
+    except Exception as e:
+        print(f"[Telegram Menu Setup]: {e}")
+
 def start_api_server(port=5000):
-    server = HTTPServer(("0.0.0.0", port), WebhookHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), WebhookHandler)
     print(f"🚀 Birthday Webhook API Server running on http://localhost:{port}")
     server.serve_forever()
 
